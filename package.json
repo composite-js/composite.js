@@ -1,0 +1,23 @@
+{
+  "name": "composite-js",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "A small JavaScript functional composition library (demo) using Vite + pnpm",
+  "main": "dist/cjs/index.cjs",
+  "module": "dist/esm/index.js",
+  "types": "",
+  "files": ["dist"],
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "test": "node test/run.mjs",
+    "lint": "echo 'add lint step'"
+  },
+  "keywords": ["compose","functional","library","vite"],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "vite": "^5.0.0",
+    "vitest": "^1.0.0"
+  }
+}
