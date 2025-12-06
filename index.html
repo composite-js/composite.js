@@ -6,22 +6,7 @@
     <title>composite-js demo</title>
   </head>
   <body>
-    <script type="module">
-      // 直接在浏览器/开发服务器中演示库用法
-      import { compose } from '/src/index.js'
-
-      const add1 = x => x + 1
-      const dbl = x => x * 2
-
-      const fn = compose(add1, dbl)
-
-      // 输出到控制台（也可以在页面中显示）
-      console.log('compose(add1, dbl)(3) =>', fn(3))
-
-      // 可视化简单输出
-      const pre = document.createElement('pre')
-      pre.textContent = `compose(add1, dbl)(3) => ${fn(3)}`
-      document.body.appendChild(pre)
-    </script>
+    <div id="app"></div>
+    <script type="module" src="/index.js"></script>
   </body>
 </html>

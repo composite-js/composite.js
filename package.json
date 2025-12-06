@@ -6,17 +6,26 @@
   "main": "dist/cjs/index.cjs",
   "module": "dist/esm/index.js",
   "types": "",
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "dev": "vite",
     "build": "vite build",
     "test": "node test/run.mjs",
-    "lint": "echo 'add lint step'"
+    "lint": "echo 'add lint step'",
+    "format": "prettier --write ."
   },
-  "keywords": ["compose","functional","library","vite"],
+  "keywords": [
+    "compose",
+    "functional",
+    "library",
+    "vite"
+  ],
   "author": "",
   "license": "MIT",
   "devDependencies": {
+    "prettier": "^3.7.4",
     "vite": "^5.0.0",
     "vitest": "^1.0.0"
   }
