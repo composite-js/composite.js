@@ -122,7 +122,7 @@ const leftBarChart = createChart({
     x: "size", // Value
     y: "genre", // Category
   },
-  width: 200,
+  width: 250,
   height: 300,
   direction: "horizontal",
   reverse: true, // Grow right-to-left

@@ -1,22 +1,19 @@
 import { drawBarChart } from "./marks/bar.js";
 import { drawLineChart } from "./marks/line.js";
 import { drawMatrix } from "./marks/matrix.js";
+import * as d3 from "d3";
 
 /**
- * src/chart.js - Visualization grammar core
- */
-
-/**
- * 创建一个图表实例
- * @param {Object} options - 图表配置选项
- * @param {Array} options.data - 数据数组
- * @param {string} options.mark - 标记类型 ('bar' | 'line' | 'matrix')
- * @param {Object} options.encoding - 编码配置 (例如 { x: 'field', y: 'field' })
- * @param {number} [options.width=400] - 图表宽度
- * @param {number} [options.height=300] - 图表高度
- * @param {string} [options.direction='vertical'] - 图表方向 (仅 bar chart 支持 'horizontal')
- * @param {Object} [options.axis] - 坐标轴配置 { x: { display: boolean }, y: { display: boolean } }
- * @returns {Object} 图表实例，包含 render 方法
+ * Creates a chart instance with the specified options.
+ * @param {Object} options - The chart configuration options.
+ * @param {Array} options.data - The data array.
+ * @param {string} options.mark - The mark type ('bar' | 'line' | 'matrix').
+ * @param {Object} options.encoding - The encoding configuration (e.g., { x: 'field', y: 'field' }).
+ * @param {number} [options.width=400] - The chart width.
+ * @param {number} [options.height=300] - The chart height.
+ * @param {string} [options.direction='vertical'] - The chart direction (only for bar chart).
+ * @param {Object} [options.axis] - Axis configuration { x: { display: boolean }, y: { display: boolean } }.
+ * @returns {Object} The chart instance containing a render method.
  */
 export function createChart(options) {
   const {
@@ -27,27 +24,44 @@ export function createChart(options) {
     height = 300,
   } = options;
 
+  const defaultMargin = { top: 40, right: 40, bottom: 40, left: 40 };
+  const margin = { ...defaultMargin, ...options.margin };
+
   return {
-    width,
-    height,
+    width: width + margin.left + margin.right,
+    height: height + margin.top + margin.bottom,
     options, // Expose options for layout engine if needed
     /**
-     * 将图表渲染到指定的 DOM 容器中
-     * @param {HTMLElement} container - 容器元素
+     * Renders the chart into the specified DOM container.
+     * @param {HTMLElement} container - The container element.
+     * @param {Object} [renderOptions] - Optional render overrides.
      */
-    render(container) {
-      // 清空容器
+    render(container, renderOptions = {}) {
+      // Clear container
       container.innerHTML = "";
 
-      // 创建 SVG 容器
-      const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-      svg.setAttribute("width", width);
-      svg.setAttribute("height", height);
-      // Remove border for cleaner composition, or make it optional.
-      // For now, let's keep it minimal or move it to CSS.
-      // svg.style.border = "1px solid #ccc";
+      // Merge margins: renderOptions.margin > options.margin > defaultMargin
+      const currentMargin = {
+        ...defaultMargin,
+        ...options.margin,
+        ...renderOptions.margin,
+      };
 
-      // 简单的比例尺计算 (仅适用于数值型 y 轴)
+      let svg;
+      if (container instanceof SVGElement) {
+        // Use existing SVG element if provided
+        svg = container;
+      } else {
+        // Create new SVG container
+        svg = d3
+          .create("svg")
+          .attr("width", width + currentMargin.left + currentMargin.right)
+          .attr("height", height + currentMargin.top + currentMargin.bottom)
+          .node();
+        container.appendChild(svg);
+      }
+
+      // Validate encoding
       const yField = encoding.y;
       const xField = encoding.x;
 
@@ -56,15 +70,16 @@ export function createChart(options) {
         return;
       }
 
-      if (mark === "bar") {
-        drawBarChart(svg, data, options);
-      } else if (mark === "line") {
-        drawLineChart(svg, data, options);
-      } else if (mark === "matrix") {
-        drawMatrix(svg, data, options);
-      }
+      const drawOptions = { ...options, margin: currentMargin };
 
-      container.appendChild(svg);
+      // Dispatch to specific mark renderer
+      if (mark === "bar") {
+        drawBarChart(svg, data, drawOptions);
+      } else if (mark === "line") {
+        drawLineChart(svg, data, drawOptions);
+      } else if (mark === "matrix") {
+        drawMatrix(svg, data, drawOptions);
+      }
     },
   };
 }

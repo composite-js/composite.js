@@ -1,20 +1,32 @@
+import * as d3 from "d3";
+
+/**
+ * Renders a line chart.
+ * @param {SVGElement} svg - The SVG container.
+ * @param {Array} data - The data to render.
+ * @param {Object} options - Chart options.
+ */
 export function drawLineChart(svg, data, options) {
   const { encoding = {}, width = 400, height = 300 } = options;
+  const container = d3.select(svg);
 
   const xField = encoding.x;
   const yField = encoding.y;
-  const padding = 40;
-  const chartWidth = width - padding * 2;
-  const chartHeight = height - padding * 2;
+  const defaultMargin = { top: 40, right: 40, bottom: 40, left: 40 };
+  const margin = options.margin || defaultMargin;
+
+  const chartWidth = width;
+  const chartHeight = height;
 
   const maxValue = Math.max(...data.map((d) => d[yField] || 0));
   const stepWidth = chartWidth / data.length;
 
-  // 辅助函数：计算坐标
-  const getX = (i) => padding + i * stepWidth + stepWidth * 0.5;
-  const getY = (val) => height - padding - (val / maxValue) * chartHeight;
+  // Helper functions for coordinates
+  const getX = (i) => margin.left + i * stepWidth + stepWidth * 0.5;
+  const getY = (val) =>
+    margin.top + chartHeight - (val / maxValue) * chartHeight;
 
-  // 生成路径数据
+  // Generate path data
   let pathD = "";
   const points = [];
 
@@ -31,72 +43,59 @@ export function drawLineChart(svg, data, options) {
     }
   });
 
-  // 绘制折线
-  const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-  path.setAttribute("d", pathD);
-  path.setAttribute("fill", "none");
-  path.setAttribute("stroke", "steelblue");
-  path.setAttribute("stroke-width", "2");
-  svg.appendChild(path);
+  // Draw line path
+  container
+    .append("path")
+    .attr("d", pathD)
+    .attr("fill", "none")
+    .attr("stroke", "steelblue")
+    .attr("stroke-width", "2");
 
-  // 绘制数据点
+  // Draw data points
   points.forEach((p) => {
-    const circle = document.createElementNS(
-      "http://www.w3.org/2000/svg",
-      "circle",
-    );
-    circle.setAttribute("cx", p.x);
-    circle.setAttribute("cy", p.y);
-    circle.setAttribute("r", 4);
-    circle.setAttribute("fill", "white");
-    circle.setAttribute("stroke", "steelblue");
-    circle.setAttribute("stroke-width", "2");
+    const circle = container
+      .append("circle")
+      .attr("cx", p.x)
+      .attr("cy", p.y)
+      .attr("r", 4)
+      .attr("fill", "white")
+      .attr("stroke", "steelblue")
+      .attr("stroke-width", "2")
+      .on("mouseenter", function () {
+        d3.select(this).attr("fill", "orange").attr("r", 6);
+      })
+      .on("mouseleave", function () {
+        d3.select(this).attr("fill", "white").attr("r", 4);
+      });
 
-    // 交互
-    circle.addEventListener("mouseenter", () => {
-      circle.setAttribute("fill", "orange");
-      circle.setAttribute("r", 6);
-    });
-    circle.addEventListener("mouseleave", () => {
-      circle.setAttribute("fill", "white");
-      circle.setAttribute("r", 4);
-    });
-
-    const title = document.createElementNS(
-      "http://www.w3.org/2000/svg",
-      "title",
-    );
-    title.textContent = `${p.label}: ${p.value}`;
-    circle.appendChild(title);
-
-    svg.appendChild(circle);
+    circle.append("title").text(`${p.label}: ${p.value}`);
   });
 
-  // 绘制 X 轴标签
+  // Draw X Axis Labels
   data.forEach((d, i) => {
-    const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
-    text.setAttribute("x", getX(i));
-    text.setAttribute("y", height - padding + 20);
-    text.setAttribute("text-anchor", "middle");
-    text.setAttribute("font-size", "12px");
-    text.textContent = d[xField];
-    svg.appendChild(text);
+    container
+      .append("text")
+      .attr("x", getX(i))
+      .attr("y", margin.top + height + 20)
+      .attr("text-anchor", "middle")
+      .attr("font-size", "12px")
+      .text(d[xField]);
   });
 
-  // 绘制坐标轴
-  const yAxis = document.createElementNS("http://www.w3.org/2000/svg", "line");
-  yAxis.setAttribute("x1", padding);
-  yAxis.setAttribute("y1", padding);
-  yAxis.setAttribute("x2", padding);
-  yAxis.setAttribute("y2", height - padding);
-  yAxis.setAttribute("stroke", "black");
-  svg.appendChild(yAxis);
+  // Draw Axes
+  container
+    .append("line")
+    .attr("x1", margin.left)
+    .attr("y1", margin.top)
+    .attr("x2", margin.left)
+    .attr("y2", margin.top + height)
+    .attr("stroke", "black");
 
-  const xAxis = document.createElementNS("http://www.w3.org/2000/svg", "line");
-  xAxis.setAttribute("x1", padding);
-  xAxis.setAttribute("y1", height - padding);
-  xAxis.setAttribute("x2", width - padding);
-  xAxis.setAttribute("y2", height - padding);
-  xAxis.setAttribute("stroke", "black");
-  svg.appendChild(xAxis);
+  container
+    .append("line")
+    .attr("x1", margin.left)
+    .attr("y1", margin.top + height)
+    .attr("x2", margin.left + width)
+    .attr("y2", margin.top + height)
+    .attr("stroke", "black");
 }

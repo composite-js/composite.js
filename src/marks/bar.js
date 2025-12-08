@@ -1,3 +1,11 @@
+import * as d3 from "d3";
+
+/**
+ * Renders a bar chart.
+ * @param {SVGElement} svg - The SVG container.
+ * @param {Array} data - The data to render.
+ * @param {Object} options - Chart options.
+ */
 export function drawBarChart(svg, data, options) {
   const {
     encoding = {},
@@ -11,16 +19,19 @@ export function drawBarChart(svg, data, options) {
     hideAxisLabels = false, // Hide category labels
     yAxisLabel = "", // Label for Y axis
   } = options;
+  const container = d3.select(svg);
 
   const xField = encoding.x;
   const yField = encoding.y;
-  const padding = 40;
-  const chartWidth = width - padding * 2;
-  const chartHeight = height - padding * 2;
+
+  const defaultMargin = { top: 40, right: 40, bottom: 40, left: 40 };
+  const margin = options.margin || defaultMargin;
+
+  const chartWidth = width;
+  const chartHeight = height;
 
   if (direction === "horizontal") {
-    // Horizontal Bar Chart
-    // x: value (quantitative), y: category (nominal)
+    // Horizontal Bar Chart: x=value, y=category
 
     const maxValue = Math.max(...data.map((d) => d[xField] || 0));
     const stepHeight = chartHeight / data.length;
@@ -30,154 +41,110 @@ export function drawBarChart(svg, data, options) {
       const value = d[xField];
       const barWidth = (value / maxValue) * chartWidth;
 
-      const rect = document.createElementNS(
-        "http://www.w3.org/2000/svg",
-        "rect",
-      );
-
       let x, y;
-      y = padding + i * stepHeight + (stepHeight - barHeight) / 2;
+      y = margin.top + i * stepHeight + (stepHeight - barHeight) / 2;
 
       if (reverse) {
         // Grow from right to left
-        // Start x is at the right edge of the chart area
-        x = width - padding - barWidth;
+        x = margin.left + width - barWidth;
       } else {
         // Grow from left to right
-        x = padding;
+        x = margin.left;
       }
 
-      rect.setAttribute("x", x);
-      rect.setAttribute("y", y);
-      rect.setAttribute("width", barWidth);
-      rect.setAttribute("height", barHeight);
-      rect.setAttribute("fill", color);
-
-      // 交互
-      rect.addEventListener("mouseenter", () =>
-        rect.setAttribute("fill", "orange"),
-      );
-      rect.addEventListener("mouseleave", () =>
-        rect.setAttribute("fill", color),
-      );
+      const rect = container
+        .append("rect")
+        .attr("x", x)
+        .attr("y", y)
+        .attr("width", barWidth)
+        .attr("height", barHeight)
+        .attr("fill", color)
+        .on("mouseenter", function () {
+          d3.select(this).attr("fill", "orange");
+        })
+        .on("mouseleave", function () {
+          d3.select(this).attr("fill", color);
+        });
 
       // Tooltip
-      const title = document.createElementNS(
-        "http://www.w3.org/2000/svg",
-        "title",
-      );
-      title.textContent = `${d[yField]}: ${value}`;
-      rect.appendChild(title);
+      rect.append("title").text(`${d[yField]}: ${value}`);
 
-      svg.appendChild(rect);
-
-      // Value Labels on top/side of bar
+      // Value Labels
       if (showLabels) {
-        const label = document.createElementNS(
-          "http://www.w3.org/2000/svg",
-          "text",
-        );
-        // Position label slightly outside the bar end
-        if (reverse) {
-          label.setAttribute("x", x - 5);
-          label.setAttribute("text-anchor", "end");
-        } else {
-          label.setAttribute("x", x + barWidth + 5);
-          label.setAttribute("text-anchor", "start");
-        }
+        const label = container
+          .append("text")
+          .attr("y", y + barHeight / 2 + 4)
+          .attr("font-size", "10px")
+          .text(value);
 
-        label.setAttribute("y", y + barHeight / 2 + 4);
-        label.setAttribute("font-size", "10px");
-        label.textContent = value;
-        svg.appendChild(label);
+        if (reverse) {
+          label.attr("x", x - 5).attr("text-anchor", "end");
+        } else {
+          label.attr("x", x + barWidth + 5).attr("text-anchor", "start");
+        }
       }
 
       // Y Axis Labels (Categories)
       if (!hideAxisLabels) {
-        const text = document.createElementNS(
-          "http://www.w3.org/2000/svg",
-          "text",
-        );
+        const text = container
+          .append("text")
+          .attr("y", y + barHeight / 2 + 4)
+          .attr("font-size", "12px")
+          .text(d[yField]);
 
         if (yAxisAlign === "right") {
-          text.setAttribute("x", width - padding + 5);
-          text.setAttribute("text-anchor", "start");
+          text.attr("x", margin.left + width + 5).attr("text-anchor", "start");
         } else {
-          text.setAttribute("x", padding - 5);
-          text.setAttribute("text-anchor", "end");
+          text.attr("x", margin.left - 5).attr("text-anchor", "end");
         }
-
-        text.setAttribute("y", y + barHeight / 2 + 4); // 垂直居中
-        text.setAttribute("font-size", "12px");
-        text.textContent = d[yField];
-        svg.appendChild(text);
       }
     });
 
-    // 绘制坐标轴
-    // Y 轴线
-    const yAxis = document.createElementNS(
-      "http://www.w3.org/2000/svg",
-      "line",
-    );
-    if (reverse) {
-      // Axis on the right
-      yAxis.setAttribute("x1", width - padding);
-      yAxis.setAttribute("x2", width - padding);
-    } else {
-      yAxis.setAttribute("x1", padding);
-      yAxis.setAttribute("x2", padding);
-    }
-    yAxis.setAttribute("y1", padding);
-    yAxis.setAttribute("y2", height - padding);
-    yAxis.setAttribute("stroke", "black");
-    svg.appendChild(yAxis);
-
-    // X 轴线
-    const xAxis = document.createElementNS(
-      "http://www.w3.org/2000/svg",
-      "line",
-    );
-    xAxis.setAttribute("x1", padding);
-    xAxis.setAttribute("y1", height - padding);
-    xAxis.setAttribute("x2", width - padding);
-    xAxis.setAttribute("y2", height - padding);
-    xAxis.setAttribute("stroke", "black");
-    svg.appendChild(xAxis);
-
-    // X Axis Labels (Simple min/max)
-    const label0 = document.createElementNS(
-      "http://www.w3.org/2000/svg",
-      "text",
-    );
-    label0.setAttribute("y", height - padding + 15);
-    label0.setAttribute("font-size", "10px");
-    label0.textContent = "0";
-
-    const labelMax = document.createElementNS(
-      "http://www.w3.org/2000/svg",
-      "text",
-    );
-    labelMax.setAttribute("y", height - padding + 15);
-    labelMax.setAttribute("font-size", "10px");
-    labelMax.textContent = maxValue;
+    // Draw Axes
+    // Y Axis line
+    const yAxis = container
+      .append("line")
+      .attr("y1", margin.top)
+      .attr("y2", margin.top + height)
+      .attr("stroke", "black");
 
     if (reverse) {
-      label0.setAttribute("x", width - padding);
-      label0.setAttribute("text-anchor", "middle");
-      labelMax.setAttribute("x", padding);
-      labelMax.setAttribute("text-anchor", "middle");
+      yAxis.attr("x1", margin.left + width).attr("x2", margin.left + width);
     } else {
-      label0.setAttribute("x", padding);
-      label0.setAttribute("text-anchor", "middle");
-      labelMax.setAttribute("x", width - padding);
-      labelMax.setAttribute("text-anchor", "middle");
+      yAxis.attr("x1", margin.left).attr("x2", margin.left);
     }
-    svg.appendChild(label0);
-    svg.appendChild(labelMax);
+
+    // X Axis line
+    const xAxis = container
+      .append("line")
+      .attr("x1", margin.left)
+      .attr("y1", margin.top + height)
+      .attr("x2", margin.left + width)
+      .attr("y2", margin.top + height)
+      .attr("stroke", "black");
+
+    // X Axis Labels (Min/Max)
+    const label0 = container
+      .append("text")
+      .attr("y", margin.top + height + 15)
+      .attr("font-size", "10px")
+      .text("0");
+
+    const labelMax = container
+      .append("text")
+      .attr("y", margin.top + height + 15)
+      .attr("font-size", "10px")
+      .text(maxValue);
+
+    if (reverse) {
+      label0.attr("x", margin.left + width).attr("text-anchor", "middle");
+      labelMax.attr("x", margin.left).attr("text-anchor", "middle");
+    } else {
+      label0.attr("x", margin.left).attr("text-anchor", "middle");
+      labelMax.attr("x", margin.left + width).attr("text-anchor", "middle");
+    }
   } else {
-    // Vertical Bar Chart (Default)
-    // x: category, y: value
+    // Vertical Bar Chart: x=category, y=value
 
     const maxValue = Math.max(...data.map((d) => d[yField] || 0));
     const stepWidth = chartWidth / data.length;
@@ -187,108 +154,79 @@ export function drawBarChart(svg, data, options) {
       const value = d[yField];
       const barHeight = (value / maxValue) * chartHeight;
 
-      const rect = document.createElementNS(
-        "http://www.w3.org/2000/svg",
-        "rect",
-      );
+      const x = margin.left + i * stepWidth + (stepWidth - barWidth) / 2;
+      const y = margin.top + height - barHeight;
 
-      // x 坐标
-      const x = padding + i * stepWidth + (stepWidth - barWidth) / 2;
-      // y 坐标
-      const y = height - padding - barHeight;
-
-      rect.setAttribute("x", x);
-      rect.setAttribute("y", y);
-      rect.setAttribute("width", barWidth);
-      rect.setAttribute("height", barHeight);
-      rect.setAttribute("fill", color);
-
-      // 交互
-      rect.addEventListener("mouseenter", () =>
-        rect.setAttribute("fill", "orange"),
-      );
-      rect.addEventListener("mouseleave", () =>
-        rect.setAttribute("fill", color),
-      );
+      const rect = container
+        .append("rect")
+        .attr("x", x)
+        .attr("y", y)
+        .attr("width", barWidth)
+        .attr("height", barHeight)
+        .attr("fill", color)
+        .on("mouseenter", function () {
+          d3.select(this).attr("fill", "orange");
+        })
+        .on("mouseleave", function () {
+          d3.select(this).attr("fill", color);
+        });
 
       // Tooltip
-      const title = document.createElementNS(
-        "http://www.w3.org/2000/svg",
-        "title",
-      );
-      title.textContent = `${d[xField]}: ${value}`;
-      rect.appendChild(title);
+      rect.append("title").text(`${d[xField]}: ${value}`);
 
-      svg.appendChild(rect);
-
-      // Value Labels on top
+      // Value Labels
       if (showLabels) {
-        const label = document.createElementNS(
-          "http://www.w3.org/2000/svg",
-          "text",
-        );
-        label.setAttribute("x", x + barWidth / 2);
-        label.setAttribute("y", y - 5);
-        label.setAttribute("text-anchor", "middle");
-        label.setAttribute("font-size", "10px");
-        label.textContent = value;
-        svg.appendChild(label);
+        container
+          .append("text")
+          .attr("x", x + barWidth / 2)
+          .attr("y", y - 5)
+          .attr("text-anchor", "middle")
+          .attr("font-size", "10px")
+          .text(value);
       }
 
-      // X 轴标签 (Category)
+      // X Axis Labels (Category)
       if (!hideAxisLabels) {
-        const text = document.createElementNS(
-          "http://www.w3.org/2000/svg",
-          "text",
-        );
-        text.setAttribute("x", x + barWidth / 2);
-        text.setAttribute("y", height - padding + 15);
-        text.setAttribute("text-anchor", "middle");
-        text.setAttribute("font-size", "12px");
-        text.textContent = d[xField];
-        svg.appendChild(text);
+        container
+          .append("text")
+          .attr("x", x + barWidth / 2)
+          .attr("y", margin.top + height + 15)
+          .attr("text-anchor", "middle")
+          .attr("font-size", "12px")
+          .text(d[xField]);
       }
     });
 
-    // 绘制坐标轴
-    const yAxis = document.createElementNS(
-      "http://www.w3.org/2000/svg",
-      "line",
-    );
-    yAxis.setAttribute("x1", padding);
-    yAxis.setAttribute("y1", padding);
-    yAxis.setAttribute("x2", padding);
-    yAxis.setAttribute("y2", height - padding);
-    yAxis.setAttribute("stroke", "black");
-    svg.appendChild(yAxis);
+    // Draw Axes
+    container
+      .append("line")
+      .attr("x1", margin.left)
+      .attr("y1", margin.top)
+      .attr("x2", margin.left)
+      .attr("y2", margin.top + height)
+      .attr("stroke", "black");
 
     // Y Axis Label
     if (yAxisLabel) {
-      const label = document.createElementNS(
-        "http://www.w3.org/2000/svg",
-        "text",
-      );
-      label.setAttribute("x", padding - 30);
-      label.setAttribute("y", height / 2);
-      label.setAttribute("text-anchor", "middle");
-      label.setAttribute(
-        "transform",
-        `rotate(-90, ${padding - 30}, ${height / 2})`,
-      );
-      label.setAttribute("font-size", "14px");
-      label.textContent = yAxisLabel;
-      svg.appendChild(label);
+      container
+        .append("text")
+        .attr("x", margin.left - 30)
+        .attr("y", margin.top + height / 2)
+        .attr("text-anchor", "middle")
+        .attr(
+          "transform",
+          `rotate(-90, ${margin.left - 30}, ${margin.top + height / 2})`,
+        )
+        .attr("font-size", "14px")
+        .text(yAxisLabel);
     }
 
-    const xAxis = document.createElementNS(
-      "http://www.w3.org/2000/svg",
-      "line",
-    );
-    xAxis.setAttribute("x1", padding);
-    xAxis.setAttribute("y1", height - padding);
-    xAxis.setAttribute("x2", width - padding);
-    xAxis.setAttribute("y2", height - padding);
-    xAxis.setAttribute("stroke", "black");
-    svg.appendChild(xAxis);
+    container
+      .append("line")
+      .attr("x1", margin.left)
+      .attr("y1", margin.top + height)
+      .attr("x2", margin.left + width)
+      .attr("y2", margin.top + height)
+      .attr("stroke", "black");
   }
 }
