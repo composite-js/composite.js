@@ -11,27 +11,9 @@ export function stack(charts, direction, margin) {
   return { type: "stack", charts, direction, margin };
 }
 
-const context =
-  typeof document !== "undefined"
-    ? document.createElement("canvas").getContext("2d")
-    : null;
-
 /**
- * Measures the width of a text string.
- * @param {string} text - The text to measure.
- * @param {number} [fontSize=10] - The font size.
- * @returns {number} The estimated or measured width.
- */
-function measureText(text, fontSize = 10) {
-  if (context) {
-    context.font = `${fontSize}px sans-serif`;
-    return context.measureText(text).width;
-  }
-  return String(text).length * fontSize * 0.6;
-}
-
-/**
- * Estimates the margins required for a chart based on its axes and labels.
+ * Calculates the margins required for a chart by actually rendering axes
+ * and measuring their bounding boxes.
  * @param {Object} chart - The chart object.
  * @returns {Object} The calculated margins {top, right, bottom, left}.
  */
@@ -39,35 +21,155 @@ function estimateMargins(chart) {
   const {
     data,
     encoding,
-    yAxisAlign = "left",
-    hideAxisLabels = false,
-    yAxisLabel,
-    direction = "vertical",
-    showLabels = false,
+    width = 400,
+    height = 300,
+    xAxisPos = "bottom",
+    yAxisPos = "left",
+    showXAxisLabel = true,
+    showYAxisLabel = true,
+    xAxisName,
+    yAxisName,
+    mark,
   } = chart.options;
 
   const margin = { top: 10, right: 10, bottom: 10, left: 10 };
 
-  if (chart.options.mark === "bar") {
-    if (direction === "vertical") {
-      if (yAxisLabel) margin.left += 30;
-      if (!hideAxisLabels && encoding.x) margin.bottom += 20;
-      if (showLabels) margin.top += 15;
-    } else {
-      if (!hideAxisLabels && encoding.y) {
-        const labels = data.map((d) => d[encoding.y]);
-        const maxLabelWidth = Math.max(
-          0,
-          ...labels.map((l) => measureText(l, 12)),
-        );
+  // If running in browser environment, render axes to measure actual bounds
+  if (typeof document !== "undefined") {
+    // Create temporary SVG for measurement
+    const tempSvg = d3
+      .create("svg")
+      .attr("width", width + 100)
+      .attr("height", height + 100);
 
-        if (yAxisAlign === "right") {
-          margin.right += maxLabelWidth + 10;
+    // Create scales based on data
+    let xScale, yScale;
+
+    if (encoding.x && encoding.y) {
+      const xField = encoding.x;
+      const yField = encoding.y;
+
+      // Determine scale types based on data and mark type
+      if (mark === "bar") {
+        // For bar charts, typically one axis is band scale
+        const xValues = data.map((d) => d[xField]);
+        const yValues = data.map((d) => d[yField]);
+
+        if (typeof xValues[0] === "string") {
+          xScale = d3
+            .scaleBand()
+            .domain(xValues)
+            .range([0, width])
+            .padding(0.1);
         } else {
-          margin.left += maxLabelWidth + 10;
+          xScale = d3
+            .scaleLinear()
+            .domain([0, d3.max(xValues)])
+            .range([0, width]);
+        }
+
+        if (typeof yValues[0] === "string") {
+          yScale = d3
+            .scaleBand()
+            .domain(yValues)
+            .range([height, 0])
+            .padding(0.1);
+        } else {
+          yScale = d3
+            .scaleLinear()
+            .domain([0, d3.max(yValues)])
+            .range([height, 0]);
+        }
+      } else {
+        // For other marks (line, scatter, etc.)
+        const xValues = data.map((d) => d[xField]);
+        const yValues = data.map((d) => d[yField]);
+
+        xScale = d3.scaleLinear().domain(d3.extent(xValues)).range([0, width]);
+
+        yScale = d3.scaleLinear().domain(d3.extent(yValues)).range([height, 0]);
+      }
+
+      // Render X axis if needed
+      if (xScale && showXAxisLabel) {
+        const xAxisGenerator = xAxisPos === "top" ? d3.axisTop : d3.axisBottom;
+        const xAxisGroup = tempSvg
+          .append("g")
+          .attr("class", "x-axis")
+          .attr(
+            "transform",
+            `translate(50, ${xAxisPos === "top" ? 50 : 50 + height})`,
+          )
+          .call(xAxisGenerator(xScale));
+
+        // Measure X axis bounds
+        const xAxisBBox = xAxisGroup.node().getBBox();
+
+        if (xAxisPos === "top") {
+          margin.top = Math.max(
+            margin.top,
+            Math.abs(xAxisBBox.y) + xAxisBBox.height + 5,
+          );
+        } else {
+          margin.bottom = Math.max(margin.bottom, xAxisBBox.height + 5);
+        }
+
+        // Add space for X axis label if present
+        if (xAxisName) {
+          margin.bottom += 20;
         }
       }
-      if (encoding.x) margin.bottom += 20;
+
+      // Render Y axis if needed
+      if (yScale && showYAxisLabel) {
+        const yAxisGenerator =
+          yAxisPos === "right" ? d3.axisRight : d3.axisLeft;
+        const yAxisGroup = tempSvg
+          .append("g")
+          .attr("class", "y-axis")
+          .attr(
+            "transform",
+            `translate(${yAxisPos === "right" ? 50 + width : 50}, 50)`,
+          )
+          .call(yAxisGenerator(yScale));
+
+        // Measure Y axis bounds
+        const yAxisBBox = yAxisGroup.node().getBBox();
+
+        if (yAxisPos === "right") {
+          margin.right = Math.max(margin.right, yAxisBBox.width + 5);
+        } else {
+          margin.left = Math.max(
+            margin.left,
+            Math.abs(yAxisBBox.x) + yAxisBBox.width + 5,
+          );
+        }
+
+        // Add space for Y axis label if present
+        if (yAxisName) {
+          if (yAxisPos === "right") {
+            margin.right += 20;
+          } else {
+            margin.left += 20;
+          }
+        }
+      }
+    }
+  } else {
+    // Fallback for non-browser environments (e.g., Node.js)
+    // Use simple heuristics
+    if (showXAxisLabel) {
+      margin.bottom += 30;
+      if (xAxisName) margin.bottom += 20;
+    }
+    if (showYAxisLabel) {
+      if (yAxisPos === "right") {
+        margin.right += 50;
+        if (yAxisName) margin.right += 20;
+      } else {
+        margin.left += 50;
+        if (yAxisName) margin.left += 20;
+      }
     }
   }
 

@@ -1,4 +1,5 @@
 import * as d3 from "d3";
+import { drawAxes } from "../axis.js";
 
 /**
  * Renders a bar chart.
@@ -13,17 +14,19 @@ export function drawBarChart(svg, data, options) {
     height = 300,
     direction = "vertical", // 'vertical' | 'horizontal'
     color = "steelblue",
-    reverse = false, // For horizontal: grow right-to-left
     showLabels = false, // Show value labels on bars
-    yAxisAlign = "left", // 'left' | 'right' for horizontal chart labels
-    hideAxisLabels = false, // Hide category labels
-    yAxisLabel = "", // Label for Y axis
+    showXAxisLabel = true, // Show X axis labels
+    showYAxisLabel = true, // Show Y axis labels
+    xAxisName = "", // Label for X axis
+    yAxisName = "", // Label for Y axis
+    xAxisPos = "bottom", // 'top' | 'bottom'
+    yAxisPos = "left", // 'left' | 'right'
+    padding = 0.2, // Padding between bars
   } = options;
   const container = d3.select(svg);
 
   const xField = encoding.x;
   const yField = encoding.y;
-
   const defaultMargin = { top: 40, right: 40, bottom: 40, left: 40 };
   const margin = options.margin || defaultMargin;
 
@@ -31,26 +34,28 @@ export function drawBarChart(svg, data, options) {
   const chartHeight = height;
 
   if (direction === "horizontal") {
-    // Horizontal Bar Chart: x=value, y=category
-
     const maxValue = Math.max(...data.map((d) => d[xField] || 0));
-    const stepHeight = chartHeight / data.length;
-    const barHeight = stepHeight * 0.8;
 
-    data.forEach((d, i) => {
+    const yScale = d3
+      .scaleBand()
+      .domain(data.map((d) => d[yField]))
+      .range([0, chartHeight])
+      .padding(padding);
+
+    // Reverse x scale if xAxisPos is 'right' (grow right-to-left)
+    const reverseX = yAxisPos === "right";
+    const xScale = d3
+      .scaleLinear()
+      .domain([0, maxValue])
+      .range(reverseX ? [chartWidth, 0] : [0, chartWidth]);
+
+    data.forEach((d) => {
       const value = d[xField];
-      const barWidth = (value / maxValue) * chartWidth;
+      const barWidth = Math.abs(xScale(value) - xScale(0));
+      const barHeight = yScale.bandwidth();
 
-      let x, y;
-      y = margin.top + i * stepHeight + (stepHeight - barHeight) / 2;
-
-      if (reverse) {
-        // Grow from right to left
-        x = margin.left + width - barWidth;
-      } else {
-        // Grow from left to right
-        x = margin.left;
-      }
+      const x = margin.left + (reverseX ? xScale(value) : xScale(0));
+      const y = margin.top + yScale(d[yField]);
 
       const rect = container
         .append("rect")
@@ -74,88 +79,57 @@ export function drawBarChart(svg, data, options) {
         const label = container
           .append("text")
           .attr("y", y + barHeight / 2 + 4)
-          .attr("font-size", "10px")
+          .attr("font-size", "12px")
           .text(value);
 
-        if (reverse) {
+        if (reverseX) {
           label.attr("x", x - 5).attr("text-anchor", "end");
         } else {
           label.attr("x", x + barWidth + 5).attr("text-anchor", "start");
         }
       }
-
-      // Y Axis Labels (Categories)
-      if (!hideAxisLabels) {
-        const text = container
-          .append("text")
-          .attr("y", y + barHeight / 2 + 4)
-          .attr("font-size", "12px")
-          .text(d[yField]);
-
-        if (yAxisAlign === "right") {
-          text.attr("x", margin.left + width + 5).attr("text-anchor", "start");
-        } else {
-          text.attr("x", margin.left - 5).attr("text-anchor", "end");
-        }
-      }
     });
 
     // Draw Axes
-    // Y Axis line
-    const yAxis = container
-      .append("line")
-      .attr("y1", margin.top)
-      .attr("y2", margin.top + height)
-      .attr("stroke", "black");
-
-    if (reverse) {
-      yAxis.attr("x1", margin.left + width).attr("x2", margin.left + width);
-    } else {
-      yAxis.attr("x1", margin.left).attr("x2", margin.left);
-    }
-
-    // X Axis line
-    const xAxis = container
-      .append("line")
-      .attr("x1", margin.left)
-      .attr("y1", margin.top + height)
-      .attr("x2", margin.left + width)
-      .attr("y2", margin.top + height)
-      .attr("stroke", "black");
-
-    // X Axis Labels (Min/Max)
-    const label0 = container
-      .append("text")
-      .attr("y", margin.top + height + 15)
-      .attr("font-size", "10px")
-      .text("0");
-
-    const labelMax = container
-      .append("text")
-      .attr("y", margin.top + height + 15)
-      .attr("font-size", "10px")
-      .text(maxValue);
-
-    if (reverse) {
-      label0.attr("x", margin.left + width).attr("text-anchor", "middle");
-      labelMax.attr("x", margin.left).attr("text-anchor", "middle");
-    } else {
-      label0.attr("x", margin.left).attr("text-anchor", "middle");
-      labelMax.attr("x", margin.left + width).attr("text-anchor", "middle");
-    }
+    drawAxes(
+      svg,
+      { x: xScale, y: yScale },
+      { margin, width: chartWidth, height: chartHeight },
+      {
+        showXAxisLabel,
+        showYAxisLabel,
+        xAxisName,
+        yAxisName,
+        xAxisPos,
+        yAxisPos,
+      },
+    );
   } else {
     // Vertical Bar Chart: x=category, y=value
-
     const maxValue = Math.max(...data.map((d) => d[yField] || 0));
-    const stepWidth = chartWidth / data.length;
-    const barWidth = stepWidth * 0.8;
 
-    data.forEach((d, i) => {
+    // Reverse x scale if xAxisPos is 'top'
+    const reverseX = xAxisPos === "top";
+    const xScale = d3
+      .scaleBand()
+      .domain(data.map((d) => d[xField]))
+      .range(reverseX ? [chartWidth, 0] : [0, chartWidth])
+      .padding(padding);
+
+    // Reverse y scale if yAxisPos is 'right'
+    const reverseY = yAxisPos === "right";
+    const yScale = d3
+      .scaleLinear()
+      .domain([0, maxValue])
+      .range(reverseY ? [0, chartHeight] : [chartHeight, 0]);
+
+    data.forEach((d) => {
       const value = d[yField];
-      const barHeight = (value / maxValue) * chartHeight;
+      const barWidth = xScale.bandwidth();
+      const barHeight = chartHeight - yScale(value);
 
-      const x = margin.left + i * stepWidth + (stepWidth - barWidth) / 2;
-      const y = margin.top + height - barHeight;
+      const x = margin.left + xScale(d[xField]);
+      const y = margin.top + yScale(value);
 
       const rect = container
         .append("rect")
@@ -181,52 +155,24 @@ export function drawBarChart(svg, data, options) {
           .attr("x", x + barWidth / 2)
           .attr("y", y - 5)
           .attr("text-anchor", "middle")
-          .attr("font-size", "10px")
-          .text(value);
-      }
-
-      // X Axis Labels (Category)
-      if (!hideAxisLabels) {
-        container
-          .append("text")
-          .attr("x", x + barWidth / 2)
-          .attr("y", margin.top + height + 15)
-          .attr("text-anchor", "middle")
           .attr("font-size", "12px")
-          .text(d[xField]);
+          .text(value);
       }
     });
 
     // Draw Axes
-    container
-      .append("line")
-      .attr("x1", margin.left)
-      .attr("y1", margin.top)
-      .attr("x2", margin.left)
-      .attr("y2", margin.top + height)
-      .attr("stroke", "black");
-
-    // Y Axis Label
-    if (yAxisLabel) {
-      container
-        .append("text")
-        .attr("x", margin.left - 30)
-        .attr("y", margin.top + height / 2)
-        .attr("text-anchor", "middle")
-        .attr(
-          "transform",
-          `rotate(-90, ${margin.left - 30}, ${margin.top + height / 2})`,
-        )
-        .attr("font-size", "14px")
-        .text(yAxisLabel);
-    }
-
-    container
-      .append("line")
-      .attr("x1", margin.left)
-      .attr("y1", margin.top + height)
-      .attr("x2", margin.left + width)
-      .attr("y2", margin.top + height)
-      .attr("stroke", "black");
+    drawAxes(
+      svg,
+      { x: xScale, y: yScale },
+      { margin, width: chartWidth, height: chartHeight },
+      {
+        showXAxisLabel,
+        showYAxisLabel,
+        xAxisName,
+        yAxisName,
+        xAxisPos,
+        yAxisPos,
+      },
+    );
   }
 }

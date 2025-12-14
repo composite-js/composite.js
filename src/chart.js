@@ -1,6 +1,7 @@
 import { drawBarChart } from "./marks/bar.js";
 import { drawLineChart } from "./marks/line.js";
 import { drawMatrix } from "./marks/matrix.js";
+import { drawScatter } from "./marks/scatter.js";
 import * as d3 from "d3";
 
 /**
@@ -79,6 +80,8 @@ export function createChart(options) {
         drawLineChart(svg, data, drawOptions);
       } else if (mark === "matrix") {
         drawMatrix(svg, data, drawOptions);
+      } else if (mark === "scatter") {
+        drawScatter(svg, data, drawOptions);
       }
     },
   };

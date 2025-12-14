@@ -1,4 +1,5 @@
 import * as d3 from "d3";
+import { drawAxes } from "../axis.js";
 
 /**
  * Renders a line chart.
@@ -7,7 +8,17 @@ import * as d3 from "d3";
  * @param {Object} options - Chart options.
  */
 export function drawLineChart(svg, data, options) {
-  const { encoding = {}, width = 400, height = 300 } = options;
+  const {
+    encoding = {},
+    width = 400,
+    height = 300,
+    showXAxisLabel = true,
+    showYAxisLabel = true,
+    xAxisName = "",
+    yAxisName = "",
+    xAxisPos = "bottom",
+    yAxisPos = "left",
+  } = options;
   const container = d3.select(svg);
 
   const xField = encoding.x;
@@ -19,12 +30,18 @@ export function drawLineChart(svg, data, options) {
   const chartHeight = height;
 
   const maxValue = Math.max(...data.map((d) => d[yField] || 0));
-  const stepWidth = chartWidth / data.length;
+
+  const xScale = d3
+    .scalePoint()
+    .domain(data.map((d) => d[xField]))
+    .range([0, chartWidth])
+    .padding(0.5);
+
+  const yScale = d3.scaleLinear().domain([0, maxValue]).range([chartHeight, 0]);
 
   // Helper functions for coordinates
-  const getX = (i) => margin.left + i * stepWidth + stepWidth * 0.5;
-  const getY = (val) =>
-    margin.top + chartHeight - (val / maxValue) * chartHeight;
+  const getX = (val) => margin.left + xScale(val);
+  const getY = (val) => margin.top + yScale(val);
 
   // Generate path data
   let pathD = "";
@@ -32,7 +49,7 @@ export function drawLineChart(svg, data, options) {
 
   data.forEach((d, i) => {
     const value = d[yField];
-    const x = getX(i);
+    const x = getX(d[xField]);
     const y = getY(value);
     points.push({ x, y, value, label: d[xField] });
 
@@ -71,31 +88,17 @@ export function drawLineChart(svg, data, options) {
     circle.append("title").text(`${p.label}: ${p.value}`);
   });
 
-  // Draw X Axis Labels
-  data.forEach((d, i) => {
-    container
-      .append("text")
-      .attr("x", getX(i))
-      .attr("y", margin.top + height + 20)
-      .attr("text-anchor", "middle")
-      .attr("font-size", "12px")
-      .text(d[xField]);
-  });
-
-  // Draw Axes
-  container
-    .append("line")
-    .attr("x1", margin.left)
-    .attr("y1", margin.top)
-    .attr("x2", margin.left)
-    .attr("y2", margin.top + height)
-    .attr("stroke", "black");
-
-  container
-    .append("line")
-    .attr("x1", margin.left)
-    .attr("y1", margin.top + height)
-    .attr("x2", margin.left + width)
-    .attr("y2", margin.top + height)
-    .attr("stroke", "black");
+  drawAxes(
+    svg,
+    { x: xScale, y: yScale },
+    { margin, width: chartWidth, height: chartHeight },
+    {
+      showXAxisLabel,
+      showYAxisLabel,
+      xAxisName,
+      yAxisName,
+      xAxisPos,
+      yAxisPos,
+    },
+  );
 }

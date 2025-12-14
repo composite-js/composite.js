@@ -96,8 +96,7 @@ const topBarChart = createChart({
   height: 200,
   color: "black", // Black bars
   showLabels: true, // Show numbers on top
-  hideAxisLabels: true, // Hide x-axis labels (they align with matrix)
-  yAxisLabel: "Intersection Size",
+  yAxisName: "Intersection Size",
 });
 
 // 2. Matrix (Intersections)
@@ -125,18 +124,42 @@ const leftBarChart = createChart({
   width: 250,
   height: 300,
   direction: "horizontal",
-  reverse: true, // Grow right-to-left
+  yAxisPos: "right",
   color: "black",
-  yAxisAlign: "right", // Labels on the right side
-  showLabels: true, // Show numbers
-  hideAxisLabels: false, // Show category labels (they sit between bar and matrix)
+  showLabels: true,
+  yAxisName: "Set Size",
 });
 
-const myComposite = composite([topBarChart, leftBarChart, matrixChart], {
-  constraints: [
-    stack([topBarChart, matrixChart], "vertical"), // Top Bar above Matrix
-    stack([leftBarChart, matrixChart], "horizontal"), // Left Bar left of Matrix
-  ],
+// 4. Scatter Plot (right of matrix)
+// Generate some sample scatter data
+const scatterData = Array.from({ length: 50 }, (_, i) => ({
+  x: Math.random() * 100,
+  y: Math.random() * 80 + 10,
+}));
+
+const scatterChart = createChart({
+  data: scatterData,
+  mark: "scatter",
+  encoding: {
+    x: "x",
+    y: "y",
+  },
+  width: 200,
+  color: "purple",
+  radius: 3,
+  xAxisName: "Value X",
+  yAxisName: "Value Y",
 });
+
+const myComposite = composite(
+  [topBarChart, leftBarChart, matrixChart, scatterChart],
+  {
+    constraints: [
+      stack([topBarChart, matrixChart], "vertical"), // Top Bar above Matrix
+      stack([leftBarChart, matrixChart], "horizontal"), // Left Bar left of Matrix
+      stack([matrixChart, scatterChart], "horizontal"), // Scatter right of Matrix
+    ],
+  },
+);
 
 myComposite.render(app);
