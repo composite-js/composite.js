@@ -1,5 +1,4 @@
 import * as d3 from "d3";
-import { drawAxes } from "../axis.js";
 
 /**
  * Renders a bar chart.
@@ -90,12 +89,10 @@ export function drawBarChart(svg, data, options) {
       }
     });
 
-    // Draw Axes
-    drawAxes(
-      svg,
-      { x: xScale, y: yScale },
-      { margin, width: chartWidth, height: chartHeight },
-      {
+    return {
+      scales: { x: xScale, y: yScale },
+      dimensions: { margin, width: chartWidth, height: chartHeight },
+      axisOptions: {
         showXAxisLabel,
         showYAxisLabel,
         xAxisName,
@@ -103,7 +100,7 @@ export function drawBarChart(svg, data, options) {
         xAxisPos,
         yAxisPos,
       },
-    );
+    };
   } else {
     // Vertical Bar Chart: x=category, y=value
     const maxValue = Math.max(...data.map((d) => d[yField] || 0));
@@ -160,12 +157,10 @@ export function drawBarChart(svg, data, options) {
       }
     });
 
-    // Draw Axes
-    drawAxes(
-      svg,
-      { x: xScale, y: yScale },
-      { margin, width: chartWidth, height: chartHeight },
-      {
+    return {
+      scales: { x: xScale, y: yScale },
+      dimensions: { margin, width: chartWidth, height: chartHeight },
+      axisOptions: {
         showXAxisLabel,
         showYAxisLabel,
         xAxisName,
@@ -173,6 +168,6 @@ export function drawBarChart(svg, data, options) {
         xAxisPos,
         yAxisPos,
       },
-    );
+    };
   }
 }

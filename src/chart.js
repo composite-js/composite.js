@@ -2,6 +2,7 @@ import { drawBarChart } from "./marks/bar.js";
 import { drawLineChart } from "./marks/line.js";
 import { drawMatrix } from "./marks/matrix.js";
 import { drawScatter } from "./marks/scatter.js";
+import { drawAxes } from "./axis.js";
 import * as d3 from "d3";
 
 /**
@@ -73,15 +74,27 @@ export function createChart(options) {
 
       const drawOptions = { ...options, margin: currentMargin };
 
-      // Dispatch to specific mark renderer
+      // Dispatch to specific mark renderer and collect axis config
+      let axisConfig = null;
+
       if (mark === "bar") {
-        drawBarChart(svg, data, drawOptions);
+        axisConfig = drawBarChart(svg, data, drawOptions);
       } else if (mark === "line") {
-        drawLineChart(svg, data, drawOptions);
+        axisConfig = drawLineChart(svg, data, drawOptions);
       } else if (mark === "matrix") {
         drawMatrix(svg, data, drawOptions);
       } else if (mark === "scatter") {
-        drawScatter(svg, data, drawOptions);
+        axisConfig = drawScatter(svg, data, drawOptions);
+      }
+
+      // Draw axes using the config returned by mark renderers
+      if (axisConfig) {
+        drawAxes(
+          svg,
+          axisConfig.scales,
+          axisConfig.dimensions,
+          axisConfig.axisOptions,
+        );
       }
     },
   };

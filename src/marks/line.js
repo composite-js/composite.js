@@ -1,5 +1,4 @@
 import * as d3 from "d3";
-import { drawAxes } from "../axis.js";
 
 /**
  * Renders a line chart.
@@ -88,11 +87,10 @@ export function drawLineChart(svg, data, options) {
     circle.append("title").text(`${p.label}: ${p.value}`);
   });
 
-  drawAxes(
-    svg,
-    { x: xScale, y: yScale },
-    { margin, width: chartWidth, height: chartHeight },
-    {
+  return {
+    scales: { x: xScale, y: yScale },
+    dimensions: { margin, width: chartWidth, height: chartHeight },
+    axisOptions: {
       showXAxisLabel,
       showYAxisLabel,
       xAxisName,
@@ -100,5 +98,5 @@ export function drawLineChart(svg, data, options) {
       xAxisPos,
       yAxisPos,
     },
-  );
+  };
 }

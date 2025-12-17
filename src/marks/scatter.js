@@ -1,5 +1,4 @@
 import * as d3 from "d3";
-import { drawAxes } from "../axis.js";
 
 /**
  * Renders a scatter plot.
@@ -73,12 +72,10 @@ export function drawScatter(svg, data, options) {
       .text(`x: ${d[xField].toFixed(2)}, y: ${d[yField].toFixed(2)}`);
   });
 
-  // Draw Axes
-  drawAxes(
-    svg,
-    { x: xScale, y: yScale },
-    { margin, width: chartWidth, height: chartHeight },
-    {
+  return {
+    scales: { x: xScale, y: yScale },
+    dimensions: { margin, width: chartWidth, height: chartHeight },
+    axisOptions: {
       showXAxisLabel,
       showYAxisLabel,
       xAxisName,
@@ -86,5 +83,5 @@ export function drawScatter(svg, data, options) {
       xAxisPos,
       yAxisPos,
     },
-  );
+  };
 }
