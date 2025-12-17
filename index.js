@@ -1,5 +1,5 @@
 import { createChart } from "./src/chart.js";
-import { composite, stack } from "./src/layout.js";
+import { composite, stackX, stackY } from "./src/layout.js";
 
 // Data for the UpSet plot (Movie Genres)
 // Based on the image provided:
@@ -82,6 +82,16 @@ const setSizeData = genres.map((genre) => {
   };
 });
 
+const boxData = [];
+genres.forEach((genre) => {
+  for (let i = 0; i < 20; i++) {
+    boxData.push({
+      genre: genre,
+      value: Math.random() * 50 + Math.random() * 30,
+    });
+  }
+});
+
 const app = document.getElementById("app");
 
 // 1. Top Bar Chart (Intersection Size)
@@ -127,37 +137,33 @@ const leftBarChart = createChart({
   yAxisPos: "right",
   color: "black",
   showLabels: true,
+  showXAxis: false,
   yAxisName: "Set Size",
 });
 
-// 4. Scatter Plot (right of matrix)
-// Generate some sample scatter data
-const scatterData = Array.from({ length: 50 }, (_, i) => ({
-  x: Math.random() * 100,
-  y: Math.random() * 80 + 10,
-}));
-
-const scatterChart = createChart({
-  data: scatterData,
-  mark: "scatter",
+// 4. Box Plot (right of matrix)
+const boxChart = createChart({
+  data: boxData,
+  mark: "box",
   encoding: {
-    x: "x",
-    y: "y",
+    x: "value",
+    y: "genre",
+    yDomain: genres,
   },
   width: 200,
-  color: "purple",
-  radius: 3,
-  xAxisName: "Value X",
-  yAxisName: "Value Y",
+  direction: "horizontal",
+  color: "black",
+  xAxisName: "Value",
+  showYAxis: false,
 });
 
 const myComposite = composite(
-  [topBarChart, leftBarChart, matrixChart, scatterChart],
+  [topBarChart, leftBarChart, matrixChart, boxChart],
   {
     constraints: [
-      stack([topBarChart, matrixChart], "vertical"), // Top Bar above Matrix
-      stack([leftBarChart, matrixChart], "horizontal"), // Left Bar left of Matrix
-      stack([matrixChart, scatterChart], "horizontal"), // Scatter right of Matrix
+      stackY([topBarChart, matrixChart]), // Top Bar above Matrix
+      stackX([leftBarChart, matrixChart]), // Left Bar left of Matrix
+      stackX([matrixChart, boxChart]), // Box Plot right of Matrix
     ],
   },
 );

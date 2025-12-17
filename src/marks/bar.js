@@ -14,8 +14,8 @@ export function drawBarChart(svg, data, options) {
     direction = "vertical", // 'vertical' | 'horizontal'
     color = "steelblue",
     showLabels = false, // Show value labels on bars
-    showXAxisLabel = true, // Show X axis labels
-    showYAxisLabel = true, // Show Y axis labels
+    showXAxis = true, // Show X axis labels
+    showYAxis = true, // Show Y axis labels
     xAxisName = "", // Label for X axis
     yAxisName = "", // Label for Y axis
     xAxisPos = "bottom", // 'top' | 'bottom'
@@ -93,8 +93,8 @@ export function drawBarChart(svg, data, options) {
       scales: { x: xScale, y: yScale },
       dimensions: { margin, width: chartWidth, height: chartHeight },
       axisOptions: {
-        showXAxisLabel,
-        showYAxisLabel,
+        showXAxis,
+        showYAxis,
         xAxisName,
         yAxisName,
         xAxisPos,
@@ -102,7 +102,6 @@ export function drawBarChart(svg, data, options) {
       },
     };
   } else {
-    // Vertical Bar Chart: x=category, y=value
     const maxValue = Math.max(...data.map((d) => d[yField] || 0));
 
     // Reverse x scale if xAxisPos is 'top'
@@ -161,8 +160,8 @@ export function drawBarChart(svg, data, options) {
       scales: { x: xScale, y: yScale },
       dimensions: { margin, width: chartWidth, height: chartHeight },
       axisOptions: {
-        showXAxisLabel,
-        showYAxisLabel,
+        showXAxis,
+        showYAxis,
         xAxisName,
         yAxisName,
         xAxisPos,

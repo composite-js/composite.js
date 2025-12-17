@@ -1,14 +1,23 @@
 import * as d3 from "d3";
 
 /**
- * Creates a stack constraint between two charts.
+ * Creates a horizontal stack constraint between two charts.
  * @param {Array} charts - The two charts to stack.
- * @param {string} direction - 'vertical' or 'horizontal'.
  * @param {number} margin - The margin between the stacked charts.
  * @returns {Object} The stack constraint object.
  */
-export function stack(charts, direction, margin) {
-  return { type: "stack", charts, direction, margin };
+export function stackX(charts, margin) {
+  return { type: "stack", charts, direction: "horizontal", margin };
+}
+
+/**
+ * Creates a vertical stack constraint between two charts.
+ * @param {Array} charts - The two charts to stack.
+ * @param {number} margin - The margin between the stacked charts.
+ * @returns {Object} The stack constraint object.
+ */
+export function stackY(charts, margin) {
+  return { type: "stack", charts, direction: "vertical", margin };
 }
 
 /**
@@ -25,8 +34,8 @@ function estimateMargins(chart) {
     height = 300,
     xAxisPos = "bottom",
     yAxisPos = "left",
-    showXAxisLabel = true,
-    showYAxisLabel = true,
+    showXAxis = true,
+    showYAxis = true,
     xAxisName,
     yAxisName,
     mark,
@@ -91,7 +100,7 @@ function estimateMargins(chart) {
       }
 
       // Render X axis if needed
-      if (xScale && showXAxisLabel) {
+      if (xScale && showXAxis) {
         const xAxisGenerator = xAxisPos === "top" ? d3.axisTop : d3.axisBottom;
         const xAxisGroup = tempSvg
           .append("g")
@@ -121,7 +130,7 @@ function estimateMargins(chart) {
       }
 
       // Render Y axis if needed
-      if (yScale && showYAxisLabel) {
+      if (yScale && showYAxis) {
         const yAxisGenerator =
           yAxisPos === "right" ? d3.axisRight : d3.axisLeft;
         const yAxisGroup = tempSvg
@@ -158,11 +167,11 @@ function estimateMargins(chart) {
   } else {
     // Fallback for non-browser environments (e.g., Node.js)
     // Use simple heuristics
-    if (showXAxisLabel) {
+    if (showXAxis) {
       margin.bottom += 30;
       if (xAxisName) margin.bottom += 20;
     }
-    if (showYAxisLabel) {
+    if (showYAxis) {
       if (yAxisPos === "right") {
         margin.right += 50;
         if (yAxisName) margin.right += 20;

@@ -2,6 +2,7 @@ import { drawBarChart } from "./marks/bar.js";
 import { drawLineChart } from "./marks/line.js";
 import { drawMatrix } from "./marks/matrix.js";
 import { drawScatter } from "./marks/scatter.js";
+import { drawBoxPlot } from "./marks/box.js";
 import { drawAxes } from "./axis.js";
 import * as d3 from "d3";
 
@@ -85,6 +86,8 @@ export function createChart(options) {
         drawMatrix(svg, data, drawOptions);
       } else if (mark === "scatter") {
         axisConfig = drawScatter(svg, data, drawOptions);
+      } else if (mark === "box") {
+        axisConfig = drawBoxPlot(svg, data, drawOptions);
       }
 
       // Draw axes using the config returned by mark renderers
