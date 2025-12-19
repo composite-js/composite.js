@@ -412,6 +412,8 @@ export function composite(charts, { constraints = [] } = {}) {
         .attr("width", totalWidth)
         .attr("height", totalHeight);
 
+      const mainG = svg.append("g").attr("class", "main-layout");
+
       const getPos = (r, c) => {
         let x = 0;
         for (let i = 1; i < c; i++) x += colWidths[i] + gap;
@@ -426,7 +428,7 @@ export function composite(charts, { constraints = [] } = {}) {
         const margin = chartMargins.get(chart);
         const dims = chartDimensions.get(chart);
 
-        const g = svg
+        const g = mainG
           .append("g")
           .attr("class", "chart-layer")
           .attr("transform", `translate(${x}, ${y})`);
@@ -437,6 +439,22 @@ export function composite(charts, { constraints = [] } = {}) {
           height: dims.height,
         });
       });
+
+      // Adjust layout if content exceeds SVG bounds
+      if (typeof mainG.node().getBBox === "function") {
+        const bbox = mainG.node().getBBox();
+        if (bbox.width > 0 && bbox.height > 0) {
+          const scale = Math.min(
+            1,
+            totalWidth / bbox.width,
+            totalHeight / bbox.height,
+          );
+          const tx = -bbox.x * scale + (totalWidth - bbox.width * scale) / 2;
+          const ty = -bbox.y * scale + (totalHeight - bbox.height * scale) / 2;
+
+          mainG.attr("transform", `translate(${tx}, ${ty}) scale(${scale})`);
+        }
+      }
     },
   };
 }
