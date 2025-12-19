@@ -37,7 +37,6 @@ const intersections = data.map((d, i) => ({
   size: d.intersectionSize,
 }));
 
-// Top Bar Chart Data
 const topBarData = intersections.map((d) => ({
   id: d.id,
   size: d.size,

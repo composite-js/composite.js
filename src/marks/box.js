@@ -183,7 +183,6 @@ export function drawBoxPlot(svg, data, options) {
       });
     });
   } else {
-    // Vertical: x is category (band), y is value (linear)
     xScale = d3
       .scaleBand()
       .domain(categories)

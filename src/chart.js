@@ -76,11 +76,11 @@ export function createChart(options) {
         container.appendChild(svg);
       }
 
-      // Validate encoding
+      // Validate encoding (skip for marks that don't use x/y)
       const yField = encoding.y;
       const xField = encoding.x;
 
-      if (!yField || !xField) {
+      if (mark !== "matrix" && (!yField || !xField)) {
         console.warn("Missing encoding configuration for x or y.");
         return;
       }
