@@ -3,6 +3,7 @@ import { drawLineChart } from "./marks/line.js";
 import { drawMatrix } from "./marks/matrix.js";
 import { drawScatter } from "./marks/scatter.js";
 import { drawBoxPlot } from "./marks/box.js";
+import { drawBubbleChart } from "./marks/bubble.js";
 import { drawAxes } from "./axis.js";
 import * as d3 from "d3";
 
@@ -50,6 +51,11 @@ export function createChart(options) {
         ...renderOptions.margin,
       };
 
+      const currentWidth =
+        renderOptions.width !== undefined ? renderOptions.width : width;
+      const currentHeight =
+        renderOptions.height !== undefined ? renderOptions.height : height;
+
       let svg;
       if (container instanceof SVGElement) {
         // Use existing SVG element if provided
@@ -58,8 +64,14 @@ export function createChart(options) {
         // Create new SVG container
         svg = d3
           .create("svg")
-          .attr("width", width + currentMargin.left + currentMargin.right)
-          .attr("height", height + currentMargin.top + currentMargin.bottom)
+          .attr(
+            "width",
+            currentWidth + currentMargin.left + currentMargin.right,
+          )
+          .attr(
+            "height",
+            currentHeight + currentMargin.top + currentMargin.bottom,
+          )
           .node();
         container.appendChild(svg);
       }
@@ -73,7 +85,12 @@ export function createChart(options) {
         return;
       }
 
-      const drawOptions = { ...options, margin: currentMargin };
+      const drawOptions = {
+        ...options,
+        margin: currentMargin,
+        width: currentWidth,
+        height: currentHeight,
+      };
 
       // Dispatch to specific mark renderer and collect axis config
       let axisConfig = null;
@@ -88,6 +105,8 @@ export function createChart(options) {
         axisConfig = drawScatter(svg, data, drawOptions);
       } else if (mark === "box") {
         axisConfig = drawBoxPlot(svg, data, drawOptions);
+      } else if (mark === "bubble") {
+        axisConfig = drawBubbleChart(svg, data, drawOptions);
       }
 
       // Draw axes using the config returned by mark renderers

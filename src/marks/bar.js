@@ -32,6 +32,12 @@ export function drawBarChart(svg, data, options) {
   const chartWidth = width;
   const chartHeight = height;
 
+  // Create a group for the chart content
+  container.selectAll("*").remove();
+  const g = container
+    .append("g")
+    .attr("transform", `translate(${margin.left},${margin.top})`);
+
   if (direction === "horizontal") {
     const maxValue = Math.max(...data.map((d) => d[xField] || 0));
 

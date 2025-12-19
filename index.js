@@ -102,7 +102,6 @@ const topBarChart = createChart({
     x: "id",
     y: "size",
   },
-  width: 600,
   height: 200,
   color: "black", // Black bars
   showLabels: true, // Show numbers on top
@@ -131,8 +130,7 @@ const leftBarChart = createChart({
     x: "size", // Value
     y: "genre", // Category
   },
-  width: 250,
-  height: 300,
+  width: 100,
   direction: "horizontal",
   yAxisPos: "right",
   color: "black",

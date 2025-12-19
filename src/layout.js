@@ -186,6 +186,35 @@ function estimateMargins(chart) {
 }
 
 /**
+ * Suggests dimensions for a chart based on its data and configuration.
+ * @param {Object} chart - The chart object.
+ * @returns {Object} The suggested dimensions {width, height}.
+ */
+function suggestDimensions(chart) {
+  const { data, encoding, mark, direction } = chart.options;
+  const defaultWidth = 400;
+  const defaultHeight = 300;
+
+  if (mark === "bar") {
+    if (direction === "horizontal" && encoding.y) {
+      const uniqueY = new Set(data.map((d) => d[encoding.y])).size;
+      return {
+        width: defaultWidth,
+        height: Math.max(defaultHeight, uniqueY * 20),
+      };
+    } else if (encoding.x) {
+      const uniqueX = new Set(data.map((d) => d[encoding.x])).size;
+      return {
+        width: Math.max(defaultWidth, uniqueX * 20),
+        height: defaultHeight,
+      };
+    }
+  }
+
+  return { width: defaultWidth, height: defaultHeight };
+}
+
+/**
  * Composes multiple charts into a single layout.
  * @param {Array} charts - The list of charts to compose.
  * @param {Object} options - Layout options including constraints.
@@ -242,6 +271,76 @@ export function composite(charts, { constraints = [] } = {}) {
         chartMargins.set(chart, estimateMargins(chart));
       });
 
+      // Infer dimensions
+      const chartDimensions = new Map();
+      charts.forEach((chart) => {
+        let w = chart.options.width;
+        let h = chart.options.height;
+        if (w === undefined || w === -1) w = null;
+        if (h === undefined || h === -1) h = null;
+        chartDimensions.set(chart, { width: w, height: h });
+      });
+
+      let changed = true;
+      while (changed) {
+        changed = false;
+        constraints.forEach((c) => {
+          if (c.type === "stack") {
+            const [c1, c2] = c.charts;
+            const d1 = chartDimensions.get(c1);
+            const d2 = chartDimensions.get(c2);
+            if (!d1 || !d2) return;
+
+            if (c.direction === "vertical") {
+              if (d1.width !== null && d2.width !== null) {
+                if (d1.width !== d2.width) {
+                  throw new Error(
+                    `Chart width mismatch in vertical stack: ${d1.width} vs ${d2.width}`,
+                  );
+                }
+              } else if (d1.width !== null && d2.width === null) {
+                d2.width = d1.width;
+                changed = true;
+              } else if (d1.width === null && d2.width !== null) {
+                d1.width = d2.width;
+                changed = true;
+              }
+            } else if (c.direction === "horizontal") {
+              if (d1.height !== null && d2.height !== null) {
+                if (d1.height !== d2.height) {
+                  throw new Error(
+                    `Chart height mismatch in horizontal stack: ${d1.height} vs ${d2.height}`,
+                  );
+                }
+              } else if (d1.height !== null && d2.height === null) {
+                d2.height = d1.height;
+                changed = true;
+              } else if (d1.height === null && d2.height !== null) {
+                d1.height = d2.height;
+                changed = true;
+              }
+            }
+          }
+        });
+      }
+
+      charts.forEach((chart) => {
+        const dims = chartDimensions.get(chart);
+        if (dims.width === null || dims.height === null) {
+          const suggested = suggestDimensions(chart);
+          if (dims.width === null && dims.height === null) {
+            dims.width = suggested.width;
+            dims.height = suggested.height;
+          } else if (dims.width === null) {
+            const ratio = suggested.width / suggested.height;
+            dims.width = dims.height * ratio;
+          } else if (dims.height === null) {
+            const ratio = suggested.width / suggested.height;
+            dims.height = dims.width / ratio;
+          }
+        }
+      });
+
       for (let i = 0; i < 3; i++) {
         constraints.forEach((c) => {
           if (c.type === "stack") {
@@ -288,8 +387,9 @@ export function composite(charts, { constraints = [] } = {}) {
       charts.forEach((chart) => {
         const { row, col } = coords.get(chart);
         const margin = chartMargins.get(chart);
-        const w = (chart.options.width || 0) + margin.left + margin.right;
-        const h = (chart.options.height || 0) + margin.top + margin.bottom;
+        const dims = chartDimensions.get(chart);
+        const w = dims.width + margin.left + margin.right;
+        const h = dims.height + margin.top + margin.bottom;
 
         if (h > rowHeights[row]) rowHeights[row] = h;
         if (w > colWidths[col]) colWidths[col] = w;
@@ -324,13 +424,18 @@ export function composite(charts, { constraints = [] } = {}) {
         const { row, col } = coords.get(chart);
         const { x, y } = getPos(row, col);
         const margin = chartMargins.get(chart);
+        const dims = chartDimensions.get(chart);
 
         const g = svg
           .append("g")
           .attr("class", "chart-layer")
           .attr("transform", `translate(${x}, ${y})`);
 
-        chart.render(g.node(), { margin });
+        chart.render(g.node(), {
+          margin,
+          width: dims.width,
+          height: dims.height,
+        });
       });
     },
   };

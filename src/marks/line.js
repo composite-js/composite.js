@@ -42,27 +42,23 @@ export function drawLineChart(svg, data, options) {
   const getX = (val) => margin.left + xScale(val);
   const getY = (val) => margin.top + yScale(val);
 
-  // Generate path data
-  let pathD = "";
-  const points = [];
-
   data.forEach((d, i) => {
     const value = d[yField];
     const x = getX(d[xField]);
     const y = getY(value);
     points.push({ x, y, value, label: d[xField] });
-
-    if (i === 0) {
-      pathD += `M ${x} ${y}`;
-    } else {
-      pathD += ` L ${x} ${y}`;
-    }
   });
 
+  // Generate path data
+  const line = d3
+    .line()
+    .x((d) => xScale(d[xField]))
+    .y((d) => yScale(d[yField]));
+
   // Draw line path
-  container
-    .append("path")
-    .attr("d", pathD)
+  g.append("path")
+    .datum(data)
+    .attr("d", line)
     .attr("fill", "none")
     .attr("stroke", "steelblue")
     .attr("stroke-width", "2");
