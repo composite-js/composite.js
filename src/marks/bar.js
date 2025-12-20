@@ -1,6 +1,205 @@
 import * as d3 from "d3";
 
 /**
+ * Renders a stacked bar chart.
+ * @param {SVGElement} svg - The SVG container.
+ * @param {Array} data - The data to render (array of objects with category, value, and stack fields).
+ * @param {Object} options - Chart options.
+ */
+export function drawStackBarChart(svg, data, options) {
+  const {
+    encoding = {},
+    width = 400,
+    height = 300,
+    direction = "vertical", // 'vertical' | 'horizontal'
+    colorScheme = d3.schemeCategory10,
+    showLabels = false,
+    showXAxis = true,
+    showYAxis = true,
+    xAxisName = "",
+    yAxisName = "",
+    xAxisPos = "bottom",
+    yAxisPos = "left",
+    padding = 0.2,
+  } = options;
+
+  const container = d3.select(svg);
+  const categoryField = encoding.y; // Category axis (e.g., genre)
+  const valueField = encoding.x; // Value axis (e.g., size)
+  const stackField = encoding.stack; // Stack field (e.g., type)
+
+  const defaultMargin = { top: 40, right: 40, bottom: 40, left: 40 };
+  const margin = options.margin || defaultMargin;
+
+  const chartWidth = width;
+  const chartHeight = height;
+
+  container.selectAll("*").remove();
+
+  // Get unique categories and stack keys
+  const categories = [...new Set(data.map((d) => d[categoryField]))];
+  const stackKeys = [...new Set(data.map((d) => d[stackField]))];
+
+  // Pivot data: { category: { stackKey1: value1, stackKey2: value2, ... } }
+  const pivotedData = categories.map((cat) => {
+    const entry = { [categoryField]: cat };
+    stackKeys.forEach((key) => {
+      const item = data.find(
+        (d) => d[categoryField] === cat && d[stackField] === key,
+      );
+      entry[key] = item ? item[valueField] : 0;
+    });
+    return entry;
+  });
+
+  // Create stack generator
+  const stack = d3.stack().keys(stackKeys);
+  const stackedData = stack(pivotedData);
+
+  // Calculate max stacked value
+  const maxValue = d3.max(stackedData, (layer) => d3.max(layer, (d) => d[1]));
+
+  // Color scale
+  const colorScale = d3.scaleOrdinal().domain(stackKeys).range(colorScheme);
+
+  if (direction === "horizontal") {
+    // Horizontal stack bar chart
+    const yScale = d3
+      .scaleBand()
+      .domain(categories)
+      .range([0, chartHeight])
+      .padding(padding);
+
+    const reverseX = yAxisPos === "right";
+    const xScale = d3
+      .scaleLinear()
+      .domain([0, maxValue])
+      .range(reverseX ? [chartWidth, 0] : [0, chartWidth]);
+
+    // Draw stacked bars
+    stackedData.forEach((layer) => {
+      const stackKey = layer.key;
+      layer.forEach((d) => {
+        const category = d.data[categoryField];
+        const x0 = xScale(d[0]);
+        const x1 = xScale(d[1]);
+        const barX = reverseX ? Math.min(x0, x1) : Math.min(x0, x1);
+        const barWidth = Math.abs(x1 - x0);
+        const barHeight = yScale.bandwidth();
+        const y = yScale(category);
+
+        const rect = container
+          .append("rect")
+          .attr("x", margin.left + barX)
+          .attr("y", margin.top + y)
+          .attr("width", barWidth)
+          .attr("height", barHeight)
+          .attr("fill", colorScale(stackKey))
+          .on("mouseenter", function () {
+            d3.select(this).attr("opacity", 0.7);
+          })
+          .on("mouseleave", function () {
+            d3.select(this).attr("opacity", 1);
+          });
+
+        rect.append("title").text(`${category} - ${stackKey}: ${d[1] - d[0]}`);
+
+        if (showLabels && barWidth > 20) {
+          container
+            .append("text")
+            .attr("x", margin.left + barX + barWidth / 2)
+            .attr("y", margin.top + y + barHeight / 2 + 4)
+            .attr("text-anchor", "middle")
+            .attr("font-size", "10px")
+            .attr("fill", "white")
+            .text(d[1] - d[0]);
+        }
+      });
+    });
+
+    return {
+      scales: { x: xScale, y: yScale },
+      dimensions: { margin, width: chartWidth, height: chartHeight },
+      axisOptions: {
+        showXAxis,
+        showYAxis,
+        xAxisName,
+        yAxisName,
+        xAxisPos,
+        yAxisPos,
+      },
+    };
+  } else {
+    // Vertical stack bar chart
+    const xScale = d3
+      .scaleBand()
+      .domain(categories)
+      .range([0, chartWidth])
+      .padding(padding);
+
+    const reverseY = yAxisPos === "right";
+    const yScale = d3
+      .scaleLinear()
+      .domain([0, maxValue])
+      .range(reverseY ? [0, chartHeight] : [chartHeight, 0]);
+
+    // Draw stacked bars
+    stackedData.forEach((layer) => {
+      const stackKey = layer.key;
+      layer.forEach((d) => {
+        const category = d.data[categoryField];
+        const y0 = yScale(d[0]);
+        const y1 = yScale(d[1]);
+        const barY = Math.min(y0, y1);
+        const barHeight = Math.abs(y1 - y0);
+        const barWidth = xScale.bandwidth();
+        const x = xScale(category);
+
+        const rect = container
+          .append("rect")
+          .attr("x", margin.left + x)
+          .attr("y", margin.top + barY)
+          .attr("width", barWidth)
+          .attr("height", barHeight)
+          .attr("fill", colorScale(stackKey))
+          .on("mouseenter", function () {
+            d3.select(this).attr("opacity", 0.7);
+          })
+          .on("mouseleave", function () {
+            d3.select(this).attr("opacity", 1);
+          });
+
+        rect.append("title").text(`${category} - ${stackKey}: ${d[1] - d[0]}`);
+
+        if (showLabels && barHeight > 15) {
+          container
+            .append("text")
+            .attr("x", margin.left + x + barWidth / 2)
+            .attr("y", margin.top + barY + barHeight / 2 + 4)
+            .attr("text-anchor", "middle")
+            .attr("font-size", "10px")
+            .attr("fill", "white")
+            .text(d[1] - d[0]);
+        }
+      });
+    });
+
+    return {
+      scales: { x: xScale, y: yScale },
+      dimensions: { margin, width: chartWidth, height: chartHeight },
+      axisOptions: {
+        showXAxis,
+        showYAxis,
+        xAxisName,
+        yAxisName,
+        xAxisPos,
+        yAxisPos,
+      },
+    };
+  }
+}
+
+/**
  * Renders a bar chart.
  * @param {SVGElement} svg - The SVG container.
  * @param {Array} data - The data to render.

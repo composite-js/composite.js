@@ -1,4 +1,4 @@
-import { drawBarChart } from "./marks/bar.js";
+import { drawBarChart, drawStackBarChart } from "./marks/bar.js";
 import { drawLineChart } from "./marks/line.js";
 import { drawMatrix } from "./marks/matrix.js";
 import { drawScatter } from "./marks/scatter.js";
@@ -107,6 +107,8 @@ export function createChart(options) {
         axisConfig = drawBoxPlot(svg, data, drawOptions);
       } else if (mark === "bubble") {
         axisConfig = drawBubbleChart(svg, data, drawOptions);
+      } else if (mark === "stackbar") {
+        axisConfig = drawStackBarChart(svg, data, drawOptions);
       }
 
       // Draw axes using the config returned by mark renderers

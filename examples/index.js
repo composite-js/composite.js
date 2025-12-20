@@ -74,6 +74,19 @@ genres.forEach((genre) => {
   }
 });
 
+// Stack Bar Chart Data
+const stackBarData = [];
+const types = ["Type A", "Type B", "Type C"];
+genres.forEach((genre) => {
+  types.forEach((type) => {
+    stackBarData.push({
+      genre: genre,
+      type: type,
+      count: Math.floor(Math.random() * 20) + 5,
+    });
+  });
+});
+
 const app = document.getElementById("app");
 
 // 1. Top Bar Chart (Intersection Size)
@@ -137,13 +150,30 @@ const boxChart = createChart({
   showYAxis: false,
 });
 
+// 5. Horizontal Stack Bar Chart (right of box plot)
+const stackBarChart = createChart({
+  data: stackBarData,
+  mark: "stackbar",
+  encoding: {
+    x: "count",
+    y: "genre",
+    stack: "type",
+  },
+  width: 150,
+  direction: "horizontal",
+  showLabels: false,
+  xAxisName: "Count",
+  showYAxis: false,
+});
+
 const myComposite = composite(
-  [topBarChart, leftBarChart, matrixChart, boxChart],
+  [topBarChart, leftBarChart, matrixChart, boxChart, stackBarChart],
   {
     constraints: [
       stackY([topBarChart, matrixChart]), // Top Bar above Matrix
       stackX([leftBarChart, matrixChart]), // Left Bar left of Matrix
       stackX([matrixChart, boxChart]), // Box Plot right of Matrix
+      stackX([boxChart, stackBarChart]), // Stack Bar right of Box Plot
     ],
   },
 );
