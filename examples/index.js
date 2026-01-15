@@ -1,5 +1,5 @@
-import { createChart } from "../src/chart.js";
-import { composite, stackX, stackY } from "../src/layout.js";
+import { Chart } from "../src/chart.js";
+import { stackX, stackY, RepeatX } from "../src/layout.js";
 
 const data = [
   { sets: ["Drama"], intersectionSize: 20, setSize: 45 },
@@ -90,7 +90,7 @@ genres.forEach((genre) => {
 const app = document.getElementById("app");
 
 // 1. Top Bar Chart (Intersection Size)
-const topBarChart = createChart({
+const topBarChart = new Chart({
   data: topBarData,
   mark: "bar",
   encoding: {
@@ -104,7 +104,7 @@ const topBarChart = createChart({
 });
 
 // 2. Matrix (Intersections)
-const matrixChart = createChart({
+const matrixChart = new Chart({
   data: intersections,
   mark: "matrix",
   encoding: {
@@ -118,7 +118,7 @@ const matrixChart = createChart({
 });
 
 // 3. Left Bar Chart (Set Size)
-const leftBarChart = createChart({
+const leftBarChart = new Chart({
   data: setSizeData,
   mark: "bar",
   encoding: {
@@ -132,10 +132,11 @@ const leftBarChart = createChart({
   showLabels: true,
   showXAxis: false,
   yAxisName: "Set Size",
+  paddingInner: 0.3,
 });
 
 // 4. Box Plot (right of matrix)
-const boxChart = createChart({
+const boxChart = new Chart({
   data: boxData,
   mark: "box",
   encoding: {
@@ -151,7 +152,7 @@ const boxChart = createChart({
 });
 
 // 5. Horizontal Stack Bar Chart (right of box plot)
-const stackBarChart = createChart({
+const stackBarChart = new Chart({
   data: stackBarData,
   mark: "stackbar",
   encoding: {
@@ -166,16 +167,38 @@ const stackBarChart = createChart({
   showYAxis: false,
 });
 
-const myComposite = composite(
-  [topBarChart, leftBarChart, matrixChart, boxChart, stackBarChart],
-  {
-    constraints: [
-      stackY([topBarChart, matrixChart]), // Top Bar above Matrix
-      stackX([leftBarChart, matrixChart]), // Left Bar left of Matrix
-      stackX([matrixChart, boxChart]), // Box Plot right of Matrix
-      stackX([boxChart, stackBarChart]), // Stack Bar right of Box Plot
-    ],
+// 6. Pie Chart Row (below Matrix)
+// Create fake data for pie charts
+const pieDataMap = {};
+intersections.forEach((d) => {
+  pieDataMap[d.id] = [
+    { category: "A", value: Math.random() * 10 },
+    { category: "B", value: Math.random() * 10 },
+    { category: "C", value: Math.random() * 10 },
+  ];
+});
+
+const pieRow = new RepeatX(
+  intersections.map((d) => d.id),
+  (id) => {
+    return new Chart({
+      data: pieDataMap[id],
+      mark: "pie",
+      encoding: {
+        y: "value",
+        color: "category",
+      },
+      width: 40,
+      height: 40,
+      showLabels: false,
+    });
   },
 );
 
-myComposite.render(app);
+const composite = stackX([leftBarChart, matrixChart, boxChart, stackBarChart]);
+const final = stackY([topBarChart, composite, pieRow], {
+  align: [null, matrixChart, null],
+});
+
+// composite.render(app);
+final.render(app);

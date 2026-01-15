@@ -1,50 +1,328 @@
 import * as d3 from "d3";
+import { Chart } from "./chart";
 
 /**
- * Creates a horizontal stack constraint between two charts.
- * @param {Array} charts - The two charts to stack.
- * @param {number} margin - The margin between the stacked charts.
- * @returns {Object} The stack constraint object.
+ * Base class for layout nodes (charts, compositions, repeats).
  */
-export function stackX(charts, margin) {
-  return { type: "stack", charts, direction: "horizontal", margin };
+export class Node {
+  constructor() {
+    this.bbox = { x: 0, y: 0, width: 0, height: 0 };
+    this.margin = { top: 0, right: 0, bottom: 0, left: 0 };
+  }
+
+  /**
+   * Checks if a node is a composition.
+   * @param {Node} node - The node to check.
+   * @returns {boolean} True if the node is a composition.
+   */
+  static isComposition(node) {
+    return node instanceof Composition;
+  }
+
+  /**
+   * Renders the layout node.
+   * @param {HTMLElement} container - The container element.
+   */
+  render(container) {
+    throw new Error("render method must be implemented by subclass");
+  }
 }
 
 /**
- * Creates a vertical stack constraint between two charts.
- * @param {Array} charts - The two charts to stack.
- * @param {number} margin - The margin between the stacked charts.
- * @returns {Object} The stack constraint object.
+ * Base class for all compositions (Stack, Repeat, etc.)
  */
-export function stackY(charts, margin) {
-  return { type: "stack", charts, direction: "vertical", margin };
+export class Composition extends Node {
+  constructor() {
+    super();
+    this.classTag = ""; // to identify composition type name, stated by subclass
+  }
 }
 
 /**
- * Calculates the margins required for a chart by actually rendering axes
- * and measuring their bounding boxes.
- * @param {Object} chart - The chart object.
- * @returns {Object} The calculated margins {top, right, bottom, left}.
+ * Stack class for stacking charts (formerly Composition).
  */
-function estimateMargins(chart) {
-  const {
-    data,
-    encoding,
-    width = 400,
-    height = 300,
-    xAxisPos = "bottom",
-    yAxisPos = "left",
-    showXAxis = true,
-    showYAxis = true,
-    xAxisName,
-    yAxisName,
-    mark,
-  } = chart.options;
+export class Stack extends Composition {
+  /**
+   * Creates an instance of Stack.
+   * @param {Array} charts - Array of chart instances.
+   * @param {string} direction - Stacking direction ('horizontal' | 'vertical').
+   * @param {Object} options - Composition options.
+   */
+  constructor(charts, direction, options = {}) {
+    super();
+    this.children = charts;
+    this.direction = direction;
+    this.internalConstraints = [];
+    this.isStack = true;
+    this.type = "stack";
+    this.classTag = direction === "horizontal" ? "stackX" : "stackY";
 
-  const margin = { top: 10, right: 10, bottom: 10, left: 10 };
+    let margin = undefined;
+    let align = [];
 
-  // If running in browser environment, render axes to measure actual bounds
-  if (typeof document !== "undefined") {
+    options = options || {};
+    margin = options.margin || 0;
+    align = options.align || [];
+
+    let alignedCharts = [];
+
+    for (let i = 0; i < charts.length; i++) {
+      const alignedChart =
+        align[i] !== undefined && align[i] !== null ? align[i] : charts[i];
+
+      if (
+        !(alignedChart instanceof Chart) &&
+        !(alignedChart instanceof Repeat)
+      ) {
+        throw new Error("Alignment targets must be charts or repeats");
+      }
+
+      alignedCharts.push(alignedChart);
+    }
+
+    this._syncPadding(alignedCharts, direction);
+
+    for (let i = 0; i < charts.length - 1; i++) {
+      const c1 = alignedCharts[i];
+      const c2 = alignedCharts[i + 1];
+      this.internalConstraints.push({
+        type: "stack",
+        charts: [c1, c2],
+        direction,
+        margin: margin,
+      });
+    }
+  }
+
+  /**
+   * Gets all charts from a node (flattening compositions).
+   * @private
+   */
+  _getAllCharts(node) {
+    if (node instanceof Stack) {
+      return node.flatten().charts;
+    }
+    return [node];
+  }
+
+  /**
+   * Synchronizes padding across charts.
+   * @private
+   */
+  _syncPadding(charts, direction) {
+    console.log(charts);
+    // TODO: implement this!!!
+  }
+
+  /**
+   * Flattens the composition tree.
+   * @returns {Object} Object with charts and constraints arrays.
+   */
+  flatten() {
+    let allCharts = [];
+    let allConstraints = [...this.internalConstraints];
+
+    this.children.forEach((c) => {
+      if (c instanceof Stack) {
+        const res = c.flatten();
+        allCharts.push(...res.charts);
+        allConstraints.push(...res.constraints);
+      } else {
+        allCharts.push(c);
+      }
+    });
+
+    return { charts: [...new Set(allCharts)], constraints: allConstraints };
+  }
+
+  /**
+   * Renders the composition.
+   * @param {HTMLElement} container - The container element.
+   */
+  render(container) {
+    if (container.innerHTML) container.innerHTML = "";
+    LayoutEngine.layout(this, container);
+  }
+}
+
+/**
+ * Creates a horizontal composition of charts.
+ * @param {Array} charts - Array of chart instances.
+ * @param {Object} options - Composition options.
+ * @returns {Stack} A Stack instance.
+ */
+export function stackX(charts, options) {
+  return new Stack(charts, "horizontal", options);
+}
+
+/**
+ * Creates a vertical composition of charts.
+ * @param {Array} charts - Array of chart instances.
+ * @param {Object} options - Composition options.
+ * @returns {Stack} A Stack instance.
+ */
+export function stackY(charts, options) {
+  return new Stack(charts, "vertical", options);
+}
+
+/**
+ * Base class for repeat compositions.
+ */
+export class Repeat extends Composition {
+  /**
+   * Creates an instance of Repeat.
+   * @param {Array} domain - The list of categorical values.
+   * @param {Function} func - A function that takes a value and returns a chart.
+   * @param {Object} options - Repeat options { paddingInner, paddingOuter }.
+   */
+  constructor(domain, func, options = {}) {
+    super();
+    this.isRepeat = true;
+    this.type = "repeat";
+    this.domain = domain || [];
+    this.func = func;
+    this.paddingInner =
+      options.paddingInner !== undefined ? options.paddingInner : 0.1;
+    this.paddingOuter =
+      options.paddingOuter !== undefined ? options.paddingOuter : 0.1;
+
+    this.options = {
+      paddingInner: this.paddingInner,
+      paddingOuter: this.paddingOuter,
+      margin: { top: 0, right: 0, bottom: 0, left: 0 },
+    };
+
+    // no `render()` method here; implemented in subclasses
+  }
+}
+
+/**
+ * RepeatX class for horizontal repetition.
+ */
+export class RepeatX extends Repeat {
+  /**
+   * Creates an instance of RepeatX.
+   * @param {Array} domain - The list of categorical values.
+   * @param {Function} func - A function that takes a value and returns a chart.
+   * @param {Object} options - Repeat options { paddingInner, paddingOuter }.
+   */
+  constructor(domain, func, options = {}) {
+    super(domain, func, options);
+    this.classTag = "repeatX";
+  }
+
+  /**
+   * Renders the repeated charts.
+   * @param {HTMLElement} container - The container element.
+   * @param {Object} renderOptions - Render options { width, height }.
+   */
+  render(container, renderOptions = {}) {
+    if (!this.domain || this.domain.length === 0) {
+      if (container.innerHTML) container.innerHTML = "";
+      return;
+    }
+
+    const { width = 400, height = 300 } = renderOptions;
+    if (container.innerHTML) container.innerHTML = "";
+    const gParent = d3.select(container);
+
+    const xScale = d3
+      .scaleBand()
+      .domain(this.domain)
+      .range([0, width])
+      .paddingInner(this.paddingInner)
+      .paddingOuter(this.paddingOuter);
+
+    const bandwidth = xScale.bandwidth();
+
+    this.domain.forEach((value) => {
+      const chart = this.func(value);
+      const g = gParent
+        .append("g")
+        .attr("transform", `translate(${xScale(value)}, 0)`);
+
+      chart.render(g.node(), { width: bandwidth, height: height });
+    });
+  }
+}
+
+/**
+ * RepeatY class for vertical repetition.
+ */
+export class RepeatY extends Repeat {
+  /**
+   * Creates an instance of RepeatY.
+   * @param {Array} domain - The list of categorical values.
+   * @param {Function} func - A function that takes a value and returns a chart.
+   * @param {Object} options - Repeat options { paddingInner, paddingOuter }.
+   */
+  constructor(domain, func, options = {}) {
+    super(domain, func, options);
+    this.classTag = "repeatY";
+  }
+
+  /**
+   * Renders the repeated charts.
+   * @param {HTMLElement} container - The container element.
+   * @param {Object} renderOptions - Render options { width, height }.
+   */
+  render(container, renderOptions = {}) {
+    if (!this.domain || this.domain.length === 0) {
+      if (container.innerHTML) container.innerHTML = "";
+      return;
+    }
+
+    const { width = 400, height = 300 } = renderOptions;
+    if (container.innerHTML) container.innerHTML = "";
+    const gParent = d3.select(container);
+
+    const yScale = d3
+      .scaleBand()
+      .domain(this.domain)
+      .range([0, height])
+      .paddingInner(this.paddingInner)
+      .paddingOuter(this.paddingOuter);
+
+    const bandwidth = yScale.bandwidth();
+
+    this.domain.forEach((value) => {
+      const chart = this.func(value);
+      const g = gParent
+        .append("g")
+        .attr("transform", `translate(0, ${yScale(value)})`);
+
+      chart.render(g.node(), { width: width, height: bandwidth });
+    });
+  }
+}
+
+/**
+ * Layout calculator utility class.
+ */
+export class LayoutCalculator {
+  /**
+   * Calculates the margins required for a chart by actually rendering axes
+   * and measuring their bounding boxes.
+   * @param {Object} chart - The chart object.
+   * @returns {Object} The calculated margins {top, right, bottom, left}.
+   */
+  static estimateMargins(chart) {
+    const {
+      data,
+      encoding,
+      width = 400,
+      height = 300,
+      xAxisPos = "bottom",
+      yAxisPos = "left",
+      showXAxis = true,
+      showYAxis = true,
+      xAxisName,
+      yAxisName,
+      mark,
+    } = chart.options;
+
+    const margin = { top: 10, right: 10, bottom: 10, left: 10 };
+
     // Create temporary SVG for measurement
     const tempSvg = d3
       .create("svg")
@@ -54,13 +332,12 @@ function estimateMargins(chart) {
     // Create scales based on data
     let xScale, yScale;
 
-    if (encoding.x && encoding.y) {
+    if (encoding?.x && encoding?.y) {
       const xField = encoding.x;
       const yField = encoding.y;
 
       // Determine scale types based on data and mark type
       if (mark === "bar") {
-        // For bar charts, typically one axis is band scale
         const xValues = data.map((d) => d[xField]);
         const yValues = data.map((d) => d[yField]);
 
@@ -90,12 +367,10 @@ function estimateMargins(chart) {
             .range([height, 0]);
         }
       } else {
-        // For other marks (line, scatter, etc.)
         const xValues = data.map((d) => d[xField]);
         const yValues = data.map((d) => d[yField]);
 
         xScale = d3.scaleLinear().domain(d3.extent(xValues)).range([0, width]);
-
         yScale = d3.scaleLinear().domain(d3.extent(yValues)).range([height, 0]);
       }
 
@@ -111,7 +386,6 @@ function estimateMargins(chart) {
           )
           .call(xAxisGenerator(xScale));
 
-        // Measure X axis bounds
         const xAxisBBox = xAxisGroup.node().getBBox();
 
         if (xAxisPos === "top") {
@@ -123,7 +397,6 @@ function estimateMargins(chart) {
           margin.bottom = Math.max(margin.bottom, xAxisBBox.height + 5);
         }
 
-        // Add space for X axis label if present
         if (xAxisName) {
           margin.bottom += 20;
         }
@@ -142,7 +415,6 @@ function estimateMargins(chart) {
           )
           .call(yAxisGenerator(yScale));
 
-        // Measure Y axis bounds
         const yAxisBBox = yAxisGroup.node().getBBox();
 
         if (yAxisPos === "right") {
@@ -154,7 +426,6 @@ function estimateMargins(chart) {
           );
         }
 
-        // Add space for Y axis label if present
         if (yAxisName) {
           if (yAxisPos === "right") {
             margin.right += 20;
@@ -164,297 +435,284 @@ function estimateMargins(chart) {
         }
       }
     }
-  } else {
-    // Fallback for non-browser environments (e.g., Node.js)
-    // Use simple heuristics
-    if (showXAxis) {
-      margin.bottom += 30;
-      if (xAxisName) margin.bottom += 20;
+
+    return margin;
+  }
+
+  /**
+   * Suggests width & height for a chart based on its data and configuration.
+   * @param {Object} chart - The chart object.
+   * @returns {Object} The suggested dimensions {width, height}.
+   */
+  static suggestWidthHeight(chart) {
+    const { data, encoding, mark, direction } = chart.options;
+    const defaultWidth = 400;
+    const defaultHeight = 300;
+
+    if (chart.isRepeat) {
+      return { width: defaultWidth, height: defaultHeight };
     }
-    if (showYAxis) {
-      if (yAxisPos === "right") {
-        margin.right += 50;
-        if (yAxisName) margin.right += 20;
+
+    if (mark === "bar") {
+      if (direction === "horizontal" && encoding.y) {
+        const uniqueY = new Set(data.map((d) => d[encoding.y])).size;
+        return {
+          width: defaultWidth,
+          height: Math.max(defaultHeight, uniqueY * 20),
+        };
+      } else if (encoding.x) {
+        const uniqueX = new Set(data.map((d) => d[encoding.x])).size;
+        return {
+          width: Math.max(defaultWidth, uniqueX * 20),
+          height: defaultHeight,
+        };
+      }
+    }
+
+    return { width: defaultWidth, height: defaultHeight };
+  }
+}
+
+/**
+ * Layout engine for computing and rendering layouts.
+ */
+export class LayoutEngine {
+  /**
+   * Helper to find the relative layout position of a target node within a computed tree.
+   * @param {Object} computedNode - The current computed node to search within.
+   * @param {Node} targetNode - The target node to find.
+   * @returns {Object|null} The layout box {x, y, width, height} relative to computedNode, or null.
+   */
+  static findNodeLayout(computedNode, targetNode) {
+    if (computedNode.node === targetNode) {
+      return computedNode.layoutBox
+        ? { ...computedNode.layoutBox }
+        : {
+            x: 0,
+            y: 0,
+            width: computedNode.width,
+            height: computedNode.height,
+          };
+    }
+
+    if (computedNode.children) {
+      for (const child of computedNode.children) {
+        const res = this.findNodeLayout(child, targetNode);
+        if (res) {
+          return {
+            x: (child.x || 0) + res.x,
+            y: (child.y || 0) + res.y,
+            width: res.width,
+            height: res.height,
+          };
+        }
+      }
+    }
+    return null;
+  }
+
+  /**
+   * Recursively computes the dimensions and positions of the layout tree.
+   * @param {Node} node - The layout node.
+   * @returns {Object} Computed layout node with dimensions and children positions.
+   */
+  static computeLayout(node) {
+    if (node instanceof Stack) {
+      const childrenNodes = node.children.map((child) =>
+        this.computeLayout(child),
+      );
+
+      // Initialize children positions
+      childrenNodes.forEach((c) => {
+        c.x = 0;
+        c.y = 0;
+      });
+
+      const constraints = node.internalConstraints || [];
+      const isVertical = node.direction === "vertical";
+
+      // 1. Stack along main axis with gaps
+      let currentPos = 0;
+      for (let i = 0; i < childrenNodes.length; i++) {
+        const child = childrenNodes[i];
+        if (isVertical) {
+          child.y = currentPos;
+        } else {
+          child.x = currentPos;
+        }
+
+        // Determine gap after this child
+        let gap = 0;
+        // Check constraint associated with this gap (between i and i+1)
+        if (i < childrenNodes.length - 1) {
+          const constraint = constraints[i];
+          if (constraint && constraint.margin !== undefined) {
+            gap = constraint.margin;
+          }
+        }
+
+        if (isVertical) {
+          currentPos += child.height + gap;
+        } else {
+          currentPos += child.width + gap;
+        }
+      }
+
+      // 2. Align along cross axis using constraints
+      // Propagate alignment offsets
+      for (let i = 0; i < childrenNodes.length - 1; i++) {
+        const constraint = constraints[i];
+        if (!constraint) continue;
+
+        const [t1, t2] = constraint.charts;
+        // Find layout relative to the respective child root
+        const layout1 = this.findNodeLayout(childrenNodes[i], t1);
+        const layout2 = this.findNodeLayout(childrenNodes[i + 1], t2);
+
+        if (layout1 && layout2) {
+          if (isVertical) {
+            // Align Horizontally (X)
+            // We want child[i].x + layout1.x === child[i+1].x + layout2.x
+            // child[i+1].x = child[i].x + layout1.x - layout2.x
+            const diff = layout1.x - layout2.x;
+            childrenNodes[i + 1].x = childrenNodes[i].x + diff;
+          } else {
+            // Align Vertically (Y)
+            const diff = layout1.y - layout2.y;
+            childrenNodes[i + 1].y = childrenNodes[i].y + diff;
+          }
+        }
+      }
+
+      // 3. Normalize cross axis positions (start at 0)
+      if (isVertical) {
+        const minX = Math.min(...childrenNodes.map((c) => c.x));
+        childrenNodes.forEach((c) => (c.x -= minX));
       } else {
-        margin.left += 50;
-        if (yAxisName) margin.left += 20;
+        const minY = Math.min(...childrenNodes.map((c) => c.y));
+        childrenNodes.forEach((c) => (c.y -= minY));
       }
+
+      // 4. Compute total bounding box
+      let totalW = 0;
+      let totalH = 0;
+
+      if (isVertical) {
+        // Vertical stack: Width is max of (child.x + child.width)
+        // Height is determined by the last child's bottom
+        totalW = childrenNodes.reduce(
+          (max, c) => Math.max(max, c.x + c.width),
+          0,
+        );
+        const last = childrenNodes[childrenNodes.length - 1];
+        totalH = last.y + last.height;
+      } else {
+        // Horizontal stack: Height is max of (child.y + child.height)
+        // Width is determined by last child's right
+        const last = childrenNodes[childrenNodes.length - 1];
+        totalW = last.x + last.width;
+        totalH = childrenNodes.reduce(
+          (max, c) => Math.max(max, c.y + c.height),
+          0,
+        );
+      }
+
+      node.bbox = { x: 0, y: 0, width: totalW, height: totalH };
+      node.margin = { top: 0, right: 0, bottom: 0, left: 0 };
+
+      return {
+        type: "composition",
+        node,
+        width: totalW,
+        height: totalH,
+        children: childrenNodes,
+        // For compositions, we don't usually define a "layoutBox" (content box)
+        // unless we want outer stacks to align to this stack as a whole block.
+      };
+    } else {
+      const margins = LayoutCalculator.estimateMargins(node);
+      let w = node.options.width;
+      let h = node.options.height;
+
+      if (w === undefined || h === undefined) {
+        const suggested = LayoutCalculator.suggestWidthHeight(node);
+        if (w === undefined) w = suggested.width;
+        if (h === undefined) h = suggested.height;
+      }
+
+      node.bbox = { x: margins.left, y: margins.top, width: w, height: h };
+      node.margin = margins;
+
+      return {
+        type: "leaf",
+        node,
+        width: w + margins.left + margins.right,
+        height: h + margins.top + margins.bottom,
+        innerWidth: w,
+        innerHeight: h,
+        margins,
+        layoutBox: {
+          x: margins.left,
+          y: margins.top,
+          width: w,
+          height: h,
+        },
+      };
     }
   }
 
-  return margin;
-}
+  /**
+   * Recursively renders the layout tree.
+   * @param {Object} computedNode - The computed layout node.
+   * @param {d3.Selection} container - The SVG container selection.
+   * @param {number} x - X position.
+   * @param {number} y - Y position.
+   */
+  static renderTree(computedNode, container, x, y) {
+    if (computedNode.type === "leaf") {
+      const { margins, innerWidth, innerHeight, node } = computedNode;
+      const g = container
+        .append("g")
+        .attr("class", node.classTag || "leaf")
+        .attr(
+          "transform",
+          `translate(${x + margins.left}, ${y + margins.top})`,
+        );
 
-/**
- * Suggests dimensions for a chart based on its data and configuration.
- * @param {Object} chart - The chart object.
- * @returns {Object} The suggested dimensions {width, height}.
- */
-function suggestDimensions(chart) {
-  const { data, encoding, mark, direction } = chart.options;
-  const defaultWidth = 400;
-  const defaultHeight = 300;
+      node.render(g.node(), {
+        width: innerWidth,
+        height: innerHeight,
+        margin: margins,
+      });
+    } else {
+      const { node } = computedNode;
+      const group = container
+        .append("g")
+        .attr("class", `${node.classTag}`)
+        .attr("transform", `translate(${x}, ${y})`);
 
-  if (mark === "bar") {
-    if (direction === "horizontal" && encoding.y) {
-      const uniqueY = new Set(data.map((d) => d[encoding.y])).size;
-      return {
-        width: defaultWidth,
-        height: Math.max(defaultHeight, uniqueY * 20),
-      };
-    } else if (encoding.x) {
-      const uniqueX = new Set(data.map((d) => d[encoding.x])).size;
-      return {
-        width: Math.max(defaultWidth, uniqueX * 20),
-        height: defaultHeight,
-      };
+      computedNode.children.forEach((child) => {
+        this.renderTree(child, group, child.x, child.y);
+      });
     }
   }
 
-  return { width: defaultWidth, height: defaultHeight };
-}
+  /**
+   * Composes multiple charts into a single layout.
+   * @param {Node} root - The root composition node.
+   * @param {HTMLElement} container - The container element.
+   */
+  static layout(root, container) {
+    container.innerHTML = "";
 
-/**
- * Composes multiple charts into a single layout.
- * @param {Array} charts - The list of charts to compose.
- * @param {Object} options - Layout options including constraints.
- * @returns {Object} An object with a render method.
- */
-export function composite(charts, { constraints = [] } = {}) {
-  return {
-    render(container) {
-      // Initialize grid coordinates
-      const coords = new Map();
-      charts.forEach((chart) => coords.set(chart, { row: 0, col: 0 }));
+    const computedTree = this.computeLayout(root);
 
-      // Resolve constraints to determine relative positions
-      for (let i = 0; i < charts.length; i++) {
-        constraints.forEach((c) => {
-          if (c.type === "stack") {
-            const [c1, c2] = c.charts;
-            const p1 = coords.get(c1);
-            const p2 = coords.get(c2);
+    const svg = d3
+      .select(container)
+      .append("svg")
+      .attr("width", computedTree.width)
+      .attr("height", computedTree.height);
 
-            if (!p1 || !p2) return;
-
-            if (c.direction === "vertical") {
-              p1.row = p2.row - 1;
-              p1.col = p2.col;
-            } else if (c.direction === "horizontal") {
-              p1.col = p2.col - 1;
-              p1.row = p2.row;
-            }
-          }
-        });
-      }
-
-      // Normalize coordinates to be 1-based and positive
-      let minRow = Infinity,
-        minCol = Infinity;
-      coords.forEach((p) => {
-        if (p.row < minRow) minRow = p.row;
-        if (p.col < minCol) minCol = p.col;
-      });
-
-      let maxRow = 0,
-        maxCol = 0;
-      coords.forEach((p) => {
-        p.row = p.row - minRow + 1;
-        p.col = p.col - minCol + 1;
-        if (p.row > maxRow) maxRow = p.row;
-        if (p.col > maxCol) maxCol = p.col;
-      });
-
-      // Calculate and propagate margins
-      const chartMargins = new Map();
-      charts.forEach((chart) => {
-        chartMargins.set(chart, estimateMargins(chart));
-      });
-
-      // Infer dimensions
-      const chartDimensions = new Map();
-      charts.forEach((chart) => {
-        let w = chart.options.width;
-        let h = chart.options.height;
-        if (w === undefined || w === -1) w = null;
-        if (h === undefined || h === -1) h = null;
-        chartDimensions.set(chart, { width: w, height: h });
-      });
-
-      let changed = true;
-      while (changed) {
-        changed = false;
-        constraints.forEach((c) => {
-          if (c.type === "stack") {
-            const [c1, c2] = c.charts;
-            const d1 = chartDimensions.get(c1);
-            const d2 = chartDimensions.get(c2);
-            if (!d1 || !d2) return;
-
-            if (c.direction === "vertical") {
-              if (d1.width !== null && d2.width !== null) {
-                if (d1.width !== d2.width) {
-                  throw new Error(
-                    `Chart width mismatch in vertical stack: ${d1.width} vs ${d2.width}`,
-                  );
-                }
-              } else if (d1.width !== null && d2.width === null) {
-                d2.width = d1.width;
-                changed = true;
-              } else if (d1.width === null && d2.width !== null) {
-                d1.width = d2.width;
-                changed = true;
-              }
-            } else if (c.direction === "horizontal") {
-              if (d1.height !== null && d2.height !== null) {
-                if (d1.height !== d2.height) {
-                  throw new Error(
-                    `Chart height mismatch in horizontal stack: ${d1.height} vs ${d2.height}`,
-                  );
-                }
-              } else if (d1.height !== null && d2.height === null) {
-                d2.height = d1.height;
-                changed = true;
-              } else if (d1.height === null && d2.height !== null) {
-                d1.height = d2.height;
-                changed = true;
-              }
-            }
-          }
-        });
-      }
-
-      charts.forEach((chart) => {
-        const dims = chartDimensions.get(chart);
-        if (dims.width === null || dims.height === null) {
-          const suggested = suggestDimensions(chart);
-          if (dims.width === null && dims.height === null) {
-            dims.width = suggested.width;
-            dims.height = suggested.height;
-          } else if (dims.width === null) {
-            const ratio = suggested.width / suggested.height;
-            dims.width = dims.height * ratio;
-          } else if (dims.height === null) {
-            const ratio = suggested.width / suggested.height;
-            dims.height = dims.width / ratio;
-          }
-        }
-      });
-
-      for (let i = 0; i < 3; i++) {
-        constraints.forEach((c) => {
-          if (c.type === "stack") {
-            const [c1, c2] = c.charts;
-            const m1 = chartMargins.get(c1);
-            const m2 = chartMargins.get(c2);
-
-            if (!m1 || !m2) return;
-
-            if (c.direction === "vertical") {
-              const maxLeft = Math.max(m1.left, m2.left);
-              const maxRight = Math.max(m1.right, m2.right);
-              m1.left = m2.left = maxLeft;
-              m1.right = m2.right = maxRight;
-            } else if (c.direction === "horizontal") {
-              const maxTop = Math.max(m1.top, m2.top);
-              const maxBottom = Math.max(m1.bottom, m2.bottom);
-              m1.top = m2.top = maxTop;
-              m1.bottom = m2.bottom = maxBottom;
-            }
-          }
-        });
-      }
-
-      // Apply specific margin overrides from constraints
-      constraints.forEach((c) => {
-        if (c.type === "stack" && c.margin !== undefined) {
-          const [c1, c2] = c.charts;
-          const m = c.margin;
-          if (c.direction === "vertical") {
-            const m1 = chartMargins.get(c1);
-            if (m1) m1.bottom = m;
-          } else if (c.direction === "horizontal") {
-            const m1 = chartMargins.get(c1);
-            if (m1) m1.right = m;
-          }
-        }
-      });
-
-      // Determine grid dimensions (row heights and column widths)
-      const rowHeights = new Array(maxRow + 1).fill(0);
-      const colWidths = new Array(maxCol + 1).fill(0);
-
-      charts.forEach((chart) => {
-        const { row, col } = coords.get(chart);
-        const margin = chartMargins.get(chart);
-        const dims = chartDimensions.get(chart);
-        const w = dims.width + margin.left + margin.right;
-        const h = dims.height + margin.top + margin.bottom;
-
-        if (h > rowHeights[row]) rowHeights[row] = h;
-        if (w > colWidths[col]) colWidths[col] = w;
-      });
-
-      // Render SVG and charts
-      container.innerHTML = "";
-      const gap = 10;
-
-      const totalWidth =
-        colWidths.slice(1).reduce((sum, w) => sum + w, 0) +
-        Math.max(0, maxCol - 1) * gap;
-      const totalHeight =
-        rowHeights.slice(1).reduce((sum, h) => sum + h, 0) +
-        Math.max(0, maxRow - 1) * gap;
-
-      const svg = d3
-        .select(container)
-        .append("svg")
-        .attr("width", totalWidth)
-        .attr("height", totalHeight);
-
-      const mainG = svg.append("g").attr("class", "main-layout");
-
-      const getPos = (r, c) => {
-        let x = 0;
-        for (let i = 1; i < c; i++) x += colWidths[i] + gap;
-        let y = 0;
-        for (let i = 1; i < r; i++) y += rowHeights[i] + gap;
-        return { x, y };
-      };
-
-      charts.forEach((chart) => {
-        const { row, col } = coords.get(chart);
-        const { x, y } = getPos(row, col);
-        const margin = chartMargins.get(chart);
-        const dims = chartDimensions.get(chart);
-
-        const g = mainG
-          .append("g")
-          .attr("class", "chart-layer")
-          .attr("transform", `translate(${x}, ${y})`);
-
-        chart.render(g.node(), {
-          margin,
-          width: dims.width,
-          height: dims.height,
-        });
-      });
-
-      // Adjust layout if content exceeds SVG bounds
-      if (typeof mainG.node().getBBox === "function") {
-        const bbox = mainG.node().getBBox();
-        if (bbox.width > 0 && bbox.height > 0) {
-          const scale = Math.min(
-            1,
-            totalWidth / bbox.width,
-            totalHeight / bbox.height,
-          );
-          const tx = -bbox.x * scale + (totalWidth - bbox.width * scale) / 2;
-          const ty = -bbox.y * scale + (totalHeight - bbox.height * scale) / 2;
-
-          mainG.attr("transform", `translate(${tx}, ${ty}) scale(${scale})`);
-        }
-      }
-    },
-  };
+    this.renderTree(computedTree, svg, 0, 0);
+  }
 }

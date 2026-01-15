@@ -1,89 +1,104 @@
 import * as d3 from "d3";
+import { MarkRenderer } from "./mark.js";
 
 /**
- * Renders a stacked bar chart.
- * @param {SVGElement} svg - The SVG container.
- * @param {Array} data - The data to render (array of objects with category, value, and stack fields).
- * @param {Object} options - Chart options.
+ * Renderer for stacked bar charts.
  */
-export function drawStackBarChart(svg, data, options) {
-  const {
-    encoding = {},
-    width = 400,
-    height = 300,
-    direction = "vertical", // 'vertical' | 'horizontal'
-    colorScheme = d3.schemeCategory10,
-    showLabels = false,
-    showXAxis = true,
-    showYAxis = true,
-    xAxisName = "",
-    yAxisName = "",
-    xAxisPos = "bottom",
-    yAxisPos = "left",
-    padding = 0.2,
-  } = options;
+export class StackBarChartRenderer extends MarkRenderer {
+  /**
+   * Creates an instance of StackBarChartRenderer.
+   * @param {Object} options - Chart options.
+   */
+  constructor(options = {}) {
+    super(options);
+    this.direction = options.direction || "vertical";
+    this.colorScheme = options.colorScheme || d3.schemeCategory10;
+    this.showLabels = options.showLabels || false;
+    this.showXAxis = options.showXAxis !== undefined ? options.showXAxis : true;
+    this.showYAxis = options.showYAxis !== undefined ? options.showYAxis : true;
+    this.xAxisName = options.xAxisName || "";
+    this.yAxisName = options.yAxisName || "";
+    this.xAxisPos = options.xAxisPos || "bottom";
+    this.yAxisPos = options.yAxisPos || "left";
+    this.padding = options.padding || {
+      xInner: 0.1,
+      xOuter: 0.1,
+      yInner: 0.1,
+      yOuter: 0.1,
+    };
+  }
 
-  const container = d3.select(svg);
-  const categoryField = encoding.y; // Category axis (e.g., genre)
-  const valueField = encoding.x; // Value axis (e.g., size)
-  const stackField = encoding.stack; // Stack field (e.g., type)
+  /**
+   * Renders a stacked bar chart.
+   * @param {SVGElement} svg - The SVG container.
+   * @param {Array} data - The data to render.
+   * @returns {Object} Axis configuration object.
+   */
+  render(svg, data) {
+    return this.direction === "horizontal"
+      ? this._renderHorizontal(svg, data)
+      : this._renderVertical(svg, data);
+  }
 
-  const defaultMargin = { top: 40, right: 40, bottom: 40, left: 40 };
-  const margin = options.margin || defaultMargin;
+  /**
+   * Renders horizontal stacked bar chart.
+   * @private
+   */
+  _renderHorizontal(svg, data) {
+    const container = d3.select(svg);
+    const categoryField = this.encoding.y;
+    const valueField = this.encoding.x;
+    const stackField = this.encoding.stack;
 
-  const chartWidth = width;
-  const chartHeight = height;
+    const chartWidth = this.width;
+    const chartHeight = this.height;
+    const margin = this.margin;
 
-  container.selectAll("*").remove();
+    container.selectAll("*").remove();
 
-  // Get unique categories and stack keys
-  const categories = [...new Set(data.map((d) => d[categoryField]))];
-  const stackKeys = [...new Set(data.map((d) => d[stackField]))];
+    const categories = [...new Set(data.map((d) => d[categoryField]))];
+    const stackKeys = [...new Set(data.map((d) => d[stackField]))];
 
-  // Pivot data: { category: { stackKey1: value1, stackKey2: value2, ... } }
-  const pivotedData = categories.map((cat) => {
-    const entry = { [categoryField]: cat };
-    stackKeys.forEach((key) => {
-      const item = data.find(
-        (d) => d[categoryField] === cat && d[stackField] === key,
-      );
-      entry[key] = item ? item[valueField] : 0;
+    const pivotedData = categories.map((cat) => {
+      const entry = { [categoryField]: cat };
+      stackKeys.forEach((key) => {
+        const item = data.find(
+          (d) => d[categoryField] === cat && d[stackField] === key,
+        );
+        entry[key] = item ? item[valueField] : 0;
+      });
+      return entry;
     });
-    return entry;
-  });
 
-  // Create stack generator
-  const stack = d3.stack().keys(stackKeys);
-  const stackedData = stack(pivotedData);
+    const stack = d3.stack().keys(stackKeys);
+    const stackedData = stack(pivotedData);
+    const maxValue = d3.max(stackedData, (layer) => d3.max(layer, (d) => d[1]));
 
-  // Calculate max stacked value
-  const maxValue = d3.max(stackedData, (layer) => d3.max(layer, (d) => d[1]));
+    const colorScale = d3
+      .scaleOrdinal()
+      .domain(stackKeys)
+      .range(this.colorScheme);
 
-  // Color scale
-  const colorScale = d3.scaleOrdinal().domain(stackKeys).range(colorScheme);
-
-  if (direction === "horizontal") {
-    // Horizontal stack bar chart
     const yScale = d3
       .scaleBand()
       .domain(categories)
       .range([0, chartHeight])
-      .padding(padding);
+      .paddingInner(this.padding.yInner)
+      .paddingOuter(this.padding.yOuter);
 
-    const reverseX = yAxisPos === "right";
+    const reverseX = this.yAxisPos === "right";
     const xScale = d3
       .scaleLinear()
       .domain([0, maxValue])
       .range(reverseX ? [chartWidth, 0] : [0, chartWidth]);
 
-    // Draw stacked bars
     stackedData.forEach((layer) => {
       const stackKey = layer.key;
       layer.forEach((d) => {
         const category = d.data[categoryField];
         const x0 = xScale(d[0]);
         const x1 = xScale(d[1]);
-        const barX = reverseX ? Math.min(x0, x1) : Math.min(x0, x1);
+        const barX = Math.min(x0, x1);
         const barWidth = Math.abs(x1 - x0);
         const barHeight = yScale.bandwidth();
         const y = yScale(category);
@@ -104,7 +119,7 @@ export function drawStackBarChart(svg, data, options) {
 
         rect.append("title").text(`${category} - ${stackKey}: ${d[1] - d[0]}`);
 
-        if (showLabels && barWidth > 20) {
+        if (this.showLabels && barWidth > 20) {
           container
             .append("text")
             .attr("x", margin.left + barX + barWidth / 2)
@@ -121,29 +136,68 @@ export function drawStackBarChart(svg, data, options) {
       scales: { x: xScale, y: yScale },
       dimensions: { margin, width: chartWidth, height: chartHeight },
       axisOptions: {
-        showXAxis,
-        showYAxis,
-        xAxisName,
-        yAxisName,
-        xAxisPos,
-        yAxisPos,
+        showXAxis: this.showXAxis,
+        showYAxis: this.showYAxis,
+        xAxisName: this.xAxisName,
+        yAxisName: this.yAxisName,
+        xAxisPos: this.xAxisPos,
+        yAxisPos: this.yAxisPos,
       },
     };
-  } else {
-    // Vertical stack bar chart
+  }
+
+  /**
+   * Renders vertical stacked bar chart.
+   * @private
+   */
+  _renderVertical(svg, data) {
+    const container = d3.select(svg);
+    const categoryField = this.encoding.y;
+    const valueField = this.encoding.x;
+    const stackField = this.encoding.stack;
+
+    const chartWidth = this.width;
+    const chartHeight = this.height;
+    const margin = this.margin;
+
+    container.selectAll("*").remove();
+
+    const categories = [...new Set(data.map((d) => d[categoryField]))];
+    const stackKeys = [...new Set(data.map((d) => d[stackField]))];
+
+    const pivotedData = categories.map((cat) => {
+      const entry = { [categoryField]: cat };
+      stackKeys.forEach((key) => {
+        const item = data.find(
+          (d) => d[categoryField] === cat && d[stackField] === key,
+        );
+        entry[key] = item ? item[valueField] : 0;
+      });
+      return entry;
+    });
+
+    const stack = d3.stack().keys(stackKeys);
+    const stackedData = stack(pivotedData);
+    const maxValue = d3.max(stackedData, (layer) => d3.max(layer, (d) => d[1]));
+
+    const colorScale = d3
+      .scaleOrdinal()
+      .domain(stackKeys)
+      .range(this.colorScheme);
+
     const xScale = d3
       .scaleBand()
       .domain(categories)
       .range([0, chartWidth])
-      .padding(padding);
+      .paddingInner(this.padding.xInner)
+      .paddingOuter(this.padding.xOuter);
 
-    const reverseY = yAxisPos === "right";
+    const reverseY = this.yAxisPos === "right";
     const yScale = d3
       .scaleLinear()
       .domain([0, maxValue])
       .range(reverseY ? [0, chartHeight] : [chartHeight, 0]);
 
-    // Draw stacked bars
     stackedData.forEach((layer) => {
       const stackKey = layer.key;
       layer.forEach((d) => {
@@ -171,7 +225,7 @@ export function drawStackBarChart(svg, data, options) {
 
         rect.append("title").text(`${category} - ${stackKey}: ${d[1] - d[0]}`);
 
-        if (showLabels && barHeight > 15) {
+        if (this.showLabels && barHeight > 15) {
           container
             .append("text")
             .attr("x", margin.left + x + barWidth / 2)
@@ -188,66 +242,83 @@ export function drawStackBarChart(svg, data, options) {
       scales: { x: xScale, y: yScale },
       dimensions: { margin, width: chartWidth, height: chartHeight },
       axisOptions: {
-        showXAxis,
-        showYAxis,
-        xAxisName,
-        yAxisName,
-        xAxisPos,
-        yAxisPos,
+        showXAxis: this.showXAxis,
+        showYAxis: this.showYAxis,
+        xAxisName: this.xAxisName,
+        yAxisName: this.yAxisName,
+        xAxisPos: this.xAxisPos,
+        yAxisPos: this.yAxisPos,
       },
     };
   }
 }
 
 /**
- * Renders a bar chart.
- * @param {SVGElement} svg - The SVG container.
- * @param {Array} data - The data to render.
- * @param {Object} options - Chart options.
+ * Renderer for bar charts.
  */
-export function drawBarChart(svg, data, options) {
-  const {
-    encoding = {},
-    width = 400,
-    height = 300,
-    direction = "vertical", // 'vertical' | 'horizontal'
-    color = "steelblue",
-    showLabels = false, // Show value labels on bars
-    showXAxis = true, // Show X axis labels
-    showYAxis = true, // Show Y axis labels
-    xAxisName = "", // Label for X axis
-    yAxisName = "", // Label for Y axis
-    xAxisPos = "bottom", // 'top' | 'bottom'
-    yAxisPos = "left", // 'left' | 'right'
-    padding = 0.2, // Padding between bars
-  } = options;
-  const container = d3.select(svg);
+export class BarChartRenderer extends MarkRenderer {
+  /**
+   * Creates an instance of BarChartRenderer.
+   * @param {Object} options - Chart options.
+   */
+  constructor(options = {}) {
+    super(options);
+    this.direction = options.direction || "vertical";
+    this.color = options.color || "steelblue";
+    this.showLabels = options.showLabels || false;
+    this.showXAxis = options.showXAxis !== undefined ? options.showXAxis : true;
+    this.showYAxis = options.showYAxis !== undefined ? options.showYAxis : true;
+    this.xAxisName = options.xAxisName || "";
+    this.yAxisName = options.yAxisName || "";
+    this.xAxisPos = options.xAxisPos || "bottom";
+    this.yAxisPos = options.yAxisPos || "left";
+    this.padding = options.padding || {
+      xInner: 0.1,
+      xOuter: 0.1,
+      yInner: 0.1,
+      yOuter: 0.1,
+    };
+  }
 
-  const xField = encoding.x;
-  const yField = encoding.y;
-  const defaultMargin = { top: 40, right: 40, bottom: 40, left: 40 };
-  const margin = options.margin || defaultMargin;
+  /**
+   * Renders a bar chart.
+   * @param {SVGElement} svg - The SVG container.
+   * @param {Array} data - The data to render.
+   * @returns {Object} Axis configuration object.
+   */
+  render(svg, data) {
+    return this.direction === "horizontal"
+      ? this._renderHorizontal(svg, data)
+      : this._renderVertical(svg, data);
+  }
 
-  const chartWidth = width;
-  const chartHeight = height;
+  /**
+   * Renders horizontal bar chart.
+   * @private
+   */
+  _renderHorizontal(svg, data) {
+    const container = d3.select(svg);
+    const xField = this.encoding.x;
+    const yField = this.encoding.y;
+    const margin = this.margin;
+    const chartWidth = this.width;
+    const chartHeight = this.height;
 
-  // Create a group for the chart content
-  container.selectAll("*").remove();
-  const g = container
-    .append("g")
-    .attr("transform", `translate(${margin.left},${margin.top})`);
+    container.selectAll("*").remove();
+    const g = container
+      .append("g")
+      .attr("transform", `translate(${margin.left},${margin.top})`);
 
-  if (direction === "horizontal") {
     const maxValue = Math.max(...data.map((d) => d[xField] || 0));
 
     const yScale = d3
       .scaleBand()
       .domain(data.map((d) => d[yField]))
       .range([0, chartHeight])
-      .padding(padding);
+      .paddingInner(this.padding.yInner)
+      .paddingOuter(this.padding.yOuter);
 
-    // Reverse x scale if xAxisPos is 'right' (grow right-to-left)
-    const reverseX = yAxisPos === "right";
+    const reverseX = this.yAxisPos === "right";
     const xScale = d3
       .scaleLinear()
       .domain([0, maxValue])
@@ -267,19 +338,17 @@ export function drawBarChart(svg, data, options) {
         .attr("y", y)
         .attr("width", barWidth)
         .attr("height", barHeight)
-        .attr("fill", color)
+        .attr("fill", this.color)
         .on("mouseenter", function () {
           d3.select(this).attr("fill", "orange");
         })
         .on("mouseleave", function () {
-          d3.select(this).attr("fill", color);
+          d3.select(this).attr("fill", this.color);
         });
 
-      // Tooltip
       rect.append("title").text(`${d[yField]}: ${value}`);
 
-      // Value Labels
-      if (showLabels) {
+      if (this.showLabels) {
         const label = container
           .append("text")
           .attr("y", y + barHeight / 2 + 4)
@@ -298,27 +367,44 @@ export function drawBarChart(svg, data, options) {
       scales: { x: xScale, y: yScale },
       dimensions: { margin, width: chartWidth, height: chartHeight },
       axisOptions: {
-        showXAxis,
-        showYAxis,
-        xAxisName,
-        yAxisName,
-        xAxisPos,
-        yAxisPos,
+        showXAxis: this.showXAxis,
+        showYAxis: this.showYAxis,
+        xAxisName: this.xAxisName,
+        yAxisName: this.yAxisName,
+        xAxisPos: this.xAxisPos,
+        yAxisPos: this.yAxisPos,
       },
     };
-  } else {
+  }
+
+  /**
+   * Renders vertical bar chart.
+   * @private
+   */
+  _renderVertical(svg, data) {
+    const container = d3.select(svg);
+    const xField = this.encoding.x;
+    const yField = this.encoding.y;
+    const margin = this.margin;
+    const chartWidth = this.width;
+    const chartHeight = this.height;
+
+    container.selectAll("*").remove();
+    const g = container
+      .append("g")
+      .attr("transform", `translate(${margin.left},${margin.top})`);
+
     const maxValue = Math.max(...data.map((d) => d[yField] || 0));
 
-    // Reverse x scale if xAxisPos is 'top'
-    const reverseX = xAxisPos === "top";
+    const reverseX = this.xAxisPos === "top";
     const xScale = d3
       .scaleBand()
       .domain(data.map((d) => d[xField]))
       .range(reverseX ? [chartWidth, 0] : [0, chartWidth])
-      .padding(padding);
+      .paddingInner(this.padding.xInner)
+      .paddingOuter(this.padding.xOuter);
 
-    // Reverse y scale if yAxisPos is 'right'
-    const reverseY = yAxisPos === "right";
+    const reverseY = this.yAxisPos === "right";
     const yScale = d3
       .scaleLinear()
       .domain([0, maxValue])
@@ -338,19 +424,17 @@ export function drawBarChart(svg, data, options) {
         .attr("y", y)
         .attr("width", barWidth)
         .attr("height", barHeight)
-        .attr("fill", color)
+        .attr("fill", this.color)
         .on("mouseenter", function () {
           d3.select(this).attr("fill", "orange");
         })
         .on("mouseleave", function () {
-          d3.select(this).attr("fill", color);
+          d3.select(this).attr("fill", this.color);
         });
 
-      // Tooltip
       rect.append("title").text(`${d[xField]}: ${value}`);
 
-      // Value Labels
-      if (showLabels) {
+      if (this.showLabels) {
         container
           .append("text")
           .attr("x", x + barWidth / 2)
@@ -365,12 +449,12 @@ export function drawBarChart(svg, data, options) {
       scales: { x: xScale, y: yScale },
       dimensions: { margin, width: chartWidth, height: chartHeight },
       axisOptions: {
-        showXAxis,
-        showYAxis,
-        xAxisName,
-        yAxisName,
-        xAxisPos,
-        yAxisPos,
+        showXAxis: this.showXAxis,
+        showYAxis: this.showYAxis,
+        xAxisName: this.xAxisName,
+        yAxisName: this.yAxisName,
+        xAxisPos: this.xAxisPos,
+        yAxisPos: this.yAxisPos,
       },
     };
   }

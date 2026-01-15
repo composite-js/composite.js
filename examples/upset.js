@@ -4,8 +4,8 @@
 // Link: https://ieeexplore.ieee.org/document/6876017
 // Link: https://upset.app/
 
-import { createChart } from "../src/chart.js";
-import { composite, stackX, stackY } from "../src/layout.js";
+import { Chart } from "../src/chart.js";
+import { stackX, stackY } from "../src/layout.js";
 
 const data = [
   { sets: ["Drama"], intersectionSize: 20, setSize: 45 },
@@ -84,7 +84,7 @@ genres.forEach((genre) => {
 const app = document.getElementById("app");
 
 // 1. Top Bar Chart (Intersection Size)
-const topBarChart = createChart({
+const topBarChart = new Chart({
   data: topBarData,
   mark: "bar",
   encoding: {
@@ -98,7 +98,7 @@ const topBarChart = createChart({
 });
 
 // 2. Matrix (Intersections)
-const matrixChart = createChart({
+const matrixChart = new Chart({
   data: intersections,
   mark: "matrix",
   encoding: {
@@ -112,7 +112,7 @@ const matrixChart = createChart({
 });
 
 // 3. Left Bar Chart (Set Size)
-const leftBarChart = createChart({
+const leftBarChart = new Chart({
   data: setSizeData,
   mark: "bar",
   encoding: {
@@ -129,7 +129,7 @@ const leftBarChart = createChart({
 });
 
 // 4. Box Plot (right of matrix)
-const boxChart = createChart({
+const boxChart = new Chart({
   data: boxData,
   mark: "box",
   encoding: {
@@ -144,15 +144,9 @@ const boxChart = createChart({
   showYAxis: false,
 });
 
-const myComposite = composite(
-  [topBarChart, leftBarChart, matrixChart, boxChart],
-  {
-    constraints: [
-      stackY([topBarChart, matrixChart]), // Top Bar above Matrix
-      stackX([leftBarChart, matrixChart]), // Left Bar left of Matrix
-      stackX([matrixChart, boxChart]), // Box Plot right of Matrix
-    ],
-  },
-);
+// Build composite layout: Top Bar above Matrix, Left Bar left of Matrix, Box Plot right of Matrix
+const topAndMatrix = stackY([topBarChart, matrixChart]);
+const leftAndCenter = stackX([leftBarChart, topAndMatrix]);
+const myComposite = stackX([leftAndCenter, boxChart]);
 
 myComposite.render(app);

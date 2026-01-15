@@ -1,87 +1,98 @@
 import * as d3 from "d3";
+import { MarkRenderer } from "./mark.js";
 
 /**
- * Renders a scatter plot.
- * @param {SVGElement} svg - The SVG container.
- * @param {Array} data - The data to render.
- * @param {Object} options - Chart options.
+ * Renderer for scatter plots.
  */
-export function drawScatter(svg, data, options) {
-  const {
-    encoding = {},
-    width = 400,
-    height = 300,
-    color = "steelblue",
-    radius = 4,
-    showXAxis = true,
-    showYAxis = true,
-    xAxisName = "",
-    yAxisName = "",
-    xAxisPos = "bottom",
-    yAxisPos = "left",
-  } = options;
-  const container = d3.select(svg);
+export class ScatterChartRenderer extends MarkRenderer {
+  /**
+   * Creates an instance of ScatterChartRenderer.
+   * @param {Object} options - Chart options.
+   */
+  constructor(options = {}) {
+    super(options);
+    this.color = options.color || "steelblue";
+    this.radius = options.radius || 4;
+    this.showXAxis = options.showXAxis !== undefined ? options.showXAxis : true;
+    this.showYAxis = options.showYAxis !== undefined ? options.showYAxis : true;
+    this.xAxisName = options.xAxisName || "";
+    this.yAxisName = options.yAxisName || "";
+    this.xAxisPos = options.xAxisPos || "bottom";
+    this.yAxisPos = options.yAxisPos || "left";
+  }
 
-  const xField = encoding.x;
-  const yField = encoding.y;
+  /**
+   * Renders a scatter plot.
+   * @param {SVGElement} svg - The SVG container.
+   * @param {Array} data - The data to render.
+   * @returns {Object} Axis configuration object.
+   */
+  render(svg, data) {
+    const container = d3.select(svg);
+    const xField = this.encoding.x;
+    const yField = this.encoding.y;
+    const margin = this.margin;
+    const chartWidth = this.width;
+    const chartHeight = this.height;
 
-  const defaultMargin = { top: 40, right: 40, bottom: 40, left: 60 };
-  const margin = options.margin || defaultMargin;
+    // Scales
+    const xExtent = d3.extent(data, (d) => d[xField]);
+    const yExtent = d3.extent(data, (d) => d[yField]);
 
-  const chartWidth = width;
-  const chartHeight = height;
+    const xScale = d3
+      .scaleLinear()
+      .domain(xExtent)
+      .range([0, chartWidth])
+      .nice();
 
-  // Scales
-  const xExtent = d3.extent(data, (d) => d[xField]);
-  const yExtent = d3.extent(data, (d) => d[yField]);
+    const yScale = d3
+      .scaleLinear()
+      .domain(yExtent)
+      .range([chartHeight, 0])
+      .nice();
 
-  const xScale = d3.scaleLinear().domain(xExtent).range([0, chartWidth]).nice();
+    // Draw Points
+    data.forEach((d) => {
+      const cx = margin.left + xScale(d[xField]);
+      const cy = margin.top + yScale(d[yField]);
 
-  const yScale = d3
-    .scaleLinear()
-    .domain(yExtent)
-    .range([chartHeight, 0])
-    .nice();
+      const radius = this.radius;
+      const color = this.color;
+      const circle = container
+        .append("circle")
+        .attr("cx", cx)
+        .attr("cy", cy)
+        .attr("r", radius)
+        .attr("fill", color)
+        .attr("opacity", 0.7)
+        .attr("stroke", "white")
+        .attr("stroke-width", 1)
+        .on("mouseenter", function () {
+          d3.select(this)
+            .attr("fill", "orange")
+            .attr("r", radius * 1.5);
+        })
+        .on("mouseleave", function () {
+          d3.select(this).attr("fill", color).attr("r", radius);
+        });
 
-  // Draw Points
-  data.forEach((d) => {
-    const cx = margin.left + xScale(d[xField]);
-    const cy = margin.top + yScale(d[yField]);
+      // Tooltip
+      circle
+        .append("title")
+        .text(`x: ${d[xField].toFixed(2)}, y: ${d[yField].toFixed(2)}`);
+    });
 
-    const circle = container
-      .append("circle")
-      .attr("cx", cx)
-      .attr("cy", cy)
-      .attr("r", radius)
-      .attr("fill", color)
-      .attr("opacity", 0.7)
-      .attr("stroke", "white")
-      .attr("stroke-width", 1)
-      .on("mouseenter", function () {
-        d3.select(this)
-          .attr("fill", "orange")
-          .attr("r", radius * 1.5);
-      })
-      .on("mouseleave", function () {
-        d3.select(this).attr("fill", color).attr("r", radius);
-      });
-
-    // Tooltip
-    circle
-      .append("title")
-      .text(`x: ${d[xField].toFixed(2)}, y: ${d[yField].toFixed(2)}`);
-  });
-
-  return {
-    scales: { x: xScale, y: yScale },
-    dimensions: { margin, width: chartWidth, height: chartHeight },
-    axisOptions: {
-      showXAxis,
-      showYAxis,
-      xAxisName,
-      yAxisName,
-      xAxisPos,
-      yAxisPos,
-    },
-  };
+    return {
+      scales: { x: xScale, y: yScale },
+      dimensions: { margin, width: chartWidth, height: chartHeight },
+      axisOptions: {
+        showXAxis: this.showXAxis,
+        showYAxis: this.showYAxis,
+        xAxisName: this.xAxisName,
+        yAxisName: this.yAxisName,
+        xAxisPos: this.xAxisPos,
+        yAxisPos: this.yAxisPos,
+      },
+    };
+  }
 }

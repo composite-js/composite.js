@@ -1,31 +1,57 @@
 import * as d3 from "d3";
 
 /**
- * Renders axes for a chart.
- * @param {SVGElement} svg - The SVG container.
- * @param {Object} scales - The scales { x, y }.
- * @param {Object} dimensions - The dimensions { margin, width, height }.
- * @param {Object} options - Axis options { xAxisName, yAxisName, showXAxis, showYAxis, xAxisPos, yAxisPos }.
+ * Axis renderer class for drawing chart axes.
  */
-export function drawAxes(svg, scales, dimensions, options = {}) {
-  const { x: xScale, y: yScale } = scales;
-  const { margin, width, height } = dimensions;
-  const {
-    showXAxis = true,
-    showYAxis = true,
-    xAxisName,
-    yAxisName,
-    xAxisPos = "bottom",
-    yAxisPos = "left",
-  } = options;
+export class AxisRenderer {
+  /**
+   * Creates an instance of AxisRenderer.
+   * @param {Object} options - Axis configuration options.
+   */
+  constructor(options = {}) {
+    this.showXAxis = options.showXAxis !== undefined ? options.showXAxis : true;
+    this.showYAxis = options.showYAxis !== undefined ? options.showYAxis : true;
+    this.xAxisName = options.xAxisName || "";
+    this.yAxisName = options.yAxisName || "";
+    this.xAxisPos = options.xAxisPos || "bottom";
+    this.yAxisPos = options.yAxisPos || "left";
+  }
 
-  const container = d3.select(svg);
+  /**
+   * Renders axes for a chart.
+   * @param {SVGElement} svg - The SVG container.
+   * @param {Object} scales - The scales { x, y }.
+   * @param {Object} dimensions - The dimensions { margin, width, height }.
+   */
+  render(svg, scales, dimensions) {
+    const { x: xScale, y: yScale } = scales;
+    const { margin, width, height } = dimensions;
+    const container = d3.select(svg);
 
-  // Draw X Axis
-  if (xScale && showXAxis) {
-    const xAxisGenerator = xAxisPos === "top" ? d3.axisTop : d3.axisBottom;
+    // Draw X Axis
+    if (xScale && this.showXAxis) {
+      this._drawXAxis(container, xScale, margin, width, height);
+    }
+
+    // Draw Y Axis
+    if (yScale && this.showYAxis) {
+      this._drawYAxis(container, yScale, margin, width, height);
+    }
+  }
+
+  /**
+   * Draws the X axis.
+   * @private
+   * @param {d3.Selection} container - The SVG container selection.
+   * @param {d3.Scale} xScale - The X scale.
+   * @param {Object} margin - The margin object.
+   * @param {number} width - The chart width.
+   * @param {number} height - The chart height.
+   */
+  _drawXAxis(container, xScale, margin, width, height) {
+    const xAxisGenerator = this.xAxisPos === "top" ? d3.axisTop : d3.axisBottom;
     const xTransform =
-      xAxisPos === "top"
+      this.xAxisPos === "top"
         ? `translate(${margin.left}, ${margin.top})`
         : `translate(${margin.left}, ${margin.top + height})`;
 
@@ -35,24 +61,33 @@ export function drawAxes(svg, scales, dimensions, options = {}) {
       .attr("transform", xTransform)
       .call(xAxisGenerator(xScale));
 
-    if (xAxisName) {
+    if (this.xAxisName) {
       const labelY =
-        xAxisPos === "top" ? margin.top - 30 : margin.top + height + 30;
+        this.xAxisPos === "top" ? margin.top - 30 : margin.top + height + 30;
       container
         .append("text")
         .attr("x", margin.left + (xScale.range()[1] - xScale.range()[0]) / 2)
         .attr("y", labelY)
         .attr("text-anchor", "middle")
         .attr("font-size", "12px")
-        .text(xAxisName);
+        .text(this.xAxisName);
     }
   }
 
-  // Draw Y Axis
-  if (yScale && showYAxis) {
-    const yAxisGenerator = yAxisPos === "right" ? d3.axisRight : d3.axisLeft;
+  /**
+   * Draws the Y axis.
+   * @private
+   * @param {d3.Selection} container - The SVG container selection.
+   * @param {d3.Scale} yScale - The Y scale.
+   * @param {Object} margin - The margin object.
+   * @param {number} width - The chart width.
+   * @param {number} height - The chart height.
+   */
+  _drawYAxis(container, yScale, margin, width, height) {
+    const yAxisGenerator =
+      this.yAxisPos === "right" ? d3.axisRight : d3.axisLeft;
     const yTransform =
-      yAxisPos === "right"
+      this.yAxisPos === "right"
         ? `translate(${margin.left + width}, ${margin.top})`
         : `translate(${margin.left}, ${margin.top})`;
 
@@ -62,7 +97,7 @@ export function drawAxes(svg, scales, dimensions, options = {}) {
       .attr("transform", yTransform)
       .call(yAxisGenerator(yScale));
 
-    if (yAxisName) {
+    if (this.yAxisName) {
       // Calculate offset based on the maximum width of tick labels
       let maxTickLabelWidth = 0;
       yAxisGroup.selectAll(".tick text").each(function () {
@@ -74,7 +109,7 @@ export function drawAxes(svg, scales, dimensions, options = {}) {
 
       const labelOffset = maxTickLabelWidth + 20;
       const labelX =
-        yAxisPos === "right"
+        this.yAxisPos === "right"
           ? margin.left + width + labelOffset
           : margin.left - labelOffset;
       container
@@ -84,7 +119,7 @@ export function drawAxes(svg, scales, dimensions, options = {}) {
         .attr("text-anchor", "middle")
         .attr("transform", `rotate(-90, ${labelX}, ${margin.top + height / 2})`)
         .attr("font-size", "12px")
-        .text(yAxisName);
+        .text(this.yAxisName);
     }
   }
 }

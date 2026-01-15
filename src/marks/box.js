@@ -1,108 +1,117 @@
 import * as d3 from "d3";
+import { MarkRenderer } from "./mark.js";
 
 /**
- * Renders a box plot.
- * @param {SVGElement} svg - The SVG container.
- * @param {Array} data - The data to render. Each item should have a category field and a value field.
- * @param {Object} options - Chart options.
+ * Renderer for box plots.
  */
-export function drawBoxPlot(svg, data, options) {
-  const {
-    encoding = {},
-    width = 400,
-    height = 300,
-    direction = "vertical", // 'vertical' | 'horizontal'
-    color = "steelblue",
-    showXAxis = true,
-    showYAxis = true,
-    xAxisName = "",
-    yAxisName = "",
-    xAxisPos = "bottom",
-    yAxisPos = "left",
-    boxWidth = 0.6, // Width of boxes as fraction of band
-  } = options;
-
-  const container = d3.select(svg);
-
-  const xField = encoding.x;
-  const yField = encoding.y;
-
-  const defaultMargin = { top: 40, right: 40, bottom: 40, left: 60 };
-  const margin = options.margin || defaultMargin;
-
-  const chartWidth = width;
-  const chartHeight = height;
-
-  // For horizontal: y is category, x is value
-  // For vertical: x is category, y is value
-  const categoryField = direction === "horizontal" ? yField : xField;
-  const valueField = direction === "horizontal" ? xField : yField;
-
-  // Group data by category
-  const categories = [...new Set(data.map((d) => d[categoryField]))];
-  const groupedData = d3.group(data, (d) => d[categoryField]);
-
-  // Calculate statistics for each group
-  const boxData = categories.map((category) => {
-    const values = groupedData
-      .get(category)
-      .map((d) => d[valueField])
-      .sort(d3.ascending);
-    const q1 = d3.quantile(values, 0.25);
-    const median = d3.quantile(values, 0.5);
-    const q3 = d3.quantile(values, 0.75);
-    const iqr = q3 - q1;
-    const min = Math.max(d3.min(values), q1 - 1.5 * iqr);
-    const max = Math.min(d3.max(values), q3 + 1.5 * iqr);
-    const outliers = values.filter((v) => v < min || v > max);
-
-    return {
-      category,
-      q1,
-      median,
-      q3,
-      min,
-      max,
-      outliers,
+export class BoxPlotRenderer extends MarkRenderer {
+  /**
+   * Creates an instance of BoxPlotRenderer.
+   * @param {Object} options - Chart options.
+   */
+  constructor(options = {}) {
+    super(options);
+    this.direction = options.direction || "vertical";
+    this.color = options.color || "steelblue";
+    this.showXAxis = options.showXAxis !== undefined ? options.showXAxis : true;
+    this.showYAxis = options.showYAxis !== undefined ? options.showYAxis : true;
+    this.xAxisName = options.xAxisName || "";
+    this.yAxisName = options.yAxisName || "";
+    this.xAxisPos = options.xAxisPos || "bottom";
+    this.yAxisPos = options.yAxisPos || "left";
+    this.boxWidth = options.boxWidth !== undefined ? options.boxWidth : 0.6;
+    this.padding = options.padding || {
+      xInner: 0.1,
+      xOuter: 0.1,
+      yInner: 0.1,
+      yOuter: 0.1,
     };
-  });
+  }
 
-  // Calculate value extent for the value axis
-  const valueExtent = [
-    d3.min(boxData, (d) =>
-      d.outliers.length > 0 ? Math.min(d.min, ...d.outliers) : d.min,
-    ),
-    d3.max(boxData, (d) =>
-      d.outliers.length > 0 ? Math.max(d.max, ...d.outliers) : d.max,
-    ),
-  ];
+  /**
+   * Renders a box plot.
+   * @param {SVGElement} svg - The SVG container.
+   * @param {Array} data - The data to render.
+   * @returns {Object} Axis configuration object.
+   */
+  render(svg, data) {
+    return this.direction === "horizontal"
+      ? this._renderHorizontal(svg, data)
+      : this._renderVertical(svg, data);
+  }
 
-  let xScale, yScale;
+  /**
+   * Renders horizontal box plot.
+   * @private
+   */
+  _renderHorizontal(svg, data) {
+    const container = d3.select(svg);
+    const xField = this.encoding.x;
+    const yField = this.encoding.y;
+    const margin = this.margin;
+    const chartWidth = this.width;
+    const chartHeight = this.height;
 
-  if (direction === "horizontal") {
-    // Horizontal: y is category (band), x is value (linear)
-    yScale = d3
+    const categoryField = yField;
+    const valueField = xField;
+
+    const categories = [...new Set(data.map((d) => d[categoryField]))];
+    const groupedData = d3.group(data, (d) => d[categoryField]);
+
+    const boxData = categories.map((category) => {
+      const values = groupedData
+        .get(category)
+        .map((d) => d[valueField])
+        .sort(d3.ascending);
+      const q1 = d3.quantile(values, 0.25);
+      const median = d3.quantile(values, 0.5);
+      const q3 = d3.quantile(values, 0.75);
+      const iqr = q3 - q1;
+      const min = Math.max(d3.min(values), q1 - 1.5 * iqr);
+      const max = Math.min(d3.max(values), q3 + 1.5 * iqr);
+      const outliers = values.filter((v) => v < min || v > max);
+
+      return {
+        category,
+        q1,
+        median,
+        q3,
+        min,
+        max,
+        outliers,
+      };
+    });
+
+    const valueExtent = [
+      d3.min(boxData, (d) =>
+        d.outliers.length > 0 ? Math.min(d.min, ...d.outliers) : d.min,
+      ),
+      d3.max(boxData, (d) =>
+        d.outliers.length > 0 ? Math.max(d.max, ...d.outliers) : d.max,
+      ),
+    ];
+
+    const yScale = d3
       .scaleBand()
       .domain(categories)
       .range([0, chartHeight])
-      .padding(0.2);
+      .paddingInner(this.padding.yInner)
+      .paddingOuter(this.padding.yOuter);
 
-    const reverseX = yAxisPos === "right";
-    xScale = d3
+    const reverseX = this.yAxisPos === "right";
+    const xScale = d3
       .scaleLinear()
       .domain([0, valueExtent[1]])
       .range(reverseX ? [chartWidth, 0] : [0, chartWidth])
       .nice();
 
-    const actualBoxHeight = yScale.bandwidth() * boxWidth;
+    const actualBoxHeight = yScale.bandwidth() * this.boxWidth;
     const boxOffset = (yScale.bandwidth() - actualBoxHeight) / 2;
 
-    // Draw each horizontal box
     boxData.forEach((d) => {
       const y = margin.top + yScale(d.category);
       const centerY = y + yScale.bandwidth() / 2;
 
-      // Horizontal line from min to max (whiskers)
       container
         .append("line")
         .attr("x1", margin.left + xScale(d.min))
@@ -112,7 +121,6 @@ export function drawBoxPlot(svg, data, options) {
         .attr("stroke", "black")
         .attr("stroke-width", 1);
 
-      // Min whisker cap
       container
         .append("line")
         .attr("x1", margin.left + xScale(d.min))
@@ -122,7 +130,6 @@ export function drawBoxPlot(svg, data, options) {
         .attr("stroke", "black")
         .attr("stroke-width", 1);
 
-      // Max whisker cap
       container
         .append("line")
         .attr("x1", margin.left + xScale(d.max))
@@ -132,7 +139,6 @@ export function drawBoxPlot(svg, data, options) {
         .attr("stroke", "black")
         .attr("stroke-width", 1);
 
-      // Box (Q1 to Q3)
       const boxX = margin.left + xScale(reverseX ? d.q3 : d.q1);
       const boxW = Math.abs(xScale(d.q3) - xScale(d.q1));
 
@@ -142,7 +148,7 @@ export function drawBoxPlot(svg, data, options) {
         .attr("y", y + boxOffset)
         .attr("width", boxW)
         .attr("height", actualBoxHeight)
-        .attr("fill", color)
+        .attr("fill", this.color)
         .attr("stroke", "black")
         .attr("stroke-width", 1)
         .attr("opacity", 0.8)
@@ -150,17 +156,15 @@ export function drawBoxPlot(svg, data, options) {
           d3.select(this).attr("fill", "orange");
         })
         .on("mouseleave", function () {
-          d3.select(this).attr("fill", color);
+          d3.select(this).attr("fill", this.color);
         });
 
-      // Tooltip
       rect
         .append("title")
         .text(
           `${d.category}\nQ1: ${d.q1.toFixed(2)}\nMedian: ${d.median.toFixed(2)}\nQ3: ${d.q3.toFixed(2)}\nMin: ${d.min.toFixed(2)}\nMax: ${d.max.toFixed(2)}`,
         );
 
-      // Median line
       container
         .append("line")
         .attr("x1", margin.left + xScale(d.median))
@@ -170,7 +174,6 @@ export function drawBoxPlot(svg, data, options) {
         .attr("stroke", "white")
         .attr("stroke-width", 2);
 
-      // Outliers
       d.outliers.forEach((outlier) => {
         container
           .append("circle")
@@ -178,32 +181,96 @@ export function drawBoxPlot(svg, data, options) {
           .attr("cy", centerY)
           .attr("r", 3)
           .attr("fill", "none")
-          .attr("stroke", color)
+          .attr("stroke", this.color)
           .attr("stroke-width", 1.5);
       });
     });
-  } else {
-    xScale = d3
+
+    return {
+      scales: { x: xScale, y: yScale },
+      dimensions: { margin, width: chartWidth, height: chartHeight },
+      axisOptions: {
+        showXAxis: this.showXAxis,
+        showYAxis: this.showYAxis,
+        xAxisName: this.xAxisName,
+        yAxisName: this.yAxisName,
+        xAxisPos: this.xAxisPos,
+        yAxisPos: this.yAxisPos,
+      },
+    };
+  }
+
+  /**
+   * Renders vertical box plot.
+   * @private
+   */
+  _renderVertical(svg, data) {
+    const container = d3.select(svg);
+    const xField = this.encoding.x;
+    const yField = this.encoding.y;
+    const margin = this.margin;
+    const chartWidth = this.width;
+    const chartHeight = this.height;
+
+    const categoryField = xField;
+    const valueField = yField;
+
+    const categories = [...new Set(data.map((d) => d[categoryField]))];
+    const groupedData = d3.group(data, (d) => d[categoryField]);
+
+    const boxData = categories.map((category) => {
+      const values = groupedData
+        .get(category)
+        .map((d) => d[valueField])
+        .sort(d3.ascending);
+      const q1 = d3.quantile(values, 0.25);
+      const median = d3.quantile(values, 0.5);
+      const q3 = d3.quantile(values, 0.75);
+      const iqr = q3 - q1;
+      const min = Math.max(d3.min(values), q1 - 1.5 * iqr);
+      const max = Math.min(d3.max(values), q3 + 1.5 * iqr);
+      const outliers = values.filter((v) => v < min || v > max);
+
+      return {
+        category,
+        q1,
+        median,
+        q3,
+        min,
+        max,
+        outliers,
+      };
+    });
+
+    const valueExtent = [
+      d3.min(boxData, (d) =>
+        d.outliers.length > 0 ? Math.min(d.min, ...d.outliers) : d.min,
+      ),
+      d3.max(boxData, (d) =>
+        d.outliers.length > 0 ? Math.max(d.max, ...d.outliers) : d.max,
+      ),
+    ];
+
+    const xScale = d3
       .scaleBand()
       .domain(categories)
       .range([0, chartWidth])
-      .padding(0.2);
+      .paddingInner(this.padding.xInner)
+      .paddingOuter(this.padding.xOuter);
 
-    yScale = d3
+    const yScale = d3
       .scaleLinear()
       .domain(valueExtent)
       .range([chartHeight, 0])
       .nice();
 
-    const actualBoxWidth = xScale.bandwidth() * boxWidth;
+    const actualBoxWidth = xScale.bandwidth() * this.boxWidth;
     const boxOffset = (xScale.bandwidth() - actualBoxWidth) / 2;
 
-    // Draw each vertical box
     boxData.forEach((d) => {
       const x = margin.left + xScale(d.category);
       const centerX = x + xScale.bandwidth() / 2;
 
-      // Vertical line from min to max (whiskers)
       container
         .append("line")
         .attr("x1", centerX)
@@ -213,7 +280,6 @@ export function drawBoxPlot(svg, data, options) {
         .attr("stroke", "black")
         .attr("stroke-width", 1);
 
-      // Min whisker cap
       container
         .append("line")
         .attr("x1", x + boxOffset)
@@ -223,7 +289,6 @@ export function drawBoxPlot(svg, data, options) {
         .attr("stroke", "black")
         .attr("stroke-width", 1);
 
-      // Max whisker cap
       container
         .append("line")
         .attr("x1", x + boxOffset)
@@ -233,7 +298,6 @@ export function drawBoxPlot(svg, data, options) {
         .attr("stroke", "black")
         .attr("stroke-width", 1);
 
-      // Box (Q1 to Q3)
       const boxY = margin.top + yScale(d.q3);
       const boxHeight = yScale(d.q1) - yScale(d.q3);
 
@@ -243,7 +307,7 @@ export function drawBoxPlot(svg, data, options) {
         .attr("y", boxY)
         .attr("width", actualBoxWidth)
         .attr("height", boxHeight)
-        .attr("fill", color)
+        .attr("fill", this.color)
         .attr("stroke", "black")
         .attr("stroke-width", 1)
         .attr("opacity", 0.8)
@@ -251,17 +315,15 @@ export function drawBoxPlot(svg, data, options) {
           d3.select(this).attr("fill", "orange");
         })
         .on("mouseleave", function () {
-          d3.select(this).attr("fill", color);
+          d3.select(this).attr("fill", this.color);
         });
 
-      // Tooltip
       rect
         .append("title")
         .text(
           `${d.category}\nQ1: ${d.q1.toFixed(2)}\nMedian: ${d.median.toFixed(2)}\nQ3: ${d.q3.toFixed(2)}\nMin: ${d.min.toFixed(2)}\nMax: ${d.max.toFixed(2)}`,
         );
 
-      // Median line
       container
         .append("line")
         .attr("x1", x + boxOffset)
@@ -271,7 +333,6 @@ export function drawBoxPlot(svg, data, options) {
         .attr("stroke", "white")
         .attr("stroke-width", 2);
 
-      // Outliers
       d.outliers.forEach((outlier) => {
         container
           .append("circle")
@@ -279,22 +340,22 @@ export function drawBoxPlot(svg, data, options) {
           .attr("cy", margin.top + yScale(outlier))
           .attr("r", 3)
           .attr("fill", "none")
-          .attr("stroke", color)
+          .attr("stroke", this.color)
           .attr("stroke-width", 1.5);
       });
     });
-  }
 
-  return {
-    scales: { x: xScale, y: yScale },
-    dimensions: { margin, width: chartWidth, height: chartHeight },
-    axisOptions: {
-      showXAxis,
-      showYAxis,
-      xAxisName,
-      yAxisName,
-      xAxisPos,
-      yAxisPos,
-    },
-  };
+    return {
+      scales: { x: xScale, y: yScale },
+      dimensions: { margin, width: chartWidth, height: chartHeight },
+      axisOptions: {
+        showXAxis: this.showXAxis,
+        showYAxis: this.showYAxis,
+        xAxisName: this.xAxisName,
+        yAxisName: this.yAxisName,
+        xAxisPos: this.xAxisPos,
+        yAxisPos: this.yAxisPos,
+      },
+    };
+  }
 }
