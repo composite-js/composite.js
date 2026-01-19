@@ -1,13 +1,13 @@
 import * as d3 from "d3";
 import { Chart } from "./chart";
+import { BBox } from "./utils/bbox";
 
 /**
  * Base class for layout nodes (charts, compositions, repeats).
  */
 export class Node {
   constructor() {
-    this.bbox = { x: 0, y: 0, width: 0, height: 0 };
-    this.margin = { top: 0, right: 0, bottom: 0, left: 0 };
+    this.bbox = new BBox(0, 0, 0, 0);
   }
 
   /**
@@ -110,7 +110,6 @@ export class Stack extends Composition {
    * @private
    */
   _syncPadding(charts, direction) {
-    console.log(charts);
     // TODO: implement this!!!
   }
 
@@ -301,12 +300,12 @@ export class RepeatY extends Repeat {
  */
 export class LayoutCalculator {
   /**
-   * Calculates the margins required for a chart by actually rendering axes
+   * Calculates the margin required for a chart by actually rendering axes
    * and measuring their bounding boxes.
    * @param {Object} chart - The chart object.
-   * @returns {Object} The calculated margins {top, right, bottom, left}.
+   * @returns {Object} The calculated margin {top, right, bottom, left}.
    */
-  static estimateMargins(chart) {
+  static estimatemargin(chart) {
     const {
       data,
       encoding,
@@ -477,6 +476,21 @@ export class LayoutCalculator {
  * Layout engine for computing and rendering layouts.
  */
 export class LayoutEngine {
+  static _translateBBox(bbox, dx, dy) {
+    if (!(bbox instanceof BBox)) {
+      throw new TypeError("_translateBBox(bbox): bbox must be a BBox");
+    }
+
+    const translated = new BBox(
+      bbox.content.x + dx,
+      bbox.content.y + dy,
+      bbox.content.width,
+      bbox.content.height,
+    );
+    translated.margin = bbox.margin;
+    return translated;
+  }
+
   /**
    * Helper to find the relative layout position of a target node within a computed tree.
    * @param {Object} computedNode - The current computed node to search within.
@@ -485,14 +499,26 @@ export class LayoutEngine {
    */
   static findNodeLayout(computedNode, targetNode) {
     if (computedNode.node === targetNode) {
-      return computedNode.layoutBox
-        ? { ...computedNode.layoutBox }
-        : {
-            x: 0,
-            y: 0,
-            width: computedNode.width,
-            height: computedNode.height,
-          };
+      if (computedNode.bbox instanceof BBox) {
+        return {
+          x: computedNode.bbox.content.x,
+          y: computedNode.bbox.content.y,
+          width: computedNode.bbox.content.width,
+          height: computedNode.bbox.content.height,
+        };
+      }
+
+      // Back-compat fallback if bbox is a plain rect
+      if (computedNode.bbox && computedNode.bbox.width !== undefined) {
+        return { ...computedNode.bbox };
+      }
+
+      return {
+        x: 0,
+        y: 0,
+        width: computedNode.width,
+        height: computedNode.height,
+      };
     }
 
     if (computedNode.children) {
@@ -522,6 +548,10 @@ export class LayoutEngine {
         this.computeLayout(child),
       );
 
+      if (childrenNodes.length === 0) {
+        throw new Error("Invalid: composition node has no children.");
+      }
+
       // Initialize children positions
       childrenNodes.forEach((c) => {
         c.x = 0;
@@ -535,6 +565,13 @@ export class LayoutEngine {
       let currentPos = 0;
       for (let i = 0; i < childrenNodes.length; i++) {
         const child = childrenNodes[i];
+
+        if (!(child.node.bbox instanceof BBox)) {
+          throw new Error("Invalid layout tree: child.bbox must be a BBox");
+        }
+
+        const childOuter = child.node.bbox.outerRect();
+
         if (isVertical) {
           child.y = currentPos;
         } else {
@@ -552,9 +589,9 @@ export class LayoutEngine {
         }
 
         if (isVertical) {
-          currentPos += child.height + gap;
+          currentPos += childOuter.height + gap;
         } else {
-          currentPos += child.width + gap;
+          currentPos += childOuter.width + gap;
         }
       }
 
@@ -584,53 +621,54 @@ export class LayoutEngine {
         }
       }
 
-      // 3. Normalize cross axis positions (start at 0)
-      if (isVertical) {
-        const minX = Math.min(...childrenNodes.map((c) => c.x));
-        childrenNodes.forEach((c) => (c.x -= minX));
-      } else {
-        const minY = Math.min(...childrenNodes.map((c) => c.y));
-        childrenNodes.forEach((c) => (c.y -= minY));
+      // 3. Normalize positions so the union outerRect starts at (0,0)
+      const minOuterX = Math.min(
+        ...childrenNodes.map((c) => (c.x || 0) + c.node.bbox.outerRect().x),
+      );
+      const minOuterY = Math.min(
+        ...childrenNodes.map((c) => (c.y || 0) + c.node.bbox.outerRect().y),
+      );
+
+      childrenNodes.forEach((c) => {
+        c.x = (c.x || 0) - minOuterX;
+        c.y = (c.y || 0) - minOuterY;
+      });
+
+      // 4. Compute union bbox using BBox.union()
+      let unionBBox = null;
+      for (const child of childrenNodes) {
+        const placed = this._translateBBox(
+          child.node.bbox,
+          child.x || 0,
+          child.y || 0,
+        );
+        unionBBox = unionBBox ? unionBBox.union(placed) : placed;
       }
 
-      // 4. Compute total bounding box
-      let totalW = 0;
-      let totalH = 0;
-
-      if (isVertical) {
-        // Vertical stack: Width is max of (child.x + child.width)
-        // Height is determined by the last child's bottom
-        totalW = childrenNodes.reduce(
-          (max, c) => Math.max(max, c.x + c.width),
-          0,
-        );
-        const last = childrenNodes[childrenNodes.length - 1];
-        totalH = last.y + last.height;
-      } else {
-        // Horizontal stack: Height is max of (child.y + child.height)
-        // Width is determined by last child's right
-        const last = childrenNodes[childrenNodes.length - 1];
-        totalW = last.x + last.width;
-        totalH = childrenNodes.reduce(
-          (max, c) => Math.max(max, c.y + c.height),
-          0,
-        );
+      if (!unionBBox) {
+        throw new Error("Invalid: composition node has no children.");
       }
 
-      node.bbox = { x: 0, y: 0, width: totalW, height: totalH };
-      node.margin = { top: 0, right: 0, bottom: 0, left: 0 };
+      const outer = unionBBox.outerRect();
+
+      // Ensure the composition's bbox outerRect origin is (0,0)
+      if (outer.x !== 0 || outer.y !== 0) {
+        childrenNodes.forEach((c) => {
+          c.x = (c.x || 0) - outer.x;
+          c.y = (c.y || 0) - outer.y;
+        });
+        unionBBox = this._translateBBox(unionBBox, -outer.x, -outer.y);
+      }
+
+      node.bbox = unionBBox;
 
       return {
-        type: "composition",
         node,
-        width: totalW,
-        height: totalH,
+        type: "composition",
         children: childrenNodes,
-        // For compositions, we don't usually define a "layoutBox" (content box)
-        // unless we want outer stacks to align to this stack as a whole block.
       };
     } else {
-      const margins = LayoutCalculator.estimateMargins(node);
+      const margin = LayoutCalculator.estimatemargin(node);
       let w = node.options.width;
       let h = node.options.height;
 
@@ -640,23 +678,13 @@ export class LayoutEngine {
         if (h === undefined) h = suggested.height;
       }
 
-      node.bbox = { x: margins.left, y: margins.top, width: w, height: h };
-      node.margin = margins;
+      const bbox = new BBox(0, 0, w, h);
+      bbox.setMargin(margin);
+      node.bbox = bbox;
 
       return {
-        type: "leaf",
         node,
-        width: w + margins.left + margins.right,
-        height: h + margins.top + margins.bottom,
-        innerWidth: w,
-        innerHeight: h,
-        margins,
-        layoutBox: {
-          x: margins.left,
-          y: margins.top,
-          width: w,
-          height: h,
-        },
+        type: "leaf",
       };
     }
   }
@@ -670,19 +698,17 @@ export class LayoutEngine {
    */
   static renderTree(computedNode, container, x, y) {
     if (computedNode.type === "leaf") {
-      const { margins, innerWidth, innerHeight, node } = computedNode;
+      const { node } = computedNode;
+      const margin = node.bbox.margin;
       const g = container
         .append("g")
         .attr("class", node.classTag || "leaf")
-        .attr(
-          "transform",
-          `translate(${x + margins.left}, ${y + margins.top})`,
-        );
+        .attr("transform", `translate(${x + margin.left}, ${y + margin.top})`);
 
       node.render(g.node(), {
-        width: innerWidth,
-        height: innerHeight,
-        margin: margins,
+        width: node.bbox.content.width,
+        height: node.bbox.content.height,
+        margin: margin,
       });
     } else {
       const { node } = computedNode;
@@ -706,12 +732,13 @@ export class LayoutEngine {
     container.innerHTML = "";
 
     const computedTree = this.computeLayout(root);
+    const outer = computedTree.node.bbox.outerRect();
 
     const svg = d3
       .select(container)
       .append("svg")
-      .attr("width", computedTree.width)
-      .attr("height", computedTree.height);
+      .attr("width", outer.width)
+      .attr("height", outer.height);
 
     this.renderTree(computedTree, svg, 0, 0);
   }
