@@ -35,9 +35,29 @@ export class BBox {
    * @param {number} dx - translation in x direction
    * @param {number} dy - translation in y direction
    */
-  translate(dx, dy) {
+  translateBy(dx, dy) {
     this.content.x += dx;
     this.content.y += dy;
+  }
+
+  /**
+   * Translates the content box to (x, y).
+   * @param {number} x - new x position
+   * @param {number} y - new y position
+   */
+  translateTo(x, y) {
+    this.content.x = x;
+    this.content.y = y;
+  }
+
+  /**
+   * Sets the width and height of the content box.
+   * @param {number} width
+   * @param {number} height
+   */
+  setSize(width, height) {
+    if (width > 0) this.content.width = width;
+    if (height > 0) this.content.height = height;
   }
 
   /**
@@ -45,7 +65,7 @@ export class BBox {
    * @returns {{x: number, y: number, width: number, height: number}}
    */
   contentRect() {
-    return { ...this.content };
+    return this.content;
   }
 
   /**
@@ -107,5 +127,25 @@ export class BBox {
     };
 
     return result;
+  }
+
+  /**
+   * Gets the total width including margins.
+   * @returns {number}
+   */
+  totalWidth() {
+    return (
+      this.content.width + (this.margin.left || 0) + (this.margin.right || 0)
+    );
+  }
+
+  /**
+   * Gets the total height including margins.
+   * @returns {number}
+   */
+  totalHeight() {
+    return (
+      this.content.height + (this.margin.top || 0) + (this.margin.bottom || 0)
+    );
   }
 }

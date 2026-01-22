@@ -20,6 +20,24 @@ export class Node {
   }
 
   /**
+   * Checks if a node is a repeat.
+   * @param {Node} node - The node to check.
+   * @returns {boolean} True if the node is a repeat.
+   */
+  static isRepeat(node) {
+    return node instanceof Repeat;
+  }
+
+  /**
+   * Checks if a node is a stack.
+   * @param {Node} node - The node to check.
+   * @returns {boolean} True if the node is a stack.
+   */
+  static isStack(node) {
+    return node instanceof Stack;
+  }
+
+  /**
    * Renders the layout node.
    * @param {HTMLElement} container - The container element.
    */
@@ -52,23 +70,19 @@ export class Stack extends Composition {
     super();
     this.children = charts;
     this.direction = direction;
-    this.internalConstraints = [];
     this.isStack = true;
     this.type = "stack";
     this.classTag = direction === "horizontal" ? "stackX" : "stackY";
-
-    let margin = undefined;
-    let align = [];
-
-    options = options || {};
-    margin = options.margin || 0;
-    align = options.align || [];
+    this.margin = options.margin || 0; // TODO: 允许不同的 margin
+    this.align = options.align || [];
 
     let alignedCharts = [];
 
     for (let i = 0; i < charts.length; i++) {
       const alignedChart =
-        align[i] !== undefined && align[i] !== null ? align[i] : charts[i];
+        this.align[i] !== undefined && this.align[i] !== null
+          ? this.align[i]
+          : charts[i];
 
       if (
         !(alignedChart instanceof Chart) &&
@@ -81,17 +95,6 @@ export class Stack extends Composition {
     }
 
     this._syncPadding(alignedCharts, direction);
-
-    for (let i = 0; i < charts.length - 1; i++) {
-      const c1 = alignedCharts[i];
-      const c2 = alignedCharts[i + 1];
-      this.internalConstraints.push({
-        type: "stack",
-        charts: [c1, c2],
-        direction,
-        margin: margin,
-      });
-    }
   }
 
   /**
@@ -100,7 +103,7 @@ export class Stack extends Composition {
    */
   _getAllCharts(node) {
     if (node instanceof Stack) {
-      return node.flatten().charts;
+      return node.flatten();
     }
     return [node];
   }
@@ -119,19 +122,17 @@ export class Stack extends Composition {
    */
   flatten() {
     let allCharts = [];
-    let allConstraints = [...this.internalConstraints];
 
     this.children.forEach((c) => {
       if (c instanceof Stack) {
         const res = c.flatten();
         allCharts.push(...res.charts);
-        allConstraints.push(...res.constraints);
       } else {
         allCharts.push(c);
       }
     });
 
-    return { charts: [...new Set(allCharts)], constraints: allConstraints };
+    return [...new Set(allCharts)];
   }
 
   /**
@@ -476,21 +477,6 @@ export class LayoutCalculator {
  * Layout engine for computing and rendering layouts.
  */
 export class LayoutEngine {
-  static _translateBBox(bbox, dx, dy) {
-    if (!(bbox instanceof BBox)) {
-      throw new TypeError("_translateBBox(bbox): bbox must be a BBox");
-    }
-
-    const translated = new BBox(
-      bbox.content.x + dx,
-      bbox.content.y + dy,
-      bbox.content.width,
-      bbox.content.height,
-    );
-    translated.margin = bbox.margin;
-    return translated;
-  }
-
   /**
    * Helper to find the relative layout position of a target node within a computed tree.
    * @param {Object} computedNode - The current computed node to search within.
@@ -499,26 +485,16 @@ export class LayoutEngine {
    */
   static findNodeLayout(computedNode, targetNode) {
     if (computedNode.node === targetNode) {
-      if (computedNode.bbox instanceof BBox) {
+      if (targetNode.bbox instanceof BBox) {
         return {
-          x: computedNode.bbox.content.x,
-          y: computedNode.bbox.content.y,
-          width: computedNode.bbox.content.width,
-          height: computedNode.bbox.content.height,
+          x: targetNode.bbox.content.x,
+          y: targetNode.bbox.content.y,
+          width: targetNode.bbox.content.width,
+          height: targetNode.bbox.content.height,
         };
+      } else {
+        throw new Error("Invalid layout tree: targetNode.bbox must be a BBox");
       }
-
-      // Back-compat fallback if bbox is a plain rect
-      if (computedNode.bbox && computedNode.bbox.width !== undefined) {
-        return { ...computedNode.bbox };
-      }
-
-      return {
-        x: 0,
-        y: 0,
-        width: computedNode.width,
-        height: computedNode.height,
-      };
     }
 
     if (computedNode.children) {
@@ -534,7 +510,7 @@ export class LayoutEngine {
         }
       }
     }
-    return null;
+    return null; // TODO: when will this happen?
   }
 
   /**
@@ -544,129 +520,72 @@ export class LayoutEngine {
    */
   static computeLayout(node) {
     if (node instanceof Stack) {
-      const childrenNodes = node.children.map((child) =>
-        this.computeLayout(child),
-      );
-
-      if (childrenNodes.length === 0) {
+      if (node.children.length === 0) {
         throw new Error("Invalid: composition node has no children.");
       }
 
-      // Initialize children positions
-      childrenNodes.forEach((c) => {
-        c.x = 0;
-        c.y = 0;
+      node.children.forEach((child) => {
+        this.computeLayout(child);
       });
 
-      const constraints = node.internalConstraints || [];
-      const isVertical = node.direction === "vertical";
+      const n = node.children.length;
 
-      // 1. Stack along main axis with gaps
-      let currentPos = 0;
-      for (let i = 0; i < childrenNodes.length; i++) {
-        const child = childrenNodes[i];
+      // adjust children layout
+      if (node.direction === "horizontal") {
+        let currentX = 0;
+        // TODO: current aligning strategy: align by the first child's height.
+        // This is a bad strategy. We need to improve it later.
+        const sharedHeight = node.children[0].bbox.contentRect().height;
+        const sharedY = 0;
+        for (let i = 0; i < node.children.length; i++) {
+          const bbox = node.children[i].bbox;
+          currentX += bbox.margin.left;
 
-        if (!(child.node.bbox instanceof BBox)) {
-          throw new Error("Invalid layout tree: child.bbox must be a BBox");
+          bbox.translateTo(currentX, sharedY);
+          bbox.setSize(-1, sharedHeight);
+
+          currentX += bbox.contentRect().width + bbox.margin.right;
         }
 
-        const childOuter = child.node.bbox.outerRect();
+        // compute margin
+        const margin = {
+          left: node.children[0].bbox.margin.left,
+          right: node.children[n - 1].bbox.margin.right,
+          top: Math.max(...node.children.map((c) => c.bbox.margin.top)),
+          bottom: Math.max(...node.children.map((c) => c.bbox.margin.bottom)),
+        };
 
-        if (isVertical) {
-          child.y = currentPos;
-        } else {
-          child.x = currentPos;
+        // update bbox
+        node.bbox.translateTo(margin.left, margin.top);
+        node.bbox.setSize(currentX - margin.left - margin.right, sharedHeight);
+        node.bbox.setMargin(margin);
+      } else if (node.direction === "vertical") {
+        let currentY = 0;
+        const sharedWidth = node.children[0].bbox.contentRect().width;
+        const sharedX = 0;
+        for (let i = 0; i < node.children.length; i++) {
+          const bbox = node.children[i].bbox;
+          currentY += bbox.margin.top;
+
+          bbox.translateTo(sharedX, currentY);
+          bbox.setSize(sharedWidth, -1);
+
+          currentY += bbox.contentRect().height + bbox.margin.bottom;
         }
 
-        // Determine gap after this child
-        let gap = 0;
-        // Check constraint associated with this gap (between i and i+1)
-        if (i < childrenNodes.length - 1) {
-          const constraint = constraints[i];
-          if (constraint && constraint.margin !== undefined) {
-            gap = constraint.margin;
-          }
-        }
+        const margin = {
+          top: node.children[0].bbox.margin.top,
+          bottom: node.children[n - 1].bbox.margin.bottom,
+          left: Math.max(...node.children.map((c) => c.bbox.margin.left)),
+          right: Math.max(...node.children.map((c) => c.bbox.margin.right)),
+        };
 
-        if (isVertical) {
-          currentPos += childOuter.height + gap;
-        } else {
-          currentPos += childOuter.width + gap;
-        }
+        node.bbox.translateTo(margin.left, margin.top);
+        node.bbox.setSize(sharedWidth, currentY - margin.top - margin.bottom);
+        node.bbox.setMargin(margin);
+      } else {
+        throw new Error(`Unknown stacking direction: ${node.direction}`);
       }
-
-      // 2. Align along cross axis using constraints
-      // Propagate alignment offsets
-      for (let i = 0; i < childrenNodes.length - 1; i++) {
-        const constraint = constraints[i];
-        if (!constraint) continue;
-
-        const [t1, t2] = constraint.charts;
-        // Find layout relative to the respective child root
-        const layout1 = this.findNodeLayout(childrenNodes[i], t1);
-        const layout2 = this.findNodeLayout(childrenNodes[i + 1], t2);
-
-        if (layout1 && layout2) {
-          if (isVertical) {
-            // Align Horizontally (X)
-            // We want child[i].x + layout1.x === child[i+1].x + layout2.x
-            // child[i+1].x = child[i].x + layout1.x - layout2.x
-            const diff = layout1.x - layout2.x;
-            childrenNodes[i + 1].x = childrenNodes[i].x + diff;
-          } else {
-            // Align Vertically (Y)
-            const diff = layout1.y - layout2.y;
-            childrenNodes[i + 1].y = childrenNodes[i].y + diff;
-          }
-        }
-      }
-
-      // 3. Normalize positions so the union outerRect starts at (0,0)
-      const minOuterX = Math.min(
-        ...childrenNodes.map((c) => (c.x || 0) + c.node.bbox.outerRect().x),
-      );
-      const minOuterY = Math.min(
-        ...childrenNodes.map((c) => (c.y || 0) + c.node.bbox.outerRect().y),
-      );
-
-      childrenNodes.forEach((c) => {
-        c.x = (c.x || 0) - minOuterX;
-        c.y = (c.y || 0) - minOuterY;
-      });
-
-      // 4. Compute union bbox using BBox.union()
-      let unionBBox = null;
-      for (const child of childrenNodes) {
-        const placed = this._translateBBox(
-          child.node.bbox,
-          child.x || 0,
-          child.y || 0,
-        );
-        unionBBox = unionBBox ? unionBBox.union(placed) : placed;
-      }
-
-      if (!unionBBox) {
-        throw new Error("Invalid: composition node has no children.");
-      }
-
-      const outer = unionBBox.outerRect();
-
-      // Ensure the composition's bbox outerRect origin is (0,0)
-      if (outer.x !== 0 || outer.y !== 0) {
-        childrenNodes.forEach((c) => {
-          c.x = (c.x || 0) - outer.x;
-          c.y = (c.y || 0) - outer.y;
-        });
-        unionBBox = this._translateBBox(unionBBox, -outer.x, -outer.y);
-      }
-
-      node.bbox = unionBBox;
-
-      return {
-        node,
-        type: "composition",
-        children: childrenNodes,
-      };
     } else {
       const margin = LayoutCalculator.estimatemargin(node);
       let w = node.options.width;
@@ -681,24 +600,18 @@ export class LayoutEngine {
       const bbox = new BBox(0, 0, w, h);
       bbox.setMargin(margin);
       node.bbox = bbox;
-
-      return {
-        node,
-        type: "leaf",
-      };
     }
   }
 
   /**
    * Recursively renders the layout tree.
-   * @param {Object} computedNode - The computed layout node.
+   * @param {Object} node - The layout node.
    * @param {d3.Selection} container - The SVG container selection.
    * @param {number} x - X position.
    * @param {number} y - Y position.
    */
-  static renderTree(computedNode, container, x, y) {
-    if (computedNode.type === "leaf") {
-      const { node } = computedNode;
+  static renderTree(node, container, x, y) {
+    if (!Node.isStack(node)) {
       const margin = node.bbox.margin;
       const g = container
         .append("g")
@@ -706,19 +619,23 @@ export class LayoutEngine {
         .attr("transform", `translate(${x + margin.left}, ${y + margin.top})`);
 
       node.render(g.node(), {
-        width: node.bbox.content.width,
-        height: node.bbox.content.height,
+        width: node.bbox.contentRect().width,
+        height: node.bbox.contentRect().height,
         margin: margin,
       });
     } else {
-      const { node } = computedNode;
       const group = container
         .append("g")
         .attr("class", `${node.classTag}`)
         .attr("transform", `translate(${x}, ${y})`);
 
-      computedNode.children.forEach((child) => {
-        this.renderTree(child, group, child.x, child.y);
+      node.children.forEach((child) => {
+        this.renderTree(
+          child,
+          group,
+          child.bbox.contentRect().x,
+          child.bbox.contentRect().y,
+        );
       });
     }
   }
@@ -731,8 +648,8 @@ export class LayoutEngine {
   static layout(root, container) {
     container.innerHTML = "";
 
-    const computedTree = this.computeLayout(root);
-    const outer = computedTree.node.bbox.outerRect();
+    this.computeLayout(root);
+    const outer = root.bbox.outerRect();
 
     const svg = d3
       .select(container)
@@ -740,6 +657,6 @@ export class LayoutEngine {
       .attr("width", outer.width)
       .attr("height", outer.height);
 
-    this.renderTree(computedTree, svg, 0, 0);
+    this.renderTree(root, svg, 0, 0);
   }
 }
