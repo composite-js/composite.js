@@ -2,8 +2,14 @@ import * as d3 from "d3";
 import { Chart } from "./chart";
 import { BBox } from "./utils/bbox";
 
+export function chart(config) {
+  const node = new Node();
+  node.element = new Chart(config);
+  return node;
+}
+
 /**
- * Base class for layout nodes (charts, compositions, repeats).
+ * Base class for layout nodes (basic elements, compositions).
  */
 export class Node {
   constructor() {
@@ -42,7 +48,9 @@ export class Node {
    * @param {HTMLElement} container - The container element.
    */
   render(container) {
-    throw new Error("render method must be implemented by subclass");
+    if (this.element) {
+      this.element.render(container);
+    }
   }
 }
 
@@ -52,56 +60,49 @@ export class Node {
 export class Composition extends Node {
   constructor() {
     super();
-    this.classTag = ""; // to identify composition type name, stated by subclass
+    this.classTag = "composition"; // to identify composition type name, stated by subclass
   }
 }
 
 /**
- * Stack class for stacking charts (formerly Composition).
+ * Stack composition class.
  */
 export class Stack extends Composition {
   /**
    * Creates an instance of Stack.
-   * @param {Array} charts - Array of chart instances.
+   * @param {Array} nodes - Array of node instances.
    * @param {string} direction - Stacking direction ('horizontal' | 'vertical').
    * @param {Object} options - Composition options.
    */
-  constructor(charts, direction, options = {}) {
+  constructor(nodes, direction, options = {}) {
     super();
-    this.children = charts;
+    this.children = nodes;
     this.direction = direction;
     this.isStack = true;
     this.type = "stack";
     this.classTag = direction === "horizontal" ? "stackX" : "stackY";
-    this.margin = options.margin || 0; // TODO: 允许不同的 margin
+    this.margin = options.margin || 0; // TODO: allow the use of different margins
     this.align = options.align || [];
 
-    let alignedCharts = [];
+    let alignedNodes = [];
 
-    for (let i = 0; i < charts.length; i++) {
-      const alignedChart =
+    for (let i = 0; i < nodes.length; i++) {
+      const alignedNode =
         this.align[i] !== undefined && this.align[i] !== null
           ? this.align[i]
-          : charts[i];
+          : nodes[i];
 
-      if (
-        !(alignedChart instanceof Chart) &&
-        !(alignedChart instanceof Repeat)
-      ) {
-        throw new Error("Alignment targets must be charts or repeats");
-      }
-
-      alignedCharts.push(alignedChart);
+      alignedNodes.push(alignedNode);
     }
 
-    this._syncPadding(alignedCharts, direction);
+    this._syncPadding(alignedNodes, direction);
   }
 
   /**
-   * Gets all charts from a node (flattening compositions).
+   * Gets all children from a node (flattening compositions).
    * @private
    */
-  _getAllCharts(node) {
+  _getAllNodes(node) {
     if (node instanceof Stack) {
       return node.flatten();
     }
@@ -109,30 +110,29 @@ export class Stack extends Composition {
   }
 
   /**
-   * Synchronizes padding across charts.
+   * Synchronizes padding across nodes.
    * @private
    */
-  _syncPadding(charts, direction) {
+  _syncPadding(nodes, direction) {
     // TODO: implement this!!!
   }
 
   /**
    * Flattens the composition tree.
-   * @returns {Object} Object with charts and constraints arrays.
    */
   flatten() {
-    let allCharts = [];
+    let allNodes = [];
 
     this.children.forEach((c) => {
       if (c instanceof Stack) {
         const res = c.flatten();
-        allCharts.push(...res.charts);
+        allNodes.push(...res.nodes);
       } else {
-        allCharts.push(c);
+        allNodes.push(c);
       }
     });
 
-    return [...new Set(allCharts)];
+    return [...new Set(allNodes)];
   }
 
   /**
@@ -146,23 +146,23 @@ export class Stack extends Composition {
 }
 
 /**
- * Creates a horizontal composition of charts.
- * @param {Array} charts - Array of chart instances.
+ * Creates a horizontal composition of nodes.
+ * @param {Array} nodes - Array of node instances.
  * @param {Object} options - Composition options.
  * @returns {Stack} A Stack instance.
  */
-export function stackX(charts, options) {
-  return new Stack(charts, "horizontal", options);
+export function stackX(nodes, options) {
+  return new Stack(nodes, "horizontal", options);
 }
 
 /**
- * Creates a vertical composition of charts.
- * @param {Array} charts - Array of chart instances.
+ * Creates a vertical composition of nodes.
+ * @param {Array} nodes - Array of node instances.
  * @param {Object} options - Composition options.
  * @returns {Stack} A Stack instance.
  */
-export function stackY(charts, options) {
-  return new Stack(charts, "vertical", options);
+export function stackY(nodes, options) {
+  return new Stack(nodes, "vertical", options);
 }
 
 /**
@@ -172,7 +172,7 @@ export class Repeat extends Composition {
   /**
    * Creates an instance of Repeat.
    * @param {Array} domain - The list of categorical values.
-   * @param {Function} func - A function that takes a value and returns a chart.
+   * @param {Function} func - A function that takes a value and returns a node.
    * @param {Object} options - Repeat options { paddingInner, paddingOuter }.
    */
   constructor(domain, func, options = {}) {
@@ -203,7 +203,7 @@ export class RepeatX extends Repeat {
   /**
    * Creates an instance of RepeatX.
    * @param {Array} domain - The list of categorical values.
-   * @param {Function} func - A function that takes a value and returns a chart.
+   * @param {Function} func - A function that takes a value and returns a node.
    * @param {Object} options - Repeat options { paddingInner, paddingOuter }.
    */
   constructor(domain, func, options = {}) {
@@ -212,7 +212,7 @@ export class RepeatX extends Repeat {
   }
 
   /**
-   * Renders the repeated charts.
+   * Renders the repeated nodes.
    * @param {HTMLElement} container - The container element.
    * @param {Object} renderOptions - Render options { width, height }.
    */
@@ -236,12 +236,12 @@ export class RepeatX extends Repeat {
     const bandwidth = xScale.bandwidth();
 
     this.domain.forEach((value) => {
-      const chart = this.func(value);
+      const node = this.func(value);
       const g = gParent
         .append("g")
         .attr("transform", `translate(${xScale(value)}, 0)`);
 
-      chart.render(g.node(), { width: bandwidth, height: height });
+      node.render(g.node(), { width: bandwidth, height: height });
     });
   }
 }
@@ -253,7 +253,7 @@ export class RepeatY extends Repeat {
   /**
    * Creates an instance of RepeatY.
    * @param {Array} domain - The list of categorical values.
-   * @param {Function} func - A function that takes a value and returns a chart.
+   * @param {Function} func - A function that takes a value and returns a node.
    * @param {Object} options - Repeat options { paddingInner, paddingOuter }.
    */
   constructor(domain, func, options = {}) {
@@ -262,7 +262,7 @@ export class RepeatY extends Repeat {
   }
 
   /**
-   * Renders the repeated charts.
+   * Renders the repeated nodes.
    * @param {HTMLElement} container - The container element.
    * @param {Object} renderOptions - Render options { width, height }.
    */
@@ -286,12 +286,12 @@ export class RepeatY extends Repeat {
     const bandwidth = yScale.bandwidth();
 
     this.domain.forEach((value) => {
-      const chart = this.func(value);
+      const node = this.func(value);
       const g = gParent
         .append("g")
         .attr("transform", `translate(0, ${yScale(value)})`);
 
-      chart.render(g.node(), { width: width, height: bandwidth });
+      node.render(g.node(), { width: width, height: bandwidth });
     });
   }
 }
@@ -301,12 +301,12 @@ export class RepeatY extends Repeat {
  */
 export class LayoutCalculator {
   /**
-   * Calculates the margin required for a chart by actually rendering axes
+   * Calculates the margin required for a node by actually rendering axes
    * and measuring their bounding boxes.
-   * @param {Object} chart - The chart object.
+   * @param {Object} node - The node object.
    * @returns {Object} The calculated margin {top, right, bottom, left}.
    */
-  static estimatemargin(chart) {
+  static estimateMargin(node) {
     const {
       data,
       encoding,
@@ -319,7 +319,7 @@ export class LayoutCalculator {
       xAxisName,
       yAxisName,
       mark,
-    } = chart.options;
+    } = node.options;
 
     const margin = { top: 10, right: 10, bottom: 10, left: 10 };
 
@@ -440,16 +440,16 @@ export class LayoutCalculator {
   }
 
   /**
-   * Suggests width & height for a chart based on its data and configuration.
-   * @param {Object} chart - The chart object.
+   * Suggests width & height for a node based on its data and configuration.
+   * @param {Object} node - The node object.
    * @returns {Object} The suggested dimensions {width, height}.
    */
-  static suggestWidthHeight(chart) {
-    const { data, encoding, mark, direction } = chart.options;
+  static suggestWidthHeight(node) {
+    const { data, encoding, mark, direction } = node.options;
     const defaultWidth = 400;
     const defaultHeight = 300;
 
-    if (chart.isRepeat) {
+    if (node.isRepeat) {
       return { width: defaultWidth, height: defaultHeight };
     }
 
@@ -514,6 +514,18 @@ export class LayoutEngine {
   }
 
   /**
+   * Helper to traverse the tree.
+   */
+  static traverseTree(node, callback) {
+    callback(node);
+    if (Node.isStack(node)) {
+      node.children.forEach((child) => {
+        this.traverseTree(child, callback);
+      });
+    }
+  }
+
+  /**
    * Recursively computes the dimensions and positions of the layout tree.
    * @param {Node} node - The layout node.
    * @returns {Object} Computed layout node with dimensions and children positions.
@@ -532,10 +544,18 @@ export class LayoutEngine {
 
       // adjust children layout
       if (node.direction === "horizontal") {
-        let currentX = 0;
-        // TODO: current aligning strategy: align by the first child's height.
+        // TODO: current aligning strategy: align by the stack (if any) child height
         // This is a bad strategy. We need to improve it later.
-        const sharedHeight = node.children[0].bbox.contentRect().height;
+        console.log(node.children[0]);
+        let sharedHeight = node.children[0].bbox.contentRect().height;
+        for (let i = 1; i < node.children.length; i++) {
+          if (Node.isStack(node.children[i])) {
+            sharedHeight = node.children[i].bbox.contentRect().height;
+            break;
+          }
+        }
+
+        let currentX = 0;
         const sharedY = 0;
         for (let i = 0; i < node.children.length; i++) {
           const bbox = node.children[i].bbox;
@@ -560,8 +580,15 @@ export class LayoutEngine {
         node.bbox.setSize(currentX - margin.left - margin.right, sharedHeight);
         node.bbox.setMargin(margin);
       } else if (node.direction === "vertical") {
+        let sharedWidth = node.children[0].bbox.contentRect().width;
+        for (let i = 1; i < node.children.length; i++) {
+          if (Node.isStack(node.children[i])) {
+            sharedWidth = node.children[i].bbox.contentRect().width;
+            break;
+          }
+        }
+
         let currentY = 0;
-        const sharedWidth = node.children[0].bbox.contentRect().width;
         const sharedX = 0;
         for (let i = 0; i < node.children.length; i++) {
           const bbox = node.children[i].bbox;
@@ -586,13 +613,16 @@ export class LayoutEngine {
       } else {
         throw new Error(`Unknown stacking direction: ${node.direction}`);
       }
+    } else if (node instanceof Repeat) {
+      // TODO
     } else {
-      const margin = LayoutCalculator.estimatemargin(node);
-      let w = node.options.width;
-      let h = node.options.height;
+      const element = node.element;
+      const margin = LayoutCalculator.estimateMargin(element);
+      let w = element.options.width;
+      let h = element.options.height;
 
       if (w === undefined || h === undefined) {
-        const suggested = LayoutCalculator.suggestWidthHeight(node);
+        const suggested = LayoutCalculator.suggestWidthHeight(element);
         if (w === undefined) w = suggested.width;
         if (h === undefined) h = suggested.height;
       }
@@ -610,12 +640,12 @@ export class LayoutEngine {
    * @param {number} x - X position.
    * @param {number} y - Y position.
    */
-  static renderTree(node, container, x, y) {
+  static renderTree(node, container, x = 0, y = 0) {
     if (!Node.isStack(node)) {
       const margin = node.bbox.margin;
       const g = container
         .append("g")
-        .attr("class", node.classTag || "leaf")
+        .attr("class", node.classTag)
         .attr("transform", `translate(${x + margin.left}, ${y + margin.top})`);
 
       node.render(g.node(), {
@@ -626,7 +656,7 @@ export class LayoutEngine {
     } else {
       const group = container
         .append("g")
-        .attr("class", `${node.classTag}`)
+        .attr("class", node.classTag)
         .attr("transform", `translate(${x}, ${y})`);
 
       node.children.forEach((child) => {
@@ -641,7 +671,42 @@ export class LayoutEngine {
   }
 
   /**
-   * Composes multiple charts into a single layout.
+   * (Debug) Renders the bbox of the layout tree only.
+   * @param {Object} node - The layout node.
+   * @param {d3.Selection} container - The SVG container selection.
+   * @param {number} x - X position.
+   * @param {number} y - Y position.
+   */
+  static renderTreeBBoxOnly(node, container, x = 0, y = 0) {
+    const g = container
+      .append("g")
+      .attr("class", node.classTag)
+      .attr("transform", `translate(${x}, ${y})`);
+
+    this.traverseTree(node, (n) => {
+      const bbox = n.bbox;
+      g.append("rect")
+        .attr("x", bbox.outerRect().x)
+        .attr("y", bbox.outerRect().y)
+        .attr("width", bbox.outerRect().width)
+        .attr("height", bbox.outerRect().height)
+        .attr("fill", "none")
+        .attr("stroke", "red")
+        .attr("stroke-dasharray", "4 2");
+
+      g.append("rect")
+        .attr("x", bbox.contentRect().x)
+        .attr("y", bbox.contentRect().y)
+        .attr("width", bbox.contentRect().width)
+        .attr("height", bbox.contentRect().height)
+        .attr("fill", "none")
+        .attr("stroke", "blue")
+        .attr("stroke-dasharray", "4 2");
+    });
+  }
+
+  /**
+   * Composes multiple elements into a single layout.
    * @param {Node} root - The root composition node.
    * @param {HTMLElement} container - The container element.
    */
@@ -654,9 +719,16 @@ export class LayoutEngine {
     const svg = d3
       .select(container)
       .append("svg")
-      .attr("width", outer.width)
-      .attr("height", outer.height);
+      .attr("width", outer.width + 2000)
+      .attr("height", outer.height + 2000);
 
-    this.renderTree(root, svg, 0, 0);
+    this.renderTree(root, svg);
+    this.renderTreeBBoxOnly(root, svg);
+
+    // debug
+    this.traverseTree(root, (n) => {
+      console.log(n);
+      // console.log(n.classTag, n.bbox.contentRect(), n.bbox.outerRect());
+    });
   }
 }

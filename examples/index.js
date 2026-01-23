@@ -1,5 +1,4 @@
-import { Chart } from "../src/chart.js";
-import { stackX, stackY, RepeatX } from "../src/layout.js";
+import { stackX, stackY, RepeatX, chart } from "../src/layout.js";
 
 const data = [
   { sets: ["Drama"], intersectionSize: 20, setSize: 45 },
@@ -90,7 +89,7 @@ genres.forEach((genre) => {
 const app = document.getElementById("app");
 
 // 1. Top Bar Chart (Intersection Size)
-const topBarChart = new Chart({
+const topBarChart = chart({
   data: topBarData,
   mark: "bar",
   encoding: {
@@ -104,7 +103,7 @@ const topBarChart = new Chart({
 });
 
 // 2. Matrix (Intersections)
-const matrixChart = new Chart({
+const matrixChart = chart({
   data: intersections,
   mark: "matrix",
   encoding: {
@@ -118,7 +117,7 @@ const matrixChart = new Chart({
 });
 
 // 3. Left Bar Chart (Set Size)
-const leftBarChart = new Chart({
+const leftBarChart = chart({
   data: setSizeData,
   mark: "bar",
   encoding: {
@@ -136,7 +135,7 @@ const leftBarChart = new Chart({
 });
 
 // 4. Box Plot (right of matrix)
-const boxChart = new Chart({
+const boxChart = chart({
   data: boxData,
   mark: "box",
   encoding: {
@@ -152,7 +151,7 @@ const boxChart = new Chart({
 });
 
 // 5. Horizontal Stack Bar Chart (right of box plot)
-const stackBarChart = new Chart({
+const stackBarChart = chart({
   data: stackBarData,
   mark: "stackbar",
   encoding: {
@@ -181,7 +180,7 @@ intersections.forEach((d) => {
 const pieRow = new RepeatX(
   intersections.map((d) => d.id),
   (id) => {
-    return new Chart({
+    return chart({
       data: pieDataMap[id],
       mark: "pie",
       encoding: {
