@@ -5,7 +5,18 @@ import { BBox } from "./utils/bbox";
 export function chart(config) {
   const node = new Node();
   node.element = new Chart(config);
+  node.classTag = "chart";
   return node;
+}
+
+export function text(config) {
+  // TODO: implement text creation method (node with text element)
+  throw new Error("Text not implemented yet.");
+}
+
+export function image(config) {
+  // TODO: implement image creation method (node with image element)
+  throw new Error("Image not implemented yet.");
 }
 
 /**
@@ -48,8 +59,13 @@ export class Node {
    * @param {HTMLElement} container - The container element.
    */
   render(container) {
+    // console.log(this.bbox);
     if (this.element) {
-      this.element.render(container);
+      this.element.render(container, {
+        width: this.bbox.contentRect().width,
+        height: this.bbox.contentRect().height,
+        margin: this.bbox.getMargin(),
+      });
     }
   }
 }
@@ -61,6 +77,20 @@ export class Composition extends Node {
   constructor() {
     super();
     this.classTag = "composition"; // to identify composition type name, stated by subclass
+    this.children = [];
+  }
+
+  /**
+   * Updates the bounding box of the composition based on its children's bounding boxes.
+   */
+  updateBBox() {
+    if (this.children?.length > 0) {
+      let combinedBBox = this.children[0].bbox;
+      for (let i = 1; i < this.children.length; i++) {
+        combinedBBox = combinedBBox.union(this.children[i].bbox);
+      }
+      this.bbox = combinedBBox;
+    }
   }
 }
 
@@ -83,8 +113,7 @@ export class Stack extends Composition {
     this.classTag = direction === "horizontal" ? "stackX" : "stackY";
     this.margin = options.margin || 0; // TODO: allow the use of different margins
     this.align = options.align || [];
-
-    let alignedNodes = [];
+    this.alignedNodes = [];
 
     for (let i = 0; i < nodes.length; i++) {
       const alignedNode =
@@ -92,10 +121,10 @@ export class Stack extends Composition {
           ? this.align[i]
           : nodes[i];
 
-      alignedNodes.push(alignedNode);
+      this.alignedNodes.push(alignedNode);
     }
 
-    this._syncPadding(alignedNodes, direction);
+    this._syncPadding(this.alignedNodes, direction);
   }
 
   /**
@@ -546,11 +575,10 @@ export class LayoutEngine {
       if (node.direction === "horizontal") {
         // TODO: current aligning strategy: align by the stack (if any) child height
         // This is a bad strategy. We need to improve it later.
-        console.log(node.children[0]);
         let sharedHeight = node.children[0].bbox.contentRect().height;
         for (let i = 1; i < node.children.length; i++) {
-          if (Node.isStack(node.children[i])) {
-            sharedHeight = node.children[i].bbox.contentRect().height;
+          if (node.children[i] !== node.alignedNodes[i]) {
+            sharedHeight = node.alignedNodes[i].bbox.contentRect().height;
             break;
           }
         }
@@ -559,31 +587,21 @@ export class LayoutEngine {
         const sharedY = 0;
         for (let i = 0; i < node.children.length; i++) {
           const bbox = node.children[i].bbox;
-          currentX += bbox.margin.left;
+          const margin = bbox.getMargin();
+          currentX += margin.left;
 
           bbox.translateTo(currentX, sharedY);
           bbox.setSize(-1, sharedHeight);
 
-          currentX += bbox.contentRect().width + bbox.margin.right;
+          currentX += bbox.contentRect().width + margin.right;
         }
 
-        // compute margin
-        const margin = {
-          left: node.children[0].bbox.margin.left,
-          right: node.children[n - 1].bbox.margin.right,
-          top: Math.max(...node.children.map((c) => c.bbox.margin.top)),
-          bottom: Math.max(...node.children.map((c) => c.bbox.margin.bottom)),
-        };
-
-        // update bbox
-        node.bbox.translateTo(margin.left, margin.top);
-        node.bbox.setSize(currentX - margin.left - margin.right, sharedHeight);
-        node.bbox.setMargin(margin);
+        node.updateBBox();
       } else if (node.direction === "vertical") {
         let sharedWidth = node.children[0].bbox.contentRect().width;
         for (let i = 1; i < node.children.length; i++) {
-          if (Node.isStack(node.children[i])) {
-            sharedWidth = node.children[i].bbox.contentRect().width;
+          if (node.children[i] !== node.alignedNodes[i]) {
+            sharedWidth = node.alignedNodes[i].bbox.contentRect().width;
             break;
           }
         }
@@ -592,29 +610,21 @@ export class LayoutEngine {
         const sharedX = 0;
         for (let i = 0; i < node.children.length; i++) {
           const bbox = node.children[i].bbox;
-          currentY += bbox.margin.top;
+          const margin = bbox.getMargin();
+          currentY += margin.top;
 
           bbox.translateTo(sharedX, currentY);
           bbox.setSize(sharedWidth, -1);
 
-          currentY += bbox.contentRect().height + bbox.margin.bottom;
+          currentY += bbox.contentRect().height + margin.bottom;
         }
 
-        const margin = {
-          top: node.children[0].bbox.margin.top,
-          bottom: node.children[n - 1].bbox.margin.bottom,
-          left: Math.max(...node.children.map((c) => c.bbox.margin.left)),
-          right: Math.max(...node.children.map((c) => c.bbox.margin.right)),
-        };
-
-        node.bbox.translateTo(margin.left, margin.top);
-        node.bbox.setSize(sharedWidth, currentY - margin.top - margin.bottom);
-        node.bbox.setMargin(margin);
+        node.updateBBox();
       } else {
         throw new Error(`Unknown stacking direction: ${node.direction}`);
       }
     } else if (node instanceof Repeat) {
-      // TODO
+      // TODO: nothing needs to be done here?
     } else {
       const element = node.element;
       const margin = LayoutCalculator.estimateMargin(element);
@@ -642,7 +652,7 @@ export class LayoutEngine {
    */
   static renderTree(node, container, x = 0, y = 0) {
     if (!Node.isStack(node)) {
-      const margin = node.bbox.margin;
+      const margin = node.bbox.getMargin();
       const g = container
         .append("g")
         .attr("class", node.classTag)
@@ -727,7 +737,7 @@ export class LayoutEngine {
 
     // debug
     this.traverseTree(root, (n) => {
-      console.log(n);
+      // console.log(n);
       // console.log(n.classTag, n.bbox.contentRect(), n.bbox.outerRect());
     });
   }

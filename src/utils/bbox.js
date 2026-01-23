@@ -84,6 +84,14 @@ export class BBox {
   }
 
   /**
+   * Gets the margin of the bbox.
+   */
+  getMargin() {
+    return this.margin;
+    // TODO: API consistency: getXxx vs xxx()?
+  }
+
+  /**
    * Computes the union of this BBox with another BBox.
    * @param {BBox} other - another BBox
    * @returns {BBox}
