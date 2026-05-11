@@ -11,6 +11,8 @@ export {
   Stack,
   chart,
   image,
+  repeatX,
+  repeatY,
   stackX,
   stackY,
   text,

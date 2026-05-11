@@ -10,9 +10,12 @@
 
 ### 核心 API
 
-- **`createChart(options)`**: 创建一个图表实例。
-  - `options`: 配置对象，包含数据 (`data`)、标记类型 (`mark`) 等信息。
-- **`chart.render(container)`**: 将图表渲染到指定的 DOM 容器中。
+- **`chart(options)`**: 创建一个 leaf layout node，内部包装具体 chart renderer。
+- **`stackX(nodes, options)` / `stackY(nodes, options)`**: 将 layout nodes 按横向或纵向组合。
+- **`repeatX(domain, fn, options)` / `repeatY(domain, fn, options)`**: 根据 domain 生成重复节点。
+- **`node.render(container, options)`**: 将单个 chart 或组合节点渲染到 DOM 容器中。
+
+组合 API 只接受 layout node。也就是说，用户应该传入 `chart({...})` 的返回值，而不是直接把 `new Chart(...)` 放进 `stackX` 或 `stackY`。
 
 ### 目录结构
 
@@ -22,7 +25,11 @@
 ├── package.json        # 项目依赖与脚本配置
 ├── vite.config.js      # Vite 配置文件
 ├── src/
-│   └── index.js        # 库的入口文件，包含核心逻辑
+│   ├── index.js        # 库的公开入口
+│   ├── chart.js        # leaf chart wrapper
+│   ├── layout.js       # layout public exports
+│   ├── layout/         # node、composition、measurement、engine、renderer
+│   └── marks/          # mark renderers
 └── docs/               # 文档目录
 ```
 
@@ -57,7 +64,7 @@ pnpm run build
 ## 使用示例
 
 ```javascript
-import { createChart } from "./src/index.js";
+import { chart } from "./src/index.js";
 
 const data = [
   { category: "A", value: 30 },
@@ -65,7 +72,7 @@ const data = [
   { category: "C", value: 45 },
 ];
 
-const chart = createChart({
+const bar = chart({
   data: data,
   mark: "bar",
   encoding: {
@@ -75,5 +82,5 @@ const chart = createChart({
 });
 
 const root = document.getElementById("app");
-chart.render(root);
+bar.render(root);
 ```

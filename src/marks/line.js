@@ -97,17 +97,9 @@ export class LineChartRenderer extends MarkRenderer {
       circle.append("title").text(`${p.label}: ${p.value}`);
     });
 
-    return {
-      scales: { x: xScale, y: yScale },
-      dimensions: { margin, width: chartWidth, height: chartHeight },
-      axisOptions: {
-        showXAxis: this.showXAxis,
-        showYAxis: this.showYAxis,
-        xAxisName: this.xAxisName,
-        yAxisName: this.yAxisName,
-        xAxisPos: this.xAxisPos,
-        yAxisPos: this.yAxisPos,
-      },
-    };
+    return this.axisConfig(
+      { x: xScale, y: yScale },
+      { margin, width: chartWidth, height: chartHeight },
+    );
   }
 }

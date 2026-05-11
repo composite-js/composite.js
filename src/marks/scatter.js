@@ -82,17 +82,9 @@ export class ScatterChartRenderer extends MarkRenderer {
         .text(`x: ${d[xField].toFixed(2)}, y: ${d[yField].toFixed(2)}`);
     });
 
-    return {
-      scales: { x: xScale, y: yScale },
-      dimensions: { margin, width: chartWidth, height: chartHeight },
-      axisOptions: {
-        showXAxis: this.showXAxis,
-        showYAxis: this.showYAxis,
-        xAxisName: this.xAxisName,
-        yAxisName: this.yAxisName,
-        xAxisPos: this.xAxisPos,
-        yAxisPos: this.yAxisPos,
-      },
-    };
+    return this.axisConfig(
+      { x: xScale, y: yScale },
+      { margin, width: chartWidth, height: chartHeight },
+    );
   }
 }

@@ -1,3 +1,5 @@
+import * as d3 from "d3";
+
 /**
  * Base class for mark renderers.
  */
@@ -17,6 +19,52 @@ export class MarkRenderer {
       bottom: 40,
       left: 40,
     };
+    this.showXAxis = options.showXAxis !== undefined ? options.showXAxis : true;
+    this.showYAxis = options.showYAxis !== undefined ? options.showYAxis : true;
+    this.xAxisName = options.xAxisName || "";
+    this.yAxisName = options.yAxisName || "";
+    this.xAxisPos = options.xAxisPos || "bottom";
+    this.yAxisPos = options.yAxisPos || "left";
+  }
+
+  getAxisOptions() {
+    return {
+      showXAxis: this.showXAxis,
+      showYAxis: this.showYAxis,
+      xAxisName: this.xAxisName,
+      yAxisName: this.yAxisName,
+      xAxisPos: this.xAxisPos,
+      yAxisPos: this.yAxisPos,
+    };
+  }
+
+  axisConfig(scales, dimensions) {
+    return {
+      scales,
+      dimensions,
+      axisOptions: this.getAxisOptions(),
+    };
+  }
+
+  applyFillHover(selection, normalFill, hoverFill = "orange") {
+    return selection
+      .attr("fill", normalFill)
+      .on("mouseenter", function () {
+        d3.select(this).attr("fill", hoverFill);
+      })
+      .on("mouseleave", function () {
+        d3.select(this).attr("fill", normalFill);
+      });
+  }
+
+  applyOpacityHover(selection, hoverOpacity = 0.7, normalOpacity = 1) {
+    return selection
+      .on("mouseenter", function () {
+        d3.select(this).attr("opacity", hoverOpacity);
+      })
+      .on("mouseleave", function () {
+        d3.select(this).attr("opacity", normalOpacity);
+      });
   }
 
   /**

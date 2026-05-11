@@ -132,7 +132,10 @@ export class Chart {
       renderOptions.height !== undefined ? renderOptions.height : this.height;
 
     let svg;
-    if (container instanceof SVGElement) {
+    const isSvgContainer =
+      typeof SVGElement !== "undefined" && container instanceof SVGElement;
+
+    if (isSvgContainer) {
       svg = container;
     } else {
       svg = d3
