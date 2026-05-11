@@ -5,7 +5,11 @@ export default defineConfig({
     lib: {
       entry: "src/index.js",
       name: "composite",
-      fileName: (format) => `composite.${format}`,
+      fileName: (format) => {
+        if (format === "es") return "esm/index.js";
+        if (format === "cjs") return "cjs/index.cjs";
+        return "umd/composite.umd.cjs";
+      },
       formats: ["es", "cjs", "umd"],
     },
     rollupOptions: {

@@ -58,13 +58,23 @@ export class Node {
    * Renders the layout node.
    * @param {HTMLElement} container - The container element.
    */
-  render(container) {
+  render(container, renderOptions = {}) {
     // console.log(this.bbox);
     if (this.element) {
+      const content = this.bbox.contentRect();
       this.element.render(container, {
-        width: this.bbox.contentRect().width,
-        height: this.bbox.contentRect().height,
-        margin: this.bbox.getMargin(),
+        width:
+          renderOptions.width !== undefined
+            ? renderOptions.width
+            : content.width,
+        height:
+          renderOptions.height !== undefined
+            ? renderOptions.height
+            : content.height,
+        margin:
+          renderOptions.margin !== undefined
+            ? renderOptions.margin
+            : this.bbox.getMargin(),
       });
     }
   }
@@ -212,11 +222,15 @@ export class Repeat extends Composition {
       options.paddingInner !== undefined ? options.paddingInner : 0.1;
     this.paddingOuter =
       options.paddingOuter !== undefined ? options.paddingOuter : 0.1;
+    this.width = options.width;
+    this.height = options.height;
 
     this.options = {
+      width: this.width,
+      height: this.height,
       paddingInner: this.paddingInner,
       paddingOuter: this.paddingOuter,
-      margin: { top: 0, right: 0, bottom: 0, left: 0 },
+      margin: options.margin || { top: 0, right: 0, bottom: 0, left: 0 },
     };
 
     // no `render()` method here; implemented in subclasses
@@ -635,7 +649,37 @@ export class LayoutEngine {
         throw new Error(`Unknown stacking direction: ${node.direction}`);
       }
     } else if (node instanceof Repeat) {
-      // TODO: nothing needs to be done here?
+      const hasExplicitWidth = node.options.width !== undefined;
+      const hasExplicitHeight = node.options.height !== undefined;
+      let w = node.options.width;
+      let h = node.options.height;
+
+      if (!hasExplicitWidth || !hasExplicitHeight) {
+        const suggested = LayoutCalculator.suggestWidthHeight(node);
+        if (!hasExplicitWidth) w = suggested.width;
+        if (!hasExplicitHeight) h = suggested.height;
+      }
+
+      if (
+        node.domain.length > 0 &&
+        ((node instanceof RepeatX && !hasExplicitHeight) ||
+          (node instanceof RepeatY && !hasExplicitWidth))
+      ) {
+        const sampleChild = node.func(node.domain[0]);
+        this.computeLayout(sampleChild);
+
+        if (node instanceof RepeatX && !hasExplicitHeight) {
+          h = sampleChild.bbox.totalHeight();
+        }
+
+        if (node instanceof RepeatY && !hasExplicitWidth) {
+          w = sampleChild.bbox.totalWidth();
+        }
+      }
+
+      const bbox = new BBox(0, 0, w, h);
+      bbox.setMargin(node.options.margin);
+      node.bbox = bbox;
     } else {
       const element = node.element;
       const margin = LayoutCalculator.estimateMargin(element);

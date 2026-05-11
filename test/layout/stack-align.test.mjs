@@ -3,6 +3,8 @@ import {
   LayoutCalculator,
   LayoutEngine,
   Node,
+  RepeatX,
+  RepeatY,
   Stack,
   stackX,
   stackY,
@@ -56,6 +58,33 @@ function requireGlobalContentRect(root, target) {
   const rect = globalContentRect(root, target);
   assert.ok(rect, `Expected to find ${target.classTag}`);
   return rect;
+}
+
+{
+  let renderOptions;
+  const node = fakeChart("repeatChild");
+
+  node.element.render = (_container, options) => {
+    renderOptions = options;
+  };
+
+  node.render(
+    {},
+    {
+      width: 32,
+      height: 48,
+      margin: { top: 1, right: 2, bottom: 3, left: 4 },
+    },
+  );
+
+  assert.equal(renderOptions.width, 32);
+  assert.equal(renderOptions.height, 48);
+  assert.deepEqual(renderOptions.margin, {
+    top: 1,
+    right: 2,
+    bottom: 3,
+    left: 4,
+  });
 }
 
 try {
@@ -157,6 +186,59 @@ try {
     assert.ok(
       nestedRect.y + nestedRect.height >= bottomRect.y + bottomRect.height,
       "nested vertical stack should still include charts below the aligned target",
+    );
+  }
+
+  {
+    const topBar = fakeChart("topBar", {
+      width: 500,
+      height: 120,
+      margin: { top: 5, right: 8, bottom: 7, left: 12 },
+    });
+    const matrix = fakeChart("matrix", {
+      width: 300,
+      height: 220,
+      margin: { top: 19, right: 17, bottom: 6, left: 2 },
+    });
+    const pieRow = new RepeatX(["I0", "I1", "I2"], () =>
+      fakeChart("pie", {
+        width: 40,
+        height: 40,
+        margin: { top: 0, right: 0, bottom: 0, left: 0 },
+      }),
+    );
+
+    const root = stackY([topBar, matrix, pieRow], {
+      align: [matrix, matrix, matrix],
+    });
+
+    LayoutEngine.computeLayout(root);
+
+    const matrixRect = requireGlobalContentRect(root, matrix);
+    const pieRowRect = requireGlobalContentRect(root, pieRow);
+
+    assert.equal(pieRowRect.x, matrixRect.x);
+    assert.equal(pieRowRect.width, matrixRect.width);
+    assert.equal(pieRowRect.height, 40);
+  }
+
+  {
+    const repeatColumn = new RepeatY(["A", "B", "C"], () =>
+      fakeChart("sparkline", {
+        width: 64,
+        height: 20,
+        margin: { top: 2, right: 3, bottom: 4, left: 5 },
+      }),
+    );
+
+    LayoutEngine.computeLayout(repeatColumn);
+
+    const repeatRect = repeatColumn.bbox.contentRect();
+
+    assert.equal(repeatRect.width, 72);
+    assert.ok(
+      repeatRect.height > 0,
+      "repeat column should keep a non-zero height across its repeated values",
     );
   }
 } finally {
