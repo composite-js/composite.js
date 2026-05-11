@@ -9,11 +9,47 @@ export class FakeSvgElement {
     this.attributes = new Map();
     this.listeners = new Map();
     this.textContent = "";
+    const styleProperties = new Map();
+    this.style = {
+      setProperty(name, value) {
+        styleProperties.set(name, String(value));
+      },
+      getPropertyValue(name) {
+        return styleProperties.get(name) ?? "";
+      },
+      removeProperty(name) {
+        const previousValue = styleProperties.get(name) ?? "";
+        styleProperties.delete(name);
+        return previousValue;
+      },
+    };
   }
 
   appendChild(child) {
     child.parentNode = this;
     this.children.push(child);
+    return child;
+  }
+
+  insertBefore(child, nextSibling) {
+    if (child.parentNode) {
+      child.parentNode.removeChild(child);
+    }
+
+    child.parentNode = this;
+
+    if (!nextSibling) {
+      this.children.push(child);
+      return child;
+    }
+
+    const index = this.children.indexOf(nextSibling);
+    if (index < 0) {
+      this.children.push(child);
+    } else {
+      this.children.splice(index, 0, child);
+    }
+
     return child;
   }
 
