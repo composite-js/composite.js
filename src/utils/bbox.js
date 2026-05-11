@@ -69,7 +69,7 @@ export class BBox {
   }
 
   /**
-   * Computes the outer rectangle including margins.
+   * Computes the outer rectangle (including margins).
    * @returns {{x: number, y: number, width: number, height: number}}
    */
   outerRect() {

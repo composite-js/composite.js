@@ -1,6 +1,6 @@
 import * as d3 from "d3";
-import { Chart } from "./chart";
-import { BBox } from "./utils/bbox";
+import { Chart } from "./chart.js";
+import { BBox } from "./utils/bbox.js";
 
 export function chart(config) {
   const node = new Node();
@@ -89,7 +89,15 @@ export class Composition extends Node {
       for (let i = 1; i < this.children.length; i++) {
         combinedBBox = combinedBBox.union(this.children[i].bbox);
       }
-      this.bbox = combinedBBox;
+
+      const content = combinedBBox.contentRect();
+      this.children.forEach((child) => {
+        child.bbox.translateBy(-content.x, -content.y);
+      });
+
+      const normalizedBBox = new BBox(0, 0, content.width, content.height);
+      normalizedBBox.setMargin(combinedBBox.getMargin());
+      this.bbox = normalizedBBox;
     }
   }
 }
@@ -123,8 +131,6 @@ export class Stack extends Composition {
 
       this.alignedNodes.push(alignedNode);
     }
-
-    this._syncPadding(this.alignedNodes, direction);
   }
 
   /**
@@ -136,14 +142,6 @@ export class Stack extends Composition {
       return node.flatten();
     }
     return [node];
-  }
-
-  /**
-   * Synchronizes padding across nodes.
-   * @private
-   */
-  _syncPadding(nodes, direction) {
-    // TODO: implement this!!!
   }
 
   /**
@@ -336,136 +334,57 @@ export class LayoutCalculator {
    * @returns {Object} The calculated margin {top, right, bottom, left}.
    */
   static estimateMargin(node) {
-    const {
-      data,
-      encoding,
-      width = 400,
-      height = 300,
-      xAxisPos = "bottom",
-      yAxisPos = "left",
-      showXAxis = true,
-      showYAxis = true,
-      xAxisName,
-      yAxisName,
-      mark,
-    } = node.options;
-
-    const margin = { top: 10, right: 10, bottom: 10, left: 10 };
-
-    // Create temporary SVG for measurement
-    const tempSvg = d3
-      .create("svg")
-      .attr("width", width + 100)
-      .attr("height", height + 100);
-
-    // Create scales based on data
-    let xScale, yScale;
-
-    if (encoding?.x && encoding?.y) {
-      const xField = encoding.x;
-      const yField = encoding.y;
-
-      // Determine scale types based on data and mark type
-      if (mark === "bar") {
-        const xValues = data.map((d) => d[xField]);
-        const yValues = data.map((d) => d[yField]);
-
-        if (typeof xValues[0] === "string") {
-          xScale = d3
-            .scaleBand()
-            .domain(xValues)
-            .range([0, width])
-            .padding(0.1);
-        } else {
-          xScale = d3
-            .scaleLinear()
-            .domain([0, d3.max(xValues)])
-            .range([0, width]);
-        }
-
-        if (typeof yValues[0] === "string") {
-          yScale = d3
-            .scaleBand()
-            .domain(yValues)
-            .range([height, 0])
-            .padding(0.1);
-        } else {
-          yScale = d3
-            .scaleLinear()
-            .domain([0, d3.max(yValues)])
-            .range([height, 0]);
-        }
-      } else {
-        const xValues = data.map((d) => d[xField]);
-        const yValues = data.map((d) => d[yField]);
-
-        xScale = d3.scaleLinear().domain(d3.extent(xValues)).range([0, width]);
-        yScale = d3.scaleLinear().domain(d3.extent(yValues)).range([height, 0]);
-      }
-
-      // Render X axis if needed
-      if (xScale && showXAxis) {
-        const xAxisGenerator = xAxisPos === "top" ? d3.axisTop : d3.axisBottom;
-        const xAxisGroup = tempSvg
-          .append("g")
-          .attr("class", "x-axis")
-          .attr(
-            "transform",
-            `translate(50, ${xAxisPos === "top" ? 50 : 50 + height})`,
-          )
-          .call(xAxisGenerator(xScale));
-
-        const xAxisBBox = xAxisGroup.node().getBBox();
-
-        if (xAxisPos === "top") {
-          margin.top = Math.max(
-            margin.top,
-            Math.abs(xAxisBBox.y) + xAxisBBox.height + 5,
-          );
-        } else {
-          margin.bottom = Math.max(margin.bottom, xAxisBBox.height + 5);
-        }
-
-        if (xAxisName) {
-          margin.bottom += 20;
-        }
-      }
-
-      // Render Y axis if needed
-      if (yScale && showYAxis) {
-        const yAxisGenerator =
-          yAxisPos === "right" ? d3.axisRight : d3.axisLeft;
-        const yAxisGroup = tempSvg
-          .append("g")
-          .attr("class", "y-axis")
-          .attr(
-            "transform",
-            `translate(${yAxisPos === "right" ? 50 + width : 50}, 50)`,
-          )
-          .call(yAxisGenerator(yScale));
-
-        const yAxisBBox = yAxisGroup.node().getBBox();
-
-        if (yAxisPos === "right") {
-          margin.right = Math.max(margin.right, yAxisBBox.width + 5);
-        } else {
-          margin.left = Math.max(
-            margin.left,
-            Math.abs(yAxisBBox.x) + yAxisBBox.width + 5,
-          );
-        }
-
-        if (yAxisName) {
-          if (yAxisPos === "right") {
-            margin.right += 20;
-          } else {
-            margin.left += 20;
-          }
-        }
-      }
+    if (
+      typeof document === "undefined" ||
+      !document?.body ||
+      typeof document.createElementNS !== "function"
+    ) {
+      throw new Error(
+        "LayoutCalculator.estimateMargin requires a DOM with SVG getBBox support.",
+      );
     }
 
-    return margin;
+    const width = node.options?.width ?? node.width ?? 400;
+    const height = node.options?.height ?? node.height ?? 300;
+    const zeroMargin = { top: 0, right: 0, bottom: 0, left: 0 };
+    const tempSvg = document.createElementNS(
+      "http://www.w3.org/2000/svg",
+      "svg",
+    );
+
+    tempSvg.setAttribute("width", width);
+    tempSvg.setAttribute("height", height);
+    tempSvg.style.position = "absolute";
+    tempSvg.style.left = "-10000px";
+    tempSvg.style.top = "-10000px";
+    tempSvg.style.visibility = "hidden";
+    tempSvg.style.overflow = "visible";
+
+    document.body.appendChild(tempSvg);
+
+    try {
+      node.render(tempSvg, {
+        width,
+        height,
+        margin: zeroMargin,
+      });
+
+      if (typeof tempSvg.getBBox !== "function") {
+        throw new Error(
+          "LayoutCalculator.estimateMargin requires a DOM with SVG getBBox support.",
+        );
+      }
+
+      const bbox = tempSvg.getBBox();
+      return {
+        top: Math.max(0, -bbox.y),
+        right: Math.max(0, bbox.x + bbox.width - width),
+        bottom: Math.max(0, bbox.y + bbox.height - height),
+        left: Math.max(0, -bbox.x),
+      };
+    } finally {
+      tempSvg.remove();
+    }
   }
 
   /**
@@ -506,6 +425,94 @@ export class LayoutCalculator {
  * Layout engine for computing and rendering layouts.
  */
 export class LayoutEngine {
+  /**
+   * Checks whether `container` contains `target`, including itself.
+   * @param {Node} container
+   * @param {Node} target
+   * @returns {boolean}
+   */
+  static containsNode(container, target) {
+    if (container === target) return true;
+    if (!Node.isStack(container)) return false;
+    return container.children.some((child) => this.containsNode(child, target));
+  }
+
+  /**
+   * Finds a target content rect in the coordinate space of an already-computed
+   * direct stack child.
+   * @param {Node} container
+   * @param {Node} target
+   * @returns {Object|null}
+   */
+  static findTargetRectWithin(container, target) {
+    if (container === target) {
+      return { ...container.bbox.contentRect() };
+    }
+
+    if (!Node.isStack(container)) return null;
+
+    const search = (node, offsetX = 0, offsetY = 0) => {
+      const rect = node.bbox.contentRect();
+
+      if (node === target) {
+        return {
+          x: offsetX + rect.x,
+          y: offsetY + rect.y,
+          width: rect.width,
+          height: rect.height,
+        };
+      }
+
+      if (!Node.isStack(node)) return null;
+
+      for (const child of node.children) {
+        const found = search(child, offsetX + rect.x, offsetY + rect.y);
+        if (found) return found;
+      }
+
+      return null;
+    };
+
+    for (const child of container.children) {
+      const found = search(child);
+      if (found) return found;
+    }
+
+    return null;
+  }
+
+  /**
+   * Gets the alignment target that should be used for a direct stack child.
+   * Falls back to the child itself when the configured target lives elsewhere.
+   * @param {Node} child
+   * @param {Node} alignedNode
+   * @returns {Node}
+   */
+  static alignmentTargetForChild(child, alignedNode) {
+    return this.containsNode(child, alignedNode) ? alignedNode : child;
+  }
+
+  /**
+   * Finds the first explicit alignment target that is inside one of the direct
+   * children and returns its rect in that child coordinate space.
+   * @param {Stack} node
+   * @returns {Object}
+   */
+  static findReferenceAlignment(node) {
+    for (const alignedNode of node.align) {
+      if (!alignedNode) continue;
+
+      for (const child of node.children) {
+        if (!this.containsNode(child, alignedNode)) continue;
+
+        const rect = this.findTargetRectWithin(child, alignedNode);
+        if (rect) return rect;
+      }
+    }
+
+    return { ...node.children[0].bbox.contentRect() };
+  }
+
   /**
    * Helper to find the relative layout position of a target node within a computed tree.
    * @param {Object} computedNode - The current computed node to search within.
@@ -573,48 +580,52 @@ export class LayoutEngine {
 
       // adjust children layout
       if (node.direction === "horizontal") {
-        // TODO: current aligning strategy: align by the stack (if any) child height
-        // This is a bad strategy. We need to improve it later.
-        let sharedHeight = node.children[0].bbox.contentRect().height;
-        for (let i = 1; i < node.children.length; i++) {
-          if (node.children[i] !== node.alignedNodes[i]) {
-            sharedHeight = node.alignedNodes[i].bbox.contentRect().height;
-            break;
-          }
-        }
+        const referenceRect = this.findReferenceAlignment(node);
+        const sharedY = referenceRect.y;
+        const sharedHeight = referenceRect.height;
 
         let currentX = 0;
-        const sharedY = 0;
         for (let i = 0; i < node.children.length; i++) {
-          const bbox = node.children[i].bbox;
+          const child = node.children[i];
+          const bbox = child.bbox;
           const margin = bbox.getMargin();
+          const target = this.alignmentTargetForChild(
+            child,
+            node.alignedNodes[i],
+          );
+          const targetRect = this.findTargetRectWithin(child, target);
           currentX += margin.left;
 
-          bbox.translateTo(currentX, sharedY);
-          bbox.setSize(-1, sharedHeight);
+          bbox.translateTo(currentX, sharedY - targetRect.y);
+          if (target === child) {
+            bbox.setSize(-1, sharedHeight);
+          }
 
           currentX += bbox.contentRect().width + margin.right;
         }
 
         node.updateBBox();
       } else if (node.direction === "vertical") {
-        let sharedWidth = node.children[0].bbox.contentRect().width;
-        for (let i = 1; i < node.children.length; i++) {
-          if (node.children[i] !== node.alignedNodes[i]) {
-            sharedWidth = node.alignedNodes[i].bbox.contentRect().width;
-            break;
-          }
-        }
+        const referenceRect = this.findReferenceAlignment(node);
+        const sharedX = referenceRect.x;
+        const sharedWidth = referenceRect.width;
 
         let currentY = 0;
-        const sharedX = 0;
         for (let i = 0; i < node.children.length; i++) {
-          const bbox = node.children[i].bbox;
+          const child = node.children[i];
+          const bbox = child.bbox;
           const margin = bbox.getMargin();
+          const target = this.alignmentTargetForChild(
+            child,
+            node.alignedNodes[i],
+          );
+          const targetRect = this.findTargetRectWithin(child, target);
           currentY += margin.top;
 
-          bbox.translateTo(sharedX, currentY);
-          bbox.setSize(sharedWidth, -1);
+          bbox.translateTo(sharedX - targetRect.x, currentY);
+          if (target === child) {
+            bbox.setSize(sharedWidth, -1);
+          }
 
           currentY += bbox.contentRect().height + margin.bottom;
         }
@@ -656,7 +667,7 @@ export class LayoutEngine {
       const g = container
         .append("g")
         .attr("class", node.classTag)
-        .attr("transform", `translate(${x + margin.left}, ${y + margin.top})`);
+        .attr("transform", `translate(${x - margin.left}, ${y - margin.top})`);
 
       node.render(g.node(), {
         width: node.bbox.contentRect().width,
@@ -688,16 +699,13 @@ export class LayoutEngine {
    * @param {number} y - Y position.
    */
   static renderTreeBBoxOnly(node, container, x = 0, y = 0) {
-    const g = container
-      .append("g")
-      .attr("class", node.classTag)
-      .attr("transform", `translate(${x}, ${y})`);
+    const g = container.append("g").attr("class", node.classTag);
 
-    this.traverseTree(node, (n) => {
+    const renderBBox = (n, offsetX = x, offsetY = y) => {
       const bbox = n.bbox;
       g.append("rect")
-        .attr("x", bbox.outerRect().x)
-        .attr("y", bbox.outerRect().y)
+        .attr("x", offsetX + bbox.outerRect().x)
+        .attr("y", offsetY + bbox.outerRect().y)
         .attr("width", bbox.outerRect().width)
         .attr("height", bbox.outerRect().height)
         .attr("fill", "none")
@@ -705,14 +713,23 @@ export class LayoutEngine {
         .attr("stroke-dasharray", "4 2");
 
       g.append("rect")
-        .attr("x", bbox.contentRect().x)
-        .attr("y", bbox.contentRect().y)
+        .attr("x", offsetX + bbox.contentRect().x)
+        .attr("y", offsetY + bbox.contentRect().y)
         .attr("width", bbox.contentRect().width)
         .attr("height", bbox.contentRect().height)
         .attr("fill", "none")
         .attr("stroke", "blue")
         .attr("stroke-dasharray", "4 2");
-    });
+
+      if (Node.isStack(n)) {
+        const content = n.bbox.contentRect();
+        n.children.forEach((child) => {
+          renderBBox(child, offsetX + content.x, offsetY + content.y);
+        });
+      }
+    };
+
+    renderBBox(node);
   }
 
   /**
