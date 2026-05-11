@@ -109,13 +109,9 @@ export class StackBarChartRenderer extends MarkRenderer {
           .attr("y", margin.top + y)
           .attr("width", barWidth)
           .attr("height", barHeight)
-          .attr("fill", colorScale(stackKey))
-          .on("mouseenter", function () {
-            d3.select(this).attr("opacity", 0.7);
-          })
-          .on("mouseleave", function () {
-            d3.select(this).attr("opacity", 1);
-          });
+          .attr("fill", colorScale(stackKey));
+
+        this.applyOpacityHover(rect);
 
         rect.append("title").text(`${category} - ${stackKey}: ${d[1] - d[0]}`);
 
@@ -132,18 +128,10 @@ export class StackBarChartRenderer extends MarkRenderer {
       });
     });
 
-    return {
-      scales: { x: xScale, y: yScale },
-      dimensions: { margin, width: chartWidth, height: chartHeight },
-      axisOptions: {
-        showXAxis: this.showXAxis,
-        showYAxis: this.showYAxis,
-        xAxisName: this.xAxisName,
-        yAxisName: this.yAxisName,
-        xAxisPos: this.xAxisPos,
-        yAxisPos: this.yAxisPos,
-      },
-    };
+    return this.axisConfig(
+      { x: xScale, y: yScale },
+      { margin, width: chartWidth, height: chartHeight },
+    );
   }
 
   /**
@@ -215,13 +203,9 @@ export class StackBarChartRenderer extends MarkRenderer {
           .attr("y", margin.top + barY)
           .attr("width", barWidth)
           .attr("height", barHeight)
-          .attr("fill", colorScale(stackKey))
-          .on("mouseenter", function () {
-            d3.select(this).attr("opacity", 0.7);
-          })
-          .on("mouseleave", function () {
-            d3.select(this).attr("opacity", 1);
-          });
+          .attr("fill", colorScale(stackKey));
+
+        this.applyOpacityHover(rect);
 
         rect.append("title").text(`${category} - ${stackKey}: ${d[1] - d[0]}`);
 
@@ -238,18 +222,10 @@ export class StackBarChartRenderer extends MarkRenderer {
       });
     });
 
-    return {
-      scales: { x: xScale, y: yScale },
-      dimensions: { margin, width: chartWidth, height: chartHeight },
-      axisOptions: {
-        showXAxis: this.showXAxis,
-        showYAxis: this.showYAxis,
-        xAxisName: this.xAxisName,
-        yAxisName: this.yAxisName,
-        xAxisPos: this.xAxisPos,
-        yAxisPos: this.yAxisPos,
-      },
-    };
+    return this.axisConfig(
+      { x: xScale, y: yScale },
+      { margin, width: chartWidth, height: chartHeight },
+    );
   }
 }
 
@@ -337,14 +313,9 @@ export class BarChartRenderer extends MarkRenderer {
         .attr("x", x)
         .attr("y", y)
         .attr("width", barWidth)
-        .attr("height", barHeight)
-        .attr("fill", this.color)
-        .on("mouseenter", function () {
-          d3.select(this).attr("fill", "orange");
-        })
-        .on("mouseleave", function () {
-          d3.select(this).attr("fill", this.color);
-        });
+        .attr("height", barHeight);
+
+      this.applyFillHover(rect, this.color);
 
       rect.append("title").text(`${d[yField]}: ${value}`);
 
@@ -363,18 +334,10 @@ export class BarChartRenderer extends MarkRenderer {
       }
     });
 
-    return {
-      scales: { x: xScale, y: yScale },
-      dimensions: { margin, width: chartWidth, height: chartHeight },
-      axisOptions: {
-        showXAxis: this.showXAxis,
-        showYAxis: this.showYAxis,
-        xAxisName: this.xAxisName,
-        yAxisName: this.yAxisName,
-        xAxisPos: this.xAxisPos,
-        yAxisPos: this.yAxisPos,
-      },
-    };
+    return this.axisConfig(
+      { x: xScale, y: yScale },
+      { margin, width: chartWidth, height: chartHeight },
+    );
   }
 
   /**
@@ -423,14 +386,9 @@ export class BarChartRenderer extends MarkRenderer {
         .attr("x", x)
         .attr("y", y)
         .attr("width", barWidth)
-        .attr("height", barHeight)
-        .attr("fill", this.color)
-        .on("mouseenter", function () {
-          d3.select(this).attr("fill", "orange");
-        })
-        .on("mouseleave", function () {
-          d3.select(this).attr("fill", this.color);
-        });
+        .attr("height", barHeight);
+
+      this.applyFillHover(rect, this.color);
 
       rect.append("title").text(`${d[xField]}: ${value}`);
 
@@ -445,17 +403,9 @@ export class BarChartRenderer extends MarkRenderer {
       }
     });
 
-    return {
-      scales: { x: xScale, y: yScale },
-      dimensions: { margin, width: chartWidth, height: chartHeight },
-      axisOptions: {
-        showXAxis: this.showXAxis,
-        showYAxis: this.showYAxis,
-        xAxisName: this.xAxisName,
-        yAxisName: this.yAxisName,
-        xAxisPos: this.xAxisPos,
-        yAxisPos: this.yAxisPos,
-      },
-    };
+    return this.axisConfig(
+      { x: xScale, y: yScale },
+      { margin, width: chartWidth, height: chartHeight },
+    );
   }
 }

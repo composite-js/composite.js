@@ -4,8 +4,7 @@
 // Link: https://ieeexplore.ieee.org/document/6876017
 // Link: https://upset.app/
 
-import { Chart } from "../src/chart.js";
-import { stackX, stackY } from "../src/layout.js";
+import { chart, stackX, stackY } from "../src/layout.js";
 
 const data = [
   { sets: ["Drama"], intersectionSize: 20, setSize: 45 },
@@ -84,7 +83,7 @@ genres.forEach((genre) => {
 const app = document.getElementById("app");
 
 // 1. Top Bar Chart (Intersection Size)
-const topBarChart = new Chart({
+const topBarChart = chart({
   data: topBarData,
   mark: "bar",
   encoding: {
@@ -98,7 +97,7 @@ const topBarChart = new Chart({
 });
 
 // 2. Matrix (Intersections)
-const matrixChart = new Chart({
+const matrixChart = chart({
   data: intersections,
   mark: "matrix",
   encoding: {
@@ -112,7 +111,7 @@ const matrixChart = new Chart({
 });
 
 // 3. Left Bar Chart (Set Size)
-const leftBarChart = new Chart({
+const leftBarChart = chart({
   data: setSizeData,
   mark: "bar",
   encoding: {
@@ -129,7 +128,7 @@ const leftBarChart = new Chart({
 });
 
 // 4. Box Plot (right of matrix)
-const boxChart = new Chart({
+const boxChart = chart({
   data: boxData,
   mark: "box",
   encoding: {

@@ -116,16 +116,11 @@ export class BubbleChartRenderer extends MarkRenderer {
         .attr("cx", cx)
         .attr("cy", cy)
         .attr("r", r)
-        .attr("fill", this.color)
         .attr("opacity", 0.7)
         .attr("stroke", "white")
-        .attr("stroke-width", 1)
-        .on("mouseenter", function () {
-          d3.select(this).attr("fill", "orange");
-        })
-        .on("mouseleave", function () {
-          d3.select(this).attr("fill", this.color);
-        });
+        .attr("stroke-width", 1);
+
+      this.applyFillHover(circle, this.color);
 
       circle
         .append("title")
@@ -134,17 +129,9 @@ export class BubbleChartRenderer extends MarkRenderer {
         );
     });
 
-    return {
-      scales: { x: xScale, y: yScale },
-      dimensions: { margin, width: chartWidth, height: chartHeight },
-      axisOptions: {
-        showXAxis: this.showXAxis,
-        showYAxis: this.showYAxis,
-        xAxisName: this.xAxisName,
-        yAxisName: this.yAxisName,
-        xAxisPos: this.xAxisPos,
-        yAxisPos: this.yAxisPos,
-      },
-    };
+    return this.axisConfig(
+      { x: xScale, y: yScale },
+      { margin, width: chartWidth, height: chartHeight },
+    );
   }
 }

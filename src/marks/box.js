@@ -148,16 +148,11 @@ export class BoxPlotRenderer extends MarkRenderer {
         .attr("y", y + boxOffset)
         .attr("width", boxW)
         .attr("height", actualBoxHeight)
-        .attr("fill", this.color)
         .attr("stroke", "black")
         .attr("stroke-width", 1)
-        .attr("opacity", 0.8)
-        .on("mouseenter", function () {
-          d3.select(this).attr("fill", "orange");
-        })
-        .on("mouseleave", function () {
-          d3.select(this).attr("fill", this.color);
-        });
+        .attr("opacity", 0.8);
+
+      this.applyFillHover(rect, this.color);
 
       rect
         .append("title")
@@ -186,18 +181,10 @@ export class BoxPlotRenderer extends MarkRenderer {
       });
     });
 
-    return {
-      scales: { x: xScale, y: yScale },
-      dimensions: { margin, width: chartWidth, height: chartHeight },
-      axisOptions: {
-        showXAxis: this.showXAxis,
-        showYAxis: this.showYAxis,
-        xAxisName: this.xAxisName,
-        yAxisName: this.yAxisName,
-        xAxisPos: this.xAxisPos,
-        yAxisPos: this.yAxisPos,
-      },
-    };
+    return this.axisConfig(
+      { x: xScale, y: yScale },
+      { margin, width: chartWidth, height: chartHeight },
+    );
   }
 
   /**
@@ -307,16 +294,11 @@ export class BoxPlotRenderer extends MarkRenderer {
         .attr("y", boxY)
         .attr("width", actualBoxWidth)
         .attr("height", boxHeight)
-        .attr("fill", this.color)
         .attr("stroke", "black")
         .attr("stroke-width", 1)
-        .attr("opacity", 0.8)
-        .on("mouseenter", function () {
-          d3.select(this).attr("fill", "orange");
-        })
-        .on("mouseleave", function () {
-          d3.select(this).attr("fill", this.color);
-        });
+        .attr("opacity", 0.8);
+
+      this.applyFillHover(rect, this.color);
 
       rect
         .append("title")
@@ -345,17 +327,9 @@ export class BoxPlotRenderer extends MarkRenderer {
       });
     });
 
-    return {
-      scales: { x: xScale, y: yScale },
-      dimensions: { margin, width: chartWidth, height: chartHeight },
-      axisOptions: {
-        showXAxis: this.showXAxis,
-        showYAxis: this.showYAxis,
-        xAxisName: this.xAxisName,
-        yAxisName: this.yAxisName,
-        xAxisPos: this.xAxisPos,
-        yAxisPos: this.yAxisPos,
-      },
-    };
+    return this.axisConfig(
+      { x: xScale, y: yScale },
+      { margin, width: chartWidth, height: chartHeight },
+    );
   }
 }

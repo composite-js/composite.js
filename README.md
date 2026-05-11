@@ -1,6 +1,6 @@
 # composite.js
 
-A small JavaScript functional composition demo library for building composite visualizations using Vite and pnpm. It provides simple building blocks like `createChart`, `composite`, and `stack` so you can compose marks such as bar charts and matrix views into a single coordinated layout (for example, an UpSet-style intersection visualization).
+A small JavaScript visualization grammar demo library for building composite visualizations using Vite and pnpm. It provides a function-style DSL with `chart`, `stackX`, `stackY`, `repeatX`, and `repeatY` so you can compose marks such as bar charts and matrix views into a single coordinated layout (for example, an UpSet-style intersection visualization).
 
 ## Requirements
 
@@ -37,19 +37,40 @@ Example: start the dev server and open the default Vite port:
 pnpm run dev
 ```
 
-## Quick Usage (demo in `index.js`)
+## Quick Usage (demo in `examples/index.js`)
 
-The repository includes a demo entry (`index.js`) that shows how to compose three charts: a top bar chart (intersection size), a left bar chart (set size), and a center matrix view.
+The repository includes a demo entry (`examples/index.js`) that shows how to compose charts: a top bar chart, a left bar chart, a center matrix view, and repeated pie charts.
 
-- Use `createChart({...})` to create an individual chart instance (supported marks include `bar`, `matrix`, etc.).
-- Use `composite([chartA, chartB, chartC], { constraints: [...] })` to combine child charts into a composite view.
-- Use `stack([a, b], 'vertical'|'horizontal')` to create stacking constraints between charts.
+- Use `chart({...})` to create a leaf layout node for an individual chart.
+- Use `stackX([a, b])` or `stackY([a, b])` to compose layout nodes horizontally or vertically.
+- Use `repeatX(domain, fn)` or `repeatY(domain, fn)` for repeated small multiples.
+- Pass only layout nodes into compositions. Wrap chart configs with `chart({...})` instead of passing `new Chart(...)`.
 
-Typical flow in `index.js`:
+Typical flow:
 
 1. Prepare data (e.g. `data`, `genres`).
-2. Build `topBarChart`, `matrixChart`, `leftBarChart` with `createChart`.
-3. Call `composite` with `stack` constraints and render the composite to a DOM element (e.g. `document.getElementById('app')`).
+2. Build `topBarChart`, `matrixChart`, and `leftBarChart` with `chart`.
+3. Combine them with `stackX` and `stackY`, optionally using `align` to align against a nested node.
+4. Render the final node to a DOM element.
+
+```javascript
+import { chart, stackY } from "./src/index.js";
+
+const top = chart({
+  mark: "bar",
+  data,
+  encoding: { x: "id", y: "size" },
+});
+
+const matrix = chart({
+  mark: "matrix",
+  data,
+  encoding: { x: "id", y: "sets" },
+});
+
+const view = stackY([top, matrix], { align: [matrix, matrix] });
+view.render(document.getElementById("app"));
+```
 
 ## Build & Deploy
 

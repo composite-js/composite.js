@@ -1,4 +1,4 @@
-import { stackX, stackY, RepeatX, chart } from "../src/layout.js";
+import { chart, repeatX, stackX, stackY } from "../src/layout.js";
 
 const data = [
   { sets: ["Drama"], intersectionSize: 20, setSize: 45 },
@@ -177,7 +177,7 @@ intersections.forEach((d) => {
   ];
 });
 
-const pieRow = new RepeatX(
+const pieRow = repeatX(
   intersections.map((d) => d.id),
   (id) => {
     return chart({
