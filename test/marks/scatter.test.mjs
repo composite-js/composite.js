@@ -21,7 +21,10 @@ const circles = svg.querySelectorAll("circle");
 assert.equal(circles.length, 2);
 assert.equal(circles[0].getAttribute("r"), "5");
 assert.equal(circles[0].getAttribute("fill"), "purple");
-assert.equal(circles[0].querySelectorAll("title")[0].textContent, "x: 1.00, y: 10.00");
+assert.equal(
+  circles[0].querySelectorAll("title")[0].textContent,
+  "x: 1.00, y: 10.00",
+);
 assert.deepEqual(axisConfig.scales.x.domain(), [1, 2]);
 assert.deepEqual(axisConfig.scales.y.domain(), [10, 20]);
 
