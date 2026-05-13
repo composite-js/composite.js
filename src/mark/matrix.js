@@ -1,5 +1,6 @@
 import * as d3 from "d3";
 import { MarkRenderer } from "./mark.js";
+import { categoricalDomain } from "./scale.js";
 
 /**
  * Renderer for matrix charts (e.g., for set intersections).
@@ -134,7 +135,7 @@ export class MatrixChartRenderer extends MarkRenderer {
     if (this.encoding.yDomain) {
       sortedSets = this.encoding.yDomain;
     } else if (isValueMatrix) {
-      sortedSets = this._domainFromData(data, yField);
+      sortedSets = categoricalDomain(data, yField, this.encoding.yDomain);
     } else {
       const allSets = new Set();
       data.forEach((d) => {
@@ -147,9 +148,7 @@ export class MatrixChartRenderer extends MarkRenderer {
     }
 
     // Use scaleBand for X axis
-    const xDomain = isValueMatrix
-      ? this._domainFromData(data, xField, this.encoding.xDomain)
-      : data.map((d) => d[xField]);
+    const xDomain = categoricalDomain(data, xField, this.encoding.xDomain);
     const xScale = d3
       .scaleBand()
       .domain(xDomain)
@@ -169,7 +168,7 @@ export class MatrixChartRenderer extends MarkRenderer {
     const stepHeight = yScale.bandwidth();
 
     // Helper to get coordinates
-    const getX = (i) => margin.left + xScale(data[i][xField]) + stepWidth * 0.5;
+    const getX = (value) => margin.left + xScale(value) + stepWidth * 0.5;
     const getY = (setIndex) =>
       margin.top + yScale(sortedSets[setIndex]) + stepHeight * 0.5;
 
@@ -206,9 +205,11 @@ export class MatrixChartRenderer extends MarkRenderer {
     }
 
     // Draw Columns (Intersections)
-    data.forEach((d, i) => {
+    const dataByX = new Map(data.map((d) => [d[xField], d]));
+    xDomain.forEach((xValue) => {
+      const d = dataByX.get(xValue) || { [xField]: xValue, [yField]: [] };
       const activeSets = new Set(d[yField] || []);
-      const x = getX(i);
+      const x = getX(xValue);
 
       // Find range of active sets for the vertical connecting line
       let minIndex = Infinity;

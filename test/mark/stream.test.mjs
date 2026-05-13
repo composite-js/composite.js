@@ -53,3 +53,29 @@ assert.equal(axisConfig.scales.y.domain().length, 2);
     "02-Jul",
   ]);
 }
+
+{
+  const domainSvg = createFakeSvg();
+  const domainRenderer = new StreamGraphRenderer({
+    width: 180,
+    height: 90,
+    margin: { top: 0, right: 0, bottom: 0, left: 0 },
+    encoding: {
+      x: "week",
+      y: "value",
+      color: "type",
+      xDomain: ["02-Jul", "25-Jun", "18-Jun", "09-Jul"],
+      yDomain: [-30, 30],
+    },
+  });
+
+  const domainAxisConfig = domainRenderer.render(domainSvg, data);
+
+  assert.deepEqual(domainAxisConfig.scales.x.domain(), [
+    "02-Jul",
+    "25-Jun",
+    "18-Jun",
+    "09-Jul",
+  ]);
+  assert.deepEqual(domainAxisConfig.scales.y.domain(), [-30, 30]);
+}

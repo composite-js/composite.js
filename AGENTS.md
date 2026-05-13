@@ -35,6 +35,7 @@ pnpm run lint
 - Do not pass raw `new Chart(...)` instances into layout compositions.
 - Prefer existing layout, renderer, and mark abstractions over adding parallel systems.
 - Keep changes focused. This library is small, and most behavior is covered by direct tests in `test/`.
+- Do NOT use web environments to verify.
 
 ## Project Architecture
 

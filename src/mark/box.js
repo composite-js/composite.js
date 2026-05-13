@@ -1,5 +1,14 @@
 import * as d3 from "d3";
 import { MarkRenderer } from "./mark.js";
+import {
+  bandRange,
+  bandScale,
+  categoricalDomain,
+  linearScale,
+  scaleSpan,
+  xRange,
+  yRange,
+} from "./scale.js";
 
 /**
  * Renderer for box plots.
@@ -61,32 +70,38 @@ export class BoxPlotRenderer extends MarkRenderer {
     const categoryField = yField;
     const valueField = xField;
 
-    const categories = [...new Set(data.map((d) => d[categoryField]))];
+    const scaleCategories = categoricalDomain(
+      data,
+      categoryField,
+      this.encoding.yDomain,
+    );
     const groupedData = d3.group(data, (d) => d[categoryField]);
 
-    const boxData = categories.map((category) => {
-      const values = groupedData
-        .get(category)
-        .map((d) => d[valueField])
-        .sort(d3.ascending);
-      const q1 = d3.quantile(values, 0.25);
-      const median = d3.quantile(values, 0.5);
-      const q3 = d3.quantile(values, 0.75);
-      const iqr = q3 - q1;
-      const min = Math.max(d3.min(values), q1 - 1.5 * iqr);
-      const max = Math.min(d3.max(values), q3 + 1.5 * iqr);
-      const outliers = values.filter((v) => v < min || v > max);
+    const boxData = scaleCategories
+      .filter((category) => groupedData.has(category))
+      .map((category) => {
+        const values = groupedData
+          .get(category)
+          .map((d) => d[valueField])
+          .sort(d3.ascending);
+        const q1 = d3.quantile(values, 0.25);
+        const median = d3.quantile(values, 0.5);
+        const q3 = d3.quantile(values, 0.75);
+        const iqr = q3 - q1;
+        const min = Math.max(d3.min(values), q1 - 1.5 * iqr);
+        const max = Math.min(d3.max(values), q3 + 1.5 * iqr);
+        const outliers = values.filter((v) => v < min || v > max);
 
-      return {
-        category,
-        q1,
-        median,
-        q3,
-        min,
-        max,
-        outliers,
-      };
-    });
+        return {
+          category,
+          q1,
+          median,
+          q3,
+          min,
+          max,
+          outliers,
+        };
+      });
 
     const valueExtent = [
       d3.min(boxData, (d) =>
@@ -97,26 +112,25 @@ export class BoxPlotRenderer extends MarkRenderer {
       ),
     ];
 
-    const yScale = d3
-      .scaleBand()
-      .domain(categories)
-      .range([0, chartHeight])
-      .paddingInner(this.padding.yInner)
-      .paddingOuter(this.padding.yOuter);
+    const reverseY = this.xAxisPos === "top";
+    const yScale = bandScale(
+      scaleCategories,
+      bandRange(chartHeight, reverseY),
+      {
+        inner: this.padding.yInner,
+        outer: this.padding.yOuter,
+      },
+    );
 
     const reverseX = this.yAxisPos === "right";
     const xDomain = this.encoding.xDomain || [0, valueExtent[1]];
-    const xScale = d3
-      .scaleLinear()
-      .domain(xDomain)
-      .range(
-        reverseX
-          ? [chartWidth - this.valueRangePadding, this.valueRangePadding]
-          : [this.valueRangePadding, chartWidth - this.valueRangePadding],
-      );
-    if (!this.encoding.xDomain) {
-      xScale.nice();
-    }
+    const xScale = linearScale(
+      xDomain,
+      reverseX
+        ? [chartWidth - this.valueRangePadding, this.valueRangePadding]
+        : [this.valueRangePadding, chartWidth - this.valueRangePadding],
+      { nice: !this.encoding.xDomain },
+    );
 
     const actualBoxHeight = yScale.bandwidth() * this.boxWidth;
     const boxOffset = (yScale.bandwidth() - actualBoxHeight) / 2;
@@ -161,8 +175,9 @@ export class BoxPlotRenderer extends MarkRenderer {
         maxCap.attr("stroke-dasharray", this.whiskerStrokeDasharray);
       }
 
-      const boxX = margin.left + xScale(reverseX ? d.q3 : d.q1);
-      const boxW = Math.abs(xScale(d.q3) - xScale(d.q1));
+      const boxSpan = scaleSpan(xScale, d.q1, d.q3);
+      const boxX = margin.left + boxSpan.position;
+      const boxW = boxSpan.size;
 
       const rect = container
         .append("rect")
@@ -227,32 +242,38 @@ export class BoxPlotRenderer extends MarkRenderer {
     const categoryField = xField;
     const valueField = yField;
 
-    const categories = [...new Set(data.map((d) => d[categoryField]))];
+    const scaleCategories = categoricalDomain(
+      data,
+      categoryField,
+      this.encoding.xDomain,
+    );
     const groupedData = d3.group(data, (d) => d[categoryField]);
 
-    const boxData = categories.map((category) => {
-      const values = groupedData
-        .get(category)
-        .map((d) => d[valueField])
-        .sort(d3.ascending);
-      const q1 = d3.quantile(values, 0.25);
-      const median = d3.quantile(values, 0.5);
-      const q3 = d3.quantile(values, 0.75);
-      const iqr = q3 - q1;
-      const min = Math.max(d3.min(values), q1 - 1.5 * iqr);
-      const max = Math.min(d3.max(values), q3 + 1.5 * iqr);
-      const outliers = values.filter((v) => v < min || v > max);
+    const boxData = scaleCategories
+      .filter((category) => groupedData.has(category))
+      .map((category) => {
+        const values = groupedData
+          .get(category)
+          .map((d) => d[valueField])
+          .sort(d3.ascending);
+        const q1 = d3.quantile(values, 0.25);
+        const median = d3.quantile(values, 0.5);
+        const q3 = d3.quantile(values, 0.75);
+        const iqr = q3 - q1;
+        const min = Math.max(d3.min(values), q1 - 1.5 * iqr);
+        const max = Math.min(d3.max(values), q3 + 1.5 * iqr);
+        const outliers = values.filter((v) => v < min || v > max);
 
-      return {
-        category,
-        q1,
-        median,
-        q3,
-        min,
-        max,
-        outliers,
-      };
-    });
+        return {
+          category,
+          q1,
+          median,
+          q3,
+          min,
+          max,
+          outliers,
+        };
+      });
 
     const valueExtent = [
       d3.min(boxData, (d) =>
@@ -263,20 +284,17 @@ export class BoxPlotRenderer extends MarkRenderer {
       ),
     ];
 
-    const xScale = d3
-      .scaleBand()
-      .domain(categories)
-      .range([0, chartWidth])
-      .paddingInner(this.padding.xInner)
-      .paddingOuter(this.padding.xOuter);
+    const reverseX = this.xAxisPos === "top";
+    const xScale = bandScale(scaleCategories, xRange(chartWidth, reverseX), {
+      inner: this.padding.xInner,
+      outer: this.padding.xOuter,
+    });
 
-    const yScale = d3
-      .scaleLinear()
-      .domain(this.encoding.yDomain || valueExtent)
-      .range([chartHeight, 0]);
-    if (!this.encoding.yDomain) {
-      yScale.nice();
-    }
+    const yScale = linearScale(
+      this.encoding.yDomain || valueExtent,
+      yRange(chartHeight),
+      { nice: !this.encoding.yDomain },
+    );
 
     const actualBoxWidth = xScale.bandwidth() * this.boxWidth;
     const boxOffset = (xScale.bandwidth() - actualBoxWidth) / 2;
@@ -321,8 +339,9 @@ export class BoxPlotRenderer extends MarkRenderer {
         maxCap.attr("stroke-dasharray", this.whiskerStrokeDasharray);
       }
 
-      const boxY = margin.top + yScale(d.q3);
-      const boxHeight = yScale(d.q1) - yScale(d.q3);
+      const boxSpan = scaleSpan(yScale, d.q1, d.q3);
+      const boxY = margin.top + boxSpan.position;
+      const boxHeight = boxSpan.size;
 
       const rect = container
         .append("rect")

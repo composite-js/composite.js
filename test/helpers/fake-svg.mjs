@@ -76,6 +76,10 @@ export class FakeSvgElement {
     return descendants;
   }
 
+  querySelector(selector) {
+    return this.querySelectorAll(selector)[0] || null;
+  }
+
   setAttribute(name, value) {
     this.attributes.set(name, String(value));
   }

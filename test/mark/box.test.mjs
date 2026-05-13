@@ -120,3 +120,60 @@ const data = [
 
   assert.equal(svg.querySelectorAll("circle")[0].getAttribute("cx"), "115");
 }
+
+{
+  const svg = createFakeSvg();
+  const renderer = new BoxPlotRenderer({
+    width: 120,
+    height: 80,
+    margin: { top: 0, right: 0, bottom: 0, left: 0 },
+    xAxisPos: "top",
+    yAxisPos: "right",
+    encoding: {
+      x: "category",
+      y: "value",
+      xDomain: ["B", "A", "C"],
+      yDomain: [0, 120],
+    },
+  });
+
+  const axisConfig = renderer.render(svg, data);
+
+  assert.deepEqual(axisConfig.scales.x.domain(), ["B", "A", "C"]);
+  assert.deepEqual(axisConfig.scales.y.domain(), [0, 120]);
+  assert.deepEqual(axisConfig.scales.x.range(), [120, 0]);
+  assert.deepEqual(axisConfig.scales.y.range(), [0, 80]);
+  svg.querySelectorAll("rect").forEach((rect) => {
+    assert.ok(Number(rect.getAttribute("width")) >= 0);
+    assert.ok(Number(rect.getAttribute("height")) >= 0);
+  });
+}
+
+{
+  const svg = createFakeSvg();
+  const renderer = new BoxPlotRenderer({
+    width: 120,
+    height: 80,
+    margin: { top: 0, right: 0, bottom: 0, left: 0 },
+    direction: "horizontal",
+    xAxisPos: "top",
+    yAxisPos: "right",
+    encoding: {
+      x: "value",
+      y: "category",
+      xDomain: [0, 120],
+      yDomain: ["B", "A", "C"],
+    },
+  });
+
+  const axisConfig = renderer.render(svg, data);
+
+  assert.deepEqual(axisConfig.scales.x.domain(), [0, 120]);
+  assert.deepEqual(axisConfig.scales.y.domain(), ["B", "A", "C"]);
+  assert.deepEqual(axisConfig.scales.x.range(), [120, 0]);
+  assert.deepEqual(axisConfig.scales.y.range(), [80, 0]);
+  svg.querySelectorAll("rect").forEach((rect) => {
+    assert.ok(Number(rect.getAttribute("width")) >= 0);
+    assert.ok(Number(rect.getAttribute("height")) >= 0);
+  });
+}

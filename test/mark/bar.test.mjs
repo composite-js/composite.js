@@ -89,6 +89,54 @@ function baseOptions(overrides = {}) {
 
 {
   const svg = createFakeSvg();
+  const renderer = new BarChartRenderer({
+    ...baseOptions(),
+    encoding: {
+      x: "category",
+      y: "value",
+      xDomain: ["B", "A", "C"],
+      yDomain: [0, 50],
+    },
+  });
+
+  const axisConfig = renderer.render(svg, [
+    { category: "A", value: 10 },
+    { category: "B", value: 20 },
+  ]);
+
+  assert.deepEqual(axisConfig.scales.x.domain(), ["B", "A", "C"]);
+  assert.deepEqual(axisConfig.scales.y.domain(), [0, 50]);
+}
+
+{
+  const svg = createFakeSvg();
+  const renderer = new BarChartRenderer({
+    ...baseOptions({ direction: "horizontal", xAxisPos: "top" }),
+    encoding: {
+      x: "value",
+      y: "category",
+      xDomain: [0, 50],
+      yDomain: ["B", "A", "C"],
+    },
+  });
+
+  const axisConfig = renderer.render(svg, [
+    { category: "A", value: 10 },
+    { category: "B", value: 20 },
+  ]);
+
+  const rects = svg.querySelectorAll("rect");
+  assert.deepEqual(axisConfig.scales.x.domain(), [0, 50]);
+  assert.deepEqual(axisConfig.scales.y.domain(), ["B", "A", "C"]);
+  assert.deepEqual(axisConfig.scales.y.range(), [80, 0]);
+  rects.forEach((rect) => {
+    assert.ok(Number(rect.getAttribute("width")) >= 0);
+    assert.ok(Number(rect.getAttribute("height")) >= 0);
+  });
+}
+
+{
+  const svg = createFakeSvg();
   const renderer = new StackBarChartRenderer({
     ...baseOptions({ showLabels: true }),
     colorScheme: ["red", "blue"],
@@ -134,6 +182,61 @@ function baseOptions(overrides = {}) {
   assert.ok(svg.querySelectorAll("text").length > 0);
   assert.equal(axisConfig.scales.x.domain()[1], 25);
   assert.deepEqual(axisConfig.scales.y.domain(), ["A", "B"]);
+}
+
+{
+  const svg = createFakeSvg();
+  const renderer = new StackBarChartRenderer({
+    ...baseOptions(),
+    colorScheme: ["red", "blue"],
+    encoding: {
+      x: "value",
+      y: "category",
+      stack: "group",
+      xDomain: ["B", "A", "C"],
+      yDomain: [0, 50],
+    },
+  });
+
+  const axisConfig = renderer.render(svg, [
+    { category: "A", group: "g1", value: 10 },
+    { category: "A", group: "g2", value: 15 },
+    { category: "B", group: "g1", value: 5 },
+    { category: "B", group: "g2", value: 8 },
+  ]);
+
+  assert.deepEqual(axisConfig.scales.x.domain(), ["B", "A", "C"]);
+  assert.deepEqual(axisConfig.scales.y.domain(), [0, 50]);
+}
+
+{
+  const svg = createFakeSvg();
+  const renderer = new StackBarChartRenderer({
+    ...baseOptions({ direction: "horizontal", xAxisPos: "top" }),
+    colorScheme: ["red", "blue"],
+    encoding: {
+      x: "value",
+      y: "category",
+      stack: "group",
+      xDomain: [0, 50],
+      yDomain: ["B", "A", "C"],
+    },
+  });
+
+  const axisConfig = renderer.render(svg, [
+    { category: "A", group: "g1", value: 10 },
+    { category: "A", group: "g2", value: 15 },
+    { category: "B", group: "g1", value: 5 },
+    { category: "B", group: "g2", value: 8 },
+  ]);
+
+  assert.deepEqual(axisConfig.scales.x.domain(), [0, 50]);
+  assert.deepEqual(axisConfig.scales.y.domain(), ["B", "A", "C"]);
+  assert.deepEqual(axisConfig.scales.y.range(), [80, 0]);
+  svg.querySelectorAll("rect").forEach((rect) => {
+    assert.ok(Number(rect.getAttribute("width")) >= 0);
+    assert.ok(Number(rect.getAttribute("height")) >= 0);
+  });
 }
 
 {
@@ -187,4 +290,35 @@ function baseOptions(overrides = {}) {
   svg.querySelectorAll("rect").forEach((rect) => {
     assert.notEqual(rect.getAttribute("x"), "NaN");
   });
+}
+
+{
+  const svg = createFakeSvg();
+  const renderer = new GroupBarChartRenderer({
+    ...baseOptions({ xAxisPos: "top", yAxisPos: "right" }),
+    colorScheme: ["orange", "purple"],
+    encoding: {
+      x: "date",
+      y: "count",
+      group: "kind",
+      xDomain: ["25-Jun", "18-Jun", "02-Jul"],
+      yDomain: [0, 50],
+    },
+  });
+
+  const axisConfig = renderer.render(svg, [
+    { date: "18-Jun", kind: "posts", count: 20 },
+    { date: "18-Jun", kind: "views", count: 30 },
+    { date: "25-Jun", kind: "posts", count: 10 },
+    { date: "25-Jun", kind: "views", count: 15 },
+  ]);
+
+  assert.deepEqual(axisConfig.scales.x.domain(), [
+    "25-Jun",
+    "18-Jun",
+    "02-Jul",
+  ]);
+  assert.deepEqual(axisConfig.scales.y.domain(), [0, 50]);
+  assert.deepEqual(axisConfig.scales.x.range(), [120, 0]);
+  assert.deepEqual(axisConfig.scales.y.range(), [0, 80]);
 }

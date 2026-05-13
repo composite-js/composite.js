@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { Chart } from "../../src/chart.js";
+import { DumbbellChartRenderer } from "../../src/mark/dumbbell.js";
 import { ProportionalAreaChartRenderer } from "../../src/mark/pac.js";
 import { createFakeSvg } from "../helpers/fake-svg.mjs";
 
@@ -30,6 +31,7 @@ function baseOptions(overrides = {}) {
   assert.equal(largeRadius / smallRadius, 2);
   assert.ok(largeRadius <= 30);
   assert.deepEqual(axisConfig.scales.y.domain(), ["2000", "2004"]);
+  assert.equal(typeof axisConfig.scales.y.bandwidth, "function");
 }
 
 {
@@ -52,6 +54,7 @@ function baseOptions(overrides = {}) {
   assert.equal(secondSize, Number(rects[1].getAttribute("height")));
   assert.ok(secondSize <= 60);
   assert.deepEqual(axisConfig.scales.x.domain(), ["2000", "2004"]);
+  assert.equal(typeof axisConfig.scales.x.bandwidth, "function");
 }
 
 {
@@ -86,9 +89,8 @@ function baseOptions(overrides = {}) {
   const firstCenter = Number(circles[0].getAttribute("cy"));
   const secondCenter = Number(circles[1].getAttribute("cy"));
 
-  assert.equal(firstRadius, 40);
-  assert.equal(secondRadius, 40);
-  assert.ok(secondCenter - firstCenter < firstRadius + secondRadius);
+  assert.equal(firstRadius, secondRadius);
+  assert.ok(secondCenter - firstCenter >= firstRadius + secondRadius);
   circles.forEach((circle) => {
     const cy = Number(circle.getAttribute("cy"));
     const r = Number(circle.getAttribute("r"));
@@ -96,4 +98,48 @@ function baseOptions(overrides = {}) {
     assert.ok(cy - r >= 0);
     assert.ok(cy + r <= 100);
   });
+}
+
+{
+  const years = ["2000", "2004", "2008"];
+  const padding = { yInner: 0.22, yOuter: 0.05 };
+  const pacSvg = createFakeSvg();
+  const dumbbellSvg = createFakeSvg();
+  const pacRenderer = new ProportionalAreaChartRenderer({
+    width: 50,
+    height: 90,
+    margin: { top: 0, right: 0, bottom: 0, left: 0 },
+    encoding: { category: "year", value: "count", categoryDomain: years },
+    padding,
+  });
+  const dumbbellRenderer = new DumbbellChartRenderer({
+    width: 120,
+    height: 90,
+    margin: { top: 0, right: 0, bottom: 0, left: 0 },
+    encoding: { x: "athletes", y: "year", xDomain: [0, 100], yDomain: years },
+    padding,
+  });
+
+  const pacAxisConfig = pacRenderer.render(pacSvg, [
+    { year: "2000", count: 20 },
+    { year: "2004", count: 40 },
+    { year: "2008", count: 80 },
+  ]);
+  const dumbbellAxisConfig = dumbbellRenderer.render(dumbbellSvg, [
+    { year: "2000", athletes: 10 },
+    { year: "2000", athletes: 20 },
+    { year: "2004", athletes: 30 },
+    { year: "2004", athletes: 40 },
+    { year: "2008", athletes: 50 },
+    { year: "2008", athletes: 60 },
+  ]);
+
+  const pacCenter =
+    pacAxisConfig.scales.y("2004") + pacAxisConfig.scales.y.bandwidth() / 2;
+  const dumbbellCenter =
+    dumbbellAxisConfig.scales.y("2004") +
+    dumbbellAxisConfig.scales.y.bandwidth() / 2;
+
+  assert.equal(pacCenter, dumbbellCenter);
+  assert.equal(pacSvg.querySelectorAll("circle")[1].getAttribute("cy"), "45");
 }

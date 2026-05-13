@@ -1,5 +1,12 @@
 import * as d3 from "d3";
 import { MarkRenderer } from "./mark.js";
+import {
+  categoricalDomain,
+  linearScale,
+  pointScale,
+  xRange,
+  yRange,
+} from "./scale.js";
 
 /**
  * Renderer for stream graphs.
@@ -29,7 +36,7 @@ export class StreamGraphRenderer extends MarkRenderer {
 
     container.selectAll("*").remove();
 
-    const xDomain = [...new Set(data.map((d) => d[xField]))];
+    const xDomain = categoricalDomain(data, xField, this.encoding.xDomain);
     const seriesKeys = [...new Set(data.map((d) => d[colorField]))];
 
     const byX = d3.group(data, (d) => d[xField]);
@@ -55,18 +62,12 @@ export class StreamGraphRenderer extends MarkRenderer {
     const layers = stack(pivotedData);
     const yExtent = d3.extent(layers.flat(2));
 
-    const xScale = d3
-      .scalePoint()
-      .domain(xDomain)
-      .range([0, chartWidth])
-      .padding(0);
+    const xScale = pointScale(xDomain, xRange(chartWidth), 0);
 
-    const valueScale = d3
-      .scaleLinear()
-      .domain(yExtent)
-      .range(
-        this.direction === "vertical" ? [0, chartWidth] : [chartHeight, 0],
-      );
+    const valueScale = linearScale(
+      this.encoding.yDomain || yExtent,
+      this.direction === "vertical" ? xRange(chartWidth) : yRange(chartHeight),
+    );
 
     const colorScale = d3
       .scaleOrdinal()
@@ -75,7 +76,7 @@ export class StreamGraphRenderer extends MarkRenderer {
 
     const yScale =
       this.direction === "vertical"
-        ? d3.scalePoint().domain(xDomain).range([0, chartHeight]).padding(0)
+        ? pointScale(xDomain, [0, chartHeight], 0)
         : valueScale;
 
     const area =

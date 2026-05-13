@@ -64,9 +64,11 @@ export class AxisRenderer {
     if (this.xAxisName) {
       const labelY =
         this.xAxisPos === "top" ? margin.top - 30 : margin.top + height + 30;
+      const xRange = xScale.range();
+      const labelX = margin.left + (d3.min(xRange) + d3.max(xRange)) / 2;
       container
         .append("text")
-        .attr("x", margin.left + (xScale.range()[1] - xScale.range()[0]) / 2)
+        .attr("x", labelX)
         .attr("y", labelY)
         .attr("text-anchor", "middle")
         .attr("font-size", "12px")

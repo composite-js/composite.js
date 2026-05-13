@@ -1,5 +1,12 @@
 import * as d3 from "d3";
 import { MarkRenderer } from "./mark.js";
+import {
+  continuousDomain,
+  valueDomain,
+  linearScale,
+  xRange,
+  yRange,
+} from "./scale.js";
 
 /**
  * Renderer for line charts.
@@ -40,19 +47,18 @@ export class LineChartRenderer extends MarkRenderer {
 
     const maxValue = Math.max(...data.map((d) => d[yField] || 0));
 
-    const xScale = d3
-      .scalePoint()
-      .domain(data.map((d) => d[xField]))
-      .range([0, chartWidth])
-      .padding(0.5);
+    const xScale = linearScale(
+      continuousDomain(data, xField, this.encoding.xDomain),
+      xRange(chartWidth),
+    );
 
-    const yScale = d3
-      .scaleLinear()
-      .domain([0, maxValue])
-      .range([chartHeight, 0]);
+    const yScale = linearScale(
+      valueDomain(maxValue, this.encoding.yDomain),
+      yRange(chartHeight),
+    );
 
     // Helper functions for coordinates
-    const getX = (val) => margin.left + xScale(val);
+    const getX = (val) => margin.left + xScale(Number(val));
     const getY = (val) => margin.top + yScale(val);
 
     const points = [];
@@ -66,7 +72,7 @@ export class LineChartRenderer extends MarkRenderer {
     // Generate path data
     const line = d3
       .line()
-      .x((d) => xScale(d[xField]))
+      .x((d) => xScale(Number(d[xField])))
       .y((d) => yScale(d[yField]));
 
     // Draw line path

@@ -57,3 +57,30 @@ import { createFakeSvg } from "../helpers/fake-svg.mjs";
   assert.deepEqual(axisConfig.scales.x.domain(), ["A", "B"]);
   assert.deepEqual(axisConfig.scales.y.domain(), ["North", "South"]);
 }
+
+{
+  const svg = createFakeSvg();
+  const renderer = new BubbleChartRenderer({
+    width: 100,
+    height: 80,
+    margin: { top: 0, right: 0, bottom: 0, left: 0 },
+    xAxisPos: "top",
+    yAxisPos: "right",
+    encoding: {
+      x: "category",
+      y: "group",
+      xDomain: ["B", "A", "C"],
+      yDomain: ["South", "North", "West"],
+    },
+  });
+
+  const axisConfig = renderer.render(svg, [
+    { category: "A", group: "North" },
+    { category: "B", group: "South" },
+  ]);
+
+  assert.deepEqual(axisConfig.scales.x.domain(), ["B", "A", "C"]);
+  assert.deepEqual(axisConfig.scales.y.domain(), ["South", "North", "West"]);
+  assert.deepEqual(axisConfig.scales.x.range(), [100, 0]);
+  assert.deepEqual(axisConfig.scales.y.range(), [0, 80]);
+}

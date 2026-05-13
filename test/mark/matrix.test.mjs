@@ -35,6 +35,31 @@ import { createFakeSvg } from "../helpers/fake-svg.mjs";
     width: 90,
     height: 60,
     margin: { top: 0, right: 0, bottom: 0, left: 0 },
+    showXAxis: true,
+    encoding: {
+      x: "id",
+      y: "sets",
+      xDomain: ["i2", "i1", "i3"],
+      yDomain: ["B", "A"],
+    },
+  });
+
+  renderer.render(svg, [
+    { id: "i1", sets: ["A"] },
+    { id: "i2", sets: ["B"] },
+  ]);
+
+  const labels = svg.querySelectorAll("text").map((text) => text.textContent);
+  assert.deepEqual(labels, ["i2", "i1", "i3"]);
+  assert.equal(svg.querySelectorAll("circle").length, 6);
+}
+
+{
+  const svg = createFakeSvg();
+  const renderer = new MatrixChartRenderer({
+    width: 90,
+    height: 60,
+    margin: { top: 0, right: 0, bottom: 0, left: 0 },
     stripe: false,
     encoding: { x: "id", y: "sets" },
   });

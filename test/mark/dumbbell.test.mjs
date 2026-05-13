@@ -94,3 +94,57 @@ function baseOptions(overrides = {}) {
 
   assert.equal(chart.mark, "dumbbell");
 }
+
+{
+  const svg = createFakeSvg();
+  const renderer = new DumbbellChartRenderer({
+    ...baseOptions({ xAxisPos: "top", yAxisPos: "right" }),
+    encoding: {
+      x: "value",
+      y: "year",
+      xDomain: [0, 120],
+      yDomain: ["2004", "2000", "2008"],
+    },
+  });
+
+  const axisConfig = renderer.render(svg, [
+    { year: "2000", value: 20 },
+    { year: "2000", value: 80 },
+    { year: "2004", value: 40 },
+    { year: "2004", value: 100 },
+  ]);
+
+  assert.deepEqual(axisConfig.scales.x.domain(), [0, 120]);
+  assert.deepEqual(axisConfig.scales.y.domain(), ["2004", "2000", "2008"]);
+  assert.deepEqual(axisConfig.scales.x.range(), [120, 0]);
+  assert.deepEqual(axisConfig.scales.y.range(), [0, 80]);
+}
+
+{
+  const svg = createFakeSvg();
+  const renderer = new DumbbellChartRenderer({
+    ...baseOptions({
+      direction: "horizontal",
+      xAxisPos: "top",
+      yAxisPos: "right",
+    }),
+    encoding: {
+      x: "group",
+      y: "score",
+      xDomain: ["B", "A", "C"],
+      yDomain: [0, 50],
+    },
+  });
+
+  const axisConfig = renderer.render(svg, [
+    { group: "A", score: 10 },
+    { group: "A", score: 30 },
+    { group: "B", score: 20 },
+    { group: "B", score: 40 },
+  ]);
+
+  assert.deepEqual(axisConfig.scales.x.domain(), ["B", "A", "C"]);
+  assert.deepEqual(axisConfig.scales.y.domain(), [0, 50]);
+  assert.deepEqual(axisConfig.scales.x.range(), [120, 0]);
+  assert.deepEqual(axisConfig.scales.y.range(), [0, 80]);
+}

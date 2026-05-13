@@ -1,5 +1,12 @@
 import * as d3 from "d3";
 import { MarkRenderer } from "./mark.js";
+import {
+  continuousDomain,
+  linearScale,
+  valueDomain,
+  xRange,
+  yRange,
+} from "./scale.js";
 
 /**
  * Renderer for area charts.
@@ -42,18 +49,19 @@ export class AreaChartRenderer extends MarkRenderer {
       .append("g")
       .attr("transform", `translate(${margin.left},${margin.top})`);
 
-    const xExtent = d3.extent(values, (d) => Number(d[xField]));
     const yMax = d3.max(values, (d) => Number(d[yField])) || 0;
 
-    const xScale = d3
-      .scaleLinear()
-      .domain(this.encoding.xDomain || xExtent || [0, 1])
-      .range([0, chartWidth]);
+    const xScale = linearScale(
+      continuousDomain(values, xField, this.encoding.xDomain, {
+        fallback: [0, 1],
+      }),
+      xRange(chartWidth),
+    );
 
-    const yScale = d3
-      .scaleLinear()
-      .domain(this.encoding.yDomain || [0, yMax])
-      .range([chartHeight, 0]);
+    const yScale = linearScale(
+      valueDomain(yMax, this.encoding.yDomain),
+      yRange(chartHeight),
+    );
 
     const area = d3
       .area()

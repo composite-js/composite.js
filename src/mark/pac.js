@@ -1,5 +1,6 @@
 import * as d3 from "d3";
 import { MarkRenderer } from "./mark.js";
+import { bandScale, categoricalDomain } from "./scale.js";
 
 export class ProportionalAreaChartRenderer extends MarkRenderer {
   constructor(options = {}) {
@@ -30,15 +31,17 @@ export class ProportionalAreaChartRenderer extends MarkRenderer {
 
   _domains(data) {
     const categoryField = this.encoding.category;
-    return (
+    return categoricalDomain(
+      data,
+      categoryField,
       this.encoding.categoryDomain ||
-      this.encoding.xDomain ||
-      this.encoding.yDomain || [...new Set(data.map((d) => d[categoryField]))]
+        this.encoding.xDomain ||
+        this.encoding.yDomain,
     );
   }
 
-  _maxShapeSize(mainSize, crossSize) {
-    return Math.max(0, Math.min(mainSize, crossSize));
+  _maxShapeSize(bandwidth, crossSize) {
+    return Math.max(0, Math.min(bandwidth, crossSize));
   }
 
   _sizeScale(data, maxShapeSize) {
@@ -104,19 +107,18 @@ export class ProportionalAreaChartRenderer extends MarkRenderer {
 
     container.selectAll("*").remove();
 
-    const maxShapeSize = this._maxShapeSize(chartHeight, chartWidth);
-    const maxRadius = maxShapeSize / 2;
-    const yScale = d3
-      .scalePoint()
-      .domain(categories)
-      .range([maxRadius, chartHeight - maxRadius]);
+    const yScale = bandScale(categories, [0, chartHeight], {
+      inner: this.padding.yInner,
+      outer: this.padding.yOuter,
+    });
+    const maxShapeSize = this._maxShapeSize(yScale.bandwidth(), chartWidth);
     const sizeScale = this._sizeScale(data, maxShapeSize);
     const colorScale = this._colorScale(categories);
 
     data.forEach((d) => {
       const size = sizeScale(d[valueField]);
       const x = margin.left + chartWidth / 2;
-      const y = margin.top + yScale(d[categoryField]);
+      const y = margin.top + yScale(d[categoryField]) + yScale.bandwidth() / 2;
 
       this._drawShape(
         container,
@@ -147,18 +149,17 @@ export class ProportionalAreaChartRenderer extends MarkRenderer {
 
     container.selectAll("*").remove();
 
-    const maxShapeSize = this._maxShapeSize(chartWidth, chartHeight);
-    const maxRadius = maxShapeSize / 2;
-    const xScale = d3
-      .scalePoint()
-      .domain(categories)
-      .range([maxRadius, chartWidth - maxRadius]);
+    const xScale = bandScale(categories, [0, chartWidth], {
+      inner: this.padding.xInner,
+      outer: this.padding.xOuter,
+    });
+    const maxShapeSize = this._maxShapeSize(xScale.bandwidth(), chartHeight);
     const sizeScale = this._sizeScale(data, maxShapeSize);
     const colorScale = this._colorScale(categories);
 
     data.forEach((d) => {
       const size = sizeScale(d[valueField]);
-      const x = margin.left + xScale(d[categoryField]);
+      const x = margin.left + xScale(d[categoryField]) + xScale.bandwidth() / 2;
       const y = margin.top + chartHeight / 2;
 
       this._drawShape(

@@ -1,5 +1,6 @@
 import * as d3 from "d3";
 import { MarkRenderer } from "./mark.js";
+import { continuousDomain, linearScale, xRange, yRange } from "./scale.js";
 
 /**
  * Renderer for scatter plots.
@@ -35,21 +36,17 @@ export class ScatterChartRenderer extends MarkRenderer {
     const chartWidth = this.width;
     const chartHeight = this.height;
 
-    // Scales
-    const xExtent = d3.extent(data, (d) => d[xField]);
-    const yExtent = d3.extent(data, (d) => d[yField]);
+    const xScale = linearScale(
+      continuousDomain(data, xField, this.encoding.xDomain),
+      xRange(chartWidth),
+      { nice: this.encoding.xDomain === undefined },
+    );
 
-    const xScale = d3
-      .scaleLinear()
-      .domain(xExtent)
-      .range([0, chartWidth])
-      .nice();
-
-    const yScale = d3
-      .scaleLinear()
-      .domain(yExtent)
-      .range([chartHeight, 0])
-      .nice();
+    const yScale = linearScale(
+      continuousDomain(data, yField, this.encoding.yDomain),
+      yRange(chartHeight),
+      { nice: this.encoding.yDomain === undefined },
+    );
 
     // Draw Points
     data.forEach((d) => {

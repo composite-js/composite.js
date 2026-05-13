@@ -1,5 +1,13 @@
 import * as d3 from "d3";
 import { MarkRenderer } from "./mark.js";
+import {
+  bandRange,
+  bandScale,
+  categoricalDomain,
+  linearScale,
+  xRange,
+  yRange,
+} from "./scale.js";
 
 export class DumbbellChartRenderer extends MarkRenderer {
   constructor(options = {}) {
@@ -96,17 +104,19 @@ export class DumbbellChartRenderer extends MarkRenderer {
     container.selectAll("*").remove();
 
     const pairs = this._groupPairs(data, categoryField);
-    const categories = this.encoding.yDomain || pairs.map((d) => d.category);
-    const xScale = d3
-      .scaleLinear()
-      .domain(this._valueDomain(data, valueField, this.encoding.xDomain))
-      .range([0, chartWidth]);
-    const yScale = d3
-      .scaleBand()
-      .domain(categories)
-      .range([0, chartHeight])
-      .paddingInner(this.padding.yInner)
-      .paddingOuter(this.padding.yOuter);
+    const categories = categoricalDomain(
+      pairs,
+      "category",
+      this.encoding.yDomain,
+    );
+    const xScale = linearScale(
+      this._valueDomain(data, valueField, this.encoding.xDomain),
+      xRange(chartWidth),
+    );
+    const yScale = bandScale(categories, bandRange(chartHeight), {
+      inner: this.padding.yInner,
+      outer: this.padding.yOuter,
+    });
 
     pairs.forEach((pair) => {
       this._drawPair(
@@ -135,17 +145,19 @@ export class DumbbellChartRenderer extends MarkRenderer {
     container.selectAll("*").remove();
 
     const pairs = this._groupPairs(data, categoryField);
-    const categories = this.encoding.xDomain || pairs.map((d) => d.category);
-    const xScale = d3
-      .scaleBand()
-      .domain(categories)
-      .range([0, chartWidth])
-      .paddingInner(this.padding.xInner)
-      .paddingOuter(this.padding.xOuter);
-    const yScale = d3
-      .scaleLinear()
-      .domain(this._valueDomain(data, valueField, this.encoding.yDomain))
-      .range([chartHeight, 0]);
+    const categories = categoricalDomain(
+      pairs,
+      "category",
+      this.encoding.xDomain,
+    );
+    const xScale = bandScale(categories, xRange(chartWidth), {
+      inner: this.padding.xInner,
+      outer: this.padding.xOuter,
+    });
+    const yScale = linearScale(
+      this._valueDomain(data, valueField, this.encoding.yDomain),
+      yRange(chartHeight),
+    );
 
     pairs.forEach((pair) => {
       this._drawPair(

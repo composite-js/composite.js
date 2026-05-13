@@ -1,5 +1,12 @@
 import * as d3 from "d3";
 import { MarkRenderer } from "./mark.js";
+import {
+  categoricalDomain,
+  continuousDomain,
+  linearScale,
+  xRange,
+  yRange,
+} from "./scale.js";
 
 /**
  * Renderer for bubble charts.
@@ -48,45 +55,37 @@ export class BubbleChartRenderer extends MarkRenderer {
     const xIsCategorical = typeof data[0][xField] === "string";
     let xScale;
     if (xIsCategorical) {
-      const domain = this.encoding.xDomain || data.map((d) => d[xField]);
+      const domain = categoricalDomain(data, xField, this.encoding.xDomain);
       xScale = d3
         .scaleBand()
         .domain(domain)
-        .range(reverseX ? [chartWidth, 0] : [0, chartWidth])
+        .range(xRange(chartWidth, reverseX))
         .padding(this.padding);
     } else {
-      let domain = this.encoding.xDomain;
-      if (!domain) {
-        const xExtent = d3.extent(data, (d) => d[xField]);
-        const xPadding = (xExtent[1] - xExtent[0]) * 0.05 || 1;
-        domain = [xExtent[0] - xPadding, xExtent[1] + xPadding];
-      }
-      xScale = d3
-        .scaleLinear()
-        .domain(domain)
-        .range(reverseX ? [chartWidth, 0] : [0, chartWidth]);
+      xScale = linearScale(
+        continuousDomain(data, xField, this.encoding.xDomain, {
+          padRatio: 0.05,
+        }),
+        xRange(chartWidth, reverseX),
+      );
     }
 
     const yIsCategorical = typeof data[0][yField] === "string";
     let yScale;
     if (yIsCategorical) {
-      const domain = this.encoding.yDomain || data.map((d) => d[yField]);
+      const domain = categoricalDomain(data, yField, this.encoding.yDomain);
       yScale = d3
         .scaleBand()
         .domain(domain)
-        .range(reverseY ? [0, chartHeight] : [chartHeight, 0])
+        .range(yRange(chartHeight, reverseY))
         .padding(this.padding);
     } else {
-      let domain = this.encoding.yDomain;
-      if (!domain) {
-        const yExtent = d3.extent(data, (d) => d[yField]);
-        const yPadding = (yExtent[1] - yExtent[0]) * 0.05 || 1;
-        domain = [yExtent[0] - yPadding, yExtent[1] + yPadding];
-      }
-      yScale = d3
-        .scaleLinear()
-        .domain(domain)
-        .range(reverseY ? [0, chartHeight] : [chartHeight, 0]);
+      yScale = linearScale(
+        continuousDomain(data, yField, this.encoding.yDomain, {
+          padRatio: 0.05,
+        }),
+        yRange(chartHeight, reverseY),
+      );
     }
 
     let rScale;

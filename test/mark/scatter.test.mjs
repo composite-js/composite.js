@@ -35,3 +35,25 @@ assert.equal(circles[0].getAttribute("r"), "7.5");
 circles[0].listeners.get("mouseleave").call(circles[0], {});
 assert.equal(circles[0].getAttribute("fill"), "purple");
 assert.equal(circles[0].getAttribute("r"), "5");
+
+{
+  const domainSvg = createFakeSvg();
+  const domainRenderer = new ScatterChartRenderer({
+    width: 100,
+    height: 80,
+    margin: { top: 0, right: 0, bottom: 0, left: 0 },
+    xAxisPos: "top",
+    yAxisPos: "right",
+    encoding: { x: "x", y: "y", xDomain: [0, 10], yDomain: [0, 30] },
+  });
+
+  const domainAxisConfig = domainRenderer.render(domainSvg, [
+    { x: 1, y: 10 },
+    { x: 2, y: 20 },
+  ]);
+
+  assert.deepEqual(domainAxisConfig.scales.x.domain(), [0, 10]);
+  assert.deepEqual(domainAxisConfig.scales.y.domain(), [0, 30]);
+  assert.deepEqual(domainAxisConfig.scales.x.range(), [100, 0]);
+  assert.deepEqual(domainAxisConfig.scales.y.range(), [0, 80]);
+}
