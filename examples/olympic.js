@@ -2,6 +2,8 @@
 
 import { chart, stackX } from "../src/index.js";
 
+const app = document.getElementById("app");
+
 const years = [
   "1896",
   "1900",
@@ -159,4 +161,4 @@ const flow = chart({
 });
 
 const composite = stackX([dumbbell, pac, flow]);
-composite.render();
+composite.render(app);
