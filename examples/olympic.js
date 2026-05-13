@@ -33,37 +33,6 @@ const years = [
   "2016",
 ];
 
-const hosts = [
-  "Athens",
-  "Paris",
-  "St. Louis",
-  "London",
-  "Stockholm",
-  "Antwerp",
-  "Paris",
-  "Amsterdam",
-  "Los Angeles",
-  "Berlin",
-  "London",
-  "Helsinki",
-  "Melbourne",
-  "Rome",
-  "Tokyo",
-  "Mexico City",
-  "Munich",
-  "Montreal",
-  "Moscow",
-  "Los Angeles",
-  "Seoul",
-  "Barcelona",
-  "Atlanta",
-  "Sydney",
-  "Athens",
-  "Beijing",
-  "London",
-  "Rio de Janeiro",
-];
-
 const sports = [
   "Athletics",
   "Swimming",
@@ -189,5 +158,5 @@ const flow = chart({
   labelFontSize: 10,
 });
 
-const figure = stackX([dumbbell, pac, flow]);
-const svg = figure.render(app);
+const composite = stackX([dumbbell, pac, flow]);
+composite.render();

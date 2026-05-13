@@ -7,7 +7,8 @@ export class FlowDiagramRenderer extends MarkRenderer {
     this.sourceDomain = options.sourceDomain;
     this.targetDomain = options.targetDomain;
     this.direction = options.direction || "horizontal";
-    this.colors = options.colors || (Array.isArray(options.color) ? options.color : null);
+    this.colors =
+      options.colors || (Array.isArray(options.color) ? options.color : null);
     this.color = Array.isArray(options.color)
       ? options.color[0] || "#f5b27c"
       : options.color || "#f5b27c";
@@ -27,7 +28,8 @@ export class FlowDiagramRenderer extends MarkRenderer {
     this.targetLabelName = options.targetLabelName || "";
     this.labelFill = options.labelFill || "currentColor";
     this.labelFontSize = options.labelFontSize || 10;
-    this.labelPadding = options.labelPadding !== undefined ? options.labelPadding : 6;
+    this.labelPadding =
+      options.labelPadding !== undefined ? options.labelPadding : 6;
     this.minStrokeWidth =
       options.minStrokeWidth !== undefined ? options.minStrokeWidth : 0.5;
     this.maxStrokeWidth =
@@ -86,7 +88,13 @@ export class FlowDiagramRenderer extends MarkRenderer {
       .text(text);
   }
 
-  _drawHorizontalLabels(container, sourceScale, targetScale, sourceDomain, targetDomain) {
+  _drawHorizontalLabels(
+    container,
+    sourceScale,
+    targetScale,
+    sourceDomain,
+    targetDomain,
+  ) {
     const margin = this.margin;
     const width = this.width;
 
@@ -135,7 +143,13 @@ export class FlowDiagramRenderer extends MarkRenderer {
     }
   }
 
-  _drawVerticalLabels(container, sourceScale, targetScale, sourceDomain, targetDomain) {
+  _drawVerticalLabels(
+    container,
+    sourceScale,
+    targetScale,
+    sourceDomain,
+    targetDomain,
+  ) {
     const margin = this.margin;
     const height = this.height;
 
@@ -228,7 +242,9 @@ export class FlowDiagramRenderer extends MarkRenderer {
         .attr("fill", "none")
         .attr(
           "stroke",
-          colorScale(this.colorBy === "source" ? d[sourceField] : d[targetField]),
+          colorScale(
+            this.colorBy === "source" ? d[sourceField] : d[targetField],
+          ),
         )
         .attr("stroke-width", strokeScale(d[valueField] || 0))
         .attr("stroke-linecap", "round")
@@ -283,7 +299,9 @@ export class FlowDiagramRenderer extends MarkRenderer {
         .attr("fill", "none")
         .attr(
           "stroke",
-          colorScale(this.colorBy === "source" ? d[sourceField] : d[targetField]),
+          colorScale(
+            this.colorBy === "source" ? d[sourceField] : d[targetField],
+          ),
         )
         .attr("stroke-width", strokeScale(d[valueField] || 0))
         .attr("stroke-linecap", "round")

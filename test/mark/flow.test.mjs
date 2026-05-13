@@ -54,7 +54,9 @@ assert.ok(paths[0].getAttribute("d").startsWith("M0,25C"));
   ]);
 
   const labeledPaths = labeledSvg.querySelectorAll("path");
-  const labels = labeledSvg.querySelectorAll("text").map((text) => text.textContent);
+  const labels = labeledSvg
+    .querySelectorAll("text")
+    .map((text) => text.textContent);
 
   assert.equal(labeledPaths[0].getAttribute("stroke"), "#1f77b4");
   assert.equal(labeledPaths[1].getAttribute("stroke"), "#ff7f0e");
