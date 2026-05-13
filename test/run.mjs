@@ -10,8 +10,10 @@ import "./mark/bubble.test.mjs";
 import "./mark/line.test.mjs";
 import "./mark/matrix.test.mjs";
 import "./mark/box.test.mjs";
+import "./mark/stream.test.mjs";
 import "./mark/flow.test.mjs";
 import "./mark/pie.test.mjs";
+import "./layout/text.test.mjs";
 import "./dev-example.test.mjs";
 
 console.log("All tests passed");

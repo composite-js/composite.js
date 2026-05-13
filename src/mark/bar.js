@@ -2,6 +2,89 @@ import * as d3 from "d3";
 import { MarkRenderer } from "./mark.js";
 
 /**
+ * Renderer for grouped bar charts.
+ */
+export class GroupBarChartRenderer extends MarkRenderer {
+  constructor(options = {}) {
+    super(options);
+    this.colorScheme = options.colorScheme || d3.schemeCategory10;
+    this.showLabels = options.showLabels || false;
+    const padding = options.padding || {};
+    this.padding = {
+      xInner: padding.xInner !== undefined ? padding.xInner : 0.2,
+      xOuter: padding.xOuter !== undefined ? padding.xOuter : 0.1,
+      groupInner: padding.groupInner !== undefined ? padding.groupInner : 0.08,
+    };
+  }
+
+  render(svg, data) {
+    const container = d3.select(svg);
+    const xField = this.encoding.x;
+    const yField = this.encoding.y;
+    const groupField = this.encoding.group;
+    const margin = this.margin;
+    const chartWidth = this.width;
+    const chartHeight = this.height;
+
+    container.selectAll("*").remove();
+
+    const categories = [...new Set(data.map((d) => d[xField]))];
+    const groups = [...new Set(data.map((d) => d[groupField]))];
+    const maxValue = Math.max(...data.map((d) => d[yField] || 0));
+
+    const xScale = d3
+      .scaleBand()
+      .domain(categories)
+      .range([0, chartWidth])
+      .paddingInner(this.padding.xInner)
+      .paddingOuter(this.padding.xOuter);
+
+    const groupScale = d3
+      .scaleBand()
+      .domain(groups)
+      .range([0, xScale.bandwidth()])
+      .paddingInner(this.padding.groupInner);
+
+    const yScale = d3
+      .scaleLinear()
+      .domain(this.encoding.yDomain || [0, maxValue])
+      .range([chartHeight, 0]);
+
+    const colorScale = d3.scaleOrdinal().domain(groups).range(this.colorScheme);
+
+    data.forEach((d) => {
+      const value = d[yField];
+      const x = margin.left + xScale(d[xField]) + groupScale(d[groupField]);
+      const y = margin.top + yScale(value);
+      const rect = container
+        .append("rect")
+        .attr("x", x)
+        .attr("y", y)
+        .attr("width", groupScale.bandwidth())
+        .attr("height", chartHeight - yScale(value));
+
+      this.applyFillHover(rect, colorScale(d[groupField]));
+      rect.append("title").text(`${d[xField]} - ${d[groupField]}: ${value}`);
+
+      if (this.showLabels && chartHeight - yScale(value) > 15) {
+        container
+          .append("text")
+          .attr("x", x + groupScale.bandwidth() / 2)
+          .attr("y", y - 4)
+          .attr("text-anchor", "middle")
+          .attr("font-size", "10px")
+          .text(value);
+      }
+    });
+
+    return this.axisConfig(
+      { x: xScale, y: yScale, group: groupScale },
+      { margin, width: chartWidth, height: chartHeight },
+    );
+  }
+}
+
+/**
  * Renderer for stacked bar charts.
  */
 export class StackBarChartRenderer extends MarkRenderer {
@@ -370,7 +453,7 @@ export class BarChartRenderer extends MarkRenderer {
     const reverseY = this.yAxisPos === "right";
     const yScale = d3
       .scaleLinear()
-      .domain([0, maxValue])
+      .domain(this.encoding.yDomain || [0, maxValue])
       .range(reverseY ? [0, chartHeight] : [chartHeight, 0]);
 
     data.forEach((d) => {

@@ -62,3 +62,61 @@ const data = [
   assert.equal(axisConfig.scales.x.domain()[1], 100);
   assert.deepEqual(axisConfig.scales.y.domain(), ["A", "B"]);
 }
+
+{
+  const svg = createFakeSvg();
+  const renderer = new BoxPlotRenderer({
+    width: 120,
+    height: 80,
+    margin: { top: 0, right: 0, bottom: 0, left: 0 },
+    direction: "horizontal",
+    color: "teal",
+    whiskerStrokeDasharray: "3 3",
+    outlierFill: "teal",
+    outlierOpacity: 0.5,
+    encoding: { x: "value", y: "category" },
+  });
+
+  renderer.render(svg, data);
+
+  assert.equal(
+    svg.querySelectorAll("line")[0].getAttribute("stroke-dasharray"),
+    "3 3",
+  );
+  assert.equal(svg.querySelectorAll("circle")[0].getAttribute("fill"), "teal");
+  assert.equal(
+    svg.querySelectorAll("circle")[0].getAttribute("opacity"),
+    "0.5",
+  );
+}
+
+{
+  const svg = createFakeSvg();
+  const renderer = new BoxPlotRenderer({
+    width: 120,
+    height: 80,
+    margin: { top: 0, right: 0, bottom: 0, left: 0 },
+    direction: "horizontal",
+    encoding: { x: "value", y: "category", xDomain: [0, 120] },
+  });
+
+  const axisConfig = renderer.render(svg, data);
+
+  assert.deepEqual(axisConfig.scales.x.domain(), [0, 120]);
+}
+
+{
+  const svg = createFakeSvg();
+  const renderer = new BoxPlotRenderer({
+    width: 120,
+    height: 80,
+    margin: { top: 0, right: 0, bottom: 0, left: 0 },
+    direction: "horizontal",
+    valueRangePadding: 5,
+    encoding: { x: "value", y: "category", xDomain: [0, 100] },
+  });
+
+  renderer.render(svg, data);
+
+  assert.equal(svg.querySelectorAll("circle")[0].getAttribute("cx"), "115");
+}

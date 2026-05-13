@@ -1,5 +1,6 @@
 export {
   chart,
+  frame,
   image,
   repeatX,
   repeatY,
@@ -7,6 +8,7 @@ export {
   stackY,
   text,
 } from "./layout/factory.js";
+export { Frame } from "./layout/frame.js";
 export { LayoutCalculator } from "./layout/calculator.js";
 export {
   Composition,

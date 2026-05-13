@@ -4,6 +4,7 @@ export {
   Composition,
   DirectionlessRepeat,
   Embedded,
+  Frame,
   LayoutCalculator,
   LayoutEngine,
   LayoutRenderer,
@@ -14,6 +15,7 @@ export {
   Stack,
   chart,
   embed,
+  frame,
   image,
   repeat,
   repeatX,
@@ -23,7 +25,11 @@ export {
   stackY,
   text,
 } from "./layout.js";
-export { BarChartRenderer, StackBarChartRenderer } from "./mark/bar.js";
+export {
+  BarChartRenderer,
+  GroupBarChartRenderer,
+  StackBarChartRenderer,
+} from "./mark/bar.js";
 export { BoxPlotRenderer } from "./mark/box.js";
 export { BubbleChartRenderer } from "./mark/bubble.js";
 export { FlowDiagramRenderer } from "./mark/flow.js";
@@ -32,4 +38,5 @@ export { MarkRenderer } from "./mark/mark.js";
 export { MatrixChartRenderer } from "./mark/matrix.js";
 export { PieChartRenderer } from "./mark/pie.js";
 export { ScatterChartRenderer } from "./mark/scatter.js";
+export { StreamGraphRenderer } from "./mark/stream.js";
 export { BBox } from "./utils/bbox.js";

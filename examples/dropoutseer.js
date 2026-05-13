@@ -9,7 +9,7 @@ import {
   repeat,
   sequenceContainer,
   stackX,
-} from "../src/layout.js";
+} from "../src/index.js";
 
 const app = document.getElementById("app");
 
@@ -179,7 +179,4 @@ const bars = chart({
   showLabels: false,
 });
 
-stackX([sequence, flow, bars], {
-  margin: 0,
-  align: [sequence, sequence, sequence],
-}).render(app);
+stackX([sequence, flow, bars]).render(app);

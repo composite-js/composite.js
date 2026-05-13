@@ -20,6 +20,12 @@ export class BoxPlotRenderer extends MarkRenderer {
     this.xAxisPos = options.xAxisPos || "bottom";
     this.yAxisPos = options.yAxisPos || "left";
     this.boxWidth = options.boxWidth !== undefined ? options.boxWidth : 0.6;
+    this.whiskerStrokeDasharray = options.whiskerStrokeDasharray;
+    this.valueRangePadding =
+      options.valueRangePadding !== undefined ? options.valueRangePadding : 0;
+    this.outlierFill =
+      options.outlierFill !== undefined ? options.outlierFill : "none";
+    this.outlierOpacity = options.outlierOpacity;
     this.padding = options.padding || {
       xInner: 0.1,
       xOuter: 0.1,
@@ -99,11 +105,18 @@ export class BoxPlotRenderer extends MarkRenderer {
       .paddingOuter(this.padding.yOuter);
 
     const reverseX = this.yAxisPos === "right";
+    const xDomain = this.encoding.xDomain || [0, valueExtent[1]];
     const xScale = d3
       .scaleLinear()
-      .domain([0, valueExtent[1]])
-      .range(reverseX ? [chartWidth, 0] : [0, chartWidth])
-      .nice();
+      .domain(xDomain)
+      .range(
+        reverseX
+          ? [chartWidth - this.valueRangePadding, this.valueRangePadding]
+          : [this.valueRangePadding, chartWidth - this.valueRangePadding],
+      );
+    if (!this.encoding.xDomain) {
+      xScale.nice();
+    }
 
     const actualBoxHeight = yScale.bandwidth() * this.boxWidth;
     const boxOffset = (yScale.bandwidth() - actualBoxHeight) / 2;
@@ -112,7 +125,7 @@ export class BoxPlotRenderer extends MarkRenderer {
       const y = margin.top + yScale(d.category);
       const centerY = y + yScale.bandwidth() / 2;
 
-      container
+      const whiskerLine = container
         .append("line")
         .attr("x1", margin.left + xScale(d.min))
         .attr("x2", margin.left + xScale(d.max))
@@ -120,8 +133,11 @@ export class BoxPlotRenderer extends MarkRenderer {
         .attr("y2", centerY)
         .attr("stroke", "black")
         .attr("stroke-width", 1);
+      if (this.whiskerStrokeDasharray !== undefined) {
+        whiskerLine.attr("stroke-dasharray", this.whiskerStrokeDasharray);
+      }
 
-      container
+      const minCap = container
         .append("line")
         .attr("x1", margin.left + xScale(d.min))
         .attr("x2", margin.left + xScale(d.min))
@@ -129,8 +145,11 @@ export class BoxPlotRenderer extends MarkRenderer {
         .attr("y2", y + boxOffset + actualBoxHeight)
         .attr("stroke", "black")
         .attr("stroke-width", 1);
+      if (this.whiskerStrokeDasharray !== undefined) {
+        minCap.attr("stroke-dasharray", this.whiskerStrokeDasharray);
+      }
 
-      container
+      const maxCap = container
         .append("line")
         .attr("x1", margin.left + xScale(d.max))
         .attr("x2", margin.left + xScale(d.max))
@@ -138,6 +157,9 @@ export class BoxPlotRenderer extends MarkRenderer {
         .attr("y2", y + boxOffset + actualBoxHeight)
         .attr("stroke", "black")
         .attr("stroke-width", 1);
+      if (this.whiskerStrokeDasharray !== undefined) {
+        maxCap.attr("stroke-dasharray", this.whiskerStrokeDasharray);
+      }
 
       const boxX = margin.left + xScale(reverseX ? d.q3 : d.q1);
       const boxW = Math.abs(xScale(d.q3) - xScale(d.q1));
@@ -170,14 +192,17 @@ export class BoxPlotRenderer extends MarkRenderer {
         .attr("stroke-width", 2);
 
       d.outliers.forEach((outlier) => {
-        container
+        const circle = container
           .append("circle")
           .attr("cx", margin.left + xScale(outlier))
           .attr("cy", centerY)
           .attr("r", 3)
-          .attr("fill", "none")
+          .attr("fill", this.outlierFill)
           .attr("stroke", this.color)
           .attr("stroke-width", 1.5);
+        if (this.outlierOpacity !== undefined) {
+          circle.attr("opacity", this.outlierOpacity);
+        }
       });
     });
 
@@ -247,9 +272,11 @@ export class BoxPlotRenderer extends MarkRenderer {
 
     const yScale = d3
       .scaleLinear()
-      .domain(valueExtent)
-      .range([chartHeight, 0])
-      .nice();
+      .domain(this.encoding.yDomain || valueExtent)
+      .range([chartHeight, 0]);
+    if (!this.encoding.yDomain) {
+      yScale.nice();
+    }
 
     const actualBoxWidth = xScale.bandwidth() * this.boxWidth;
     const boxOffset = (xScale.bandwidth() - actualBoxWidth) / 2;
@@ -258,7 +285,7 @@ export class BoxPlotRenderer extends MarkRenderer {
       const x = margin.left + xScale(d.category);
       const centerX = x + xScale.bandwidth() / 2;
 
-      container
+      const whiskerLine = container
         .append("line")
         .attr("x1", centerX)
         .attr("x2", centerX)
@@ -266,8 +293,11 @@ export class BoxPlotRenderer extends MarkRenderer {
         .attr("y2", margin.top + yScale(d.max))
         .attr("stroke", "black")
         .attr("stroke-width", 1);
+      if (this.whiskerStrokeDasharray !== undefined) {
+        whiskerLine.attr("stroke-dasharray", this.whiskerStrokeDasharray);
+      }
 
-      container
+      const minCap = container
         .append("line")
         .attr("x1", x + boxOffset)
         .attr("x2", x + boxOffset + actualBoxWidth)
@@ -275,8 +305,11 @@ export class BoxPlotRenderer extends MarkRenderer {
         .attr("y2", margin.top + yScale(d.min))
         .attr("stroke", "black")
         .attr("stroke-width", 1);
+      if (this.whiskerStrokeDasharray !== undefined) {
+        minCap.attr("stroke-dasharray", this.whiskerStrokeDasharray);
+      }
 
-      container
+      const maxCap = container
         .append("line")
         .attr("x1", x + boxOffset)
         .attr("x2", x + boxOffset + actualBoxWidth)
@@ -284,6 +317,9 @@ export class BoxPlotRenderer extends MarkRenderer {
         .attr("y2", margin.top + yScale(d.max))
         .attr("stroke", "black")
         .attr("stroke-width", 1);
+      if (this.whiskerStrokeDasharray !== undefined) {
+        maxCap.attr("stroke-dasharray", this.whiskerStrokeDasharray);
+      }
 
       const boxY = margin.top + yScale(d.q3);
       const boxHeight = yScale(d.q1) - yScale(d.q3);
@@ -316,14 +352,17 @@ export class BoxPlotRenderer extends MarkRenderer {
         .attr("stroke-width", 2);
 
       d.outliers.forEach((outlier) => {
-        container
+        const circle = container
           .append("circle")
           .attr("cx", centerX)
           .attr("cy", margin.top + yScale(outlier))
           .attr("r", 3)
-          .attr("fill", "none")
+          .attr("fill", this.outlierFill)
           .attr("stroke", this.color)
           .attr("stroke-width", 1.5);
+        if (this.outlierOpacity !== undefined) {
+          circle.attr("opacity", this.outlierOpacity);
+        }
       });
     });
 

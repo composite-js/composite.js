@@ -1,5 +1,6 @@
 import { BBox } from "../utils/bbox.js";
 import { Embedded, Repeat, RepeatX, RepeatY, Stack } from "./composition.js";
+import { Frame } from "./frame.js";
 import { LayoutCalculator } from "./calculator.js";
 import { renderComputedLayout } from "./renderer.js";
 import { Node, assertLayoutNode } from "./node.js";
@@ -141,6 +142,11 @@ export class LayoutEngine {
       return;
     }
 
+    if (node instanceof Frame) {
+      this.computeFrame(node);
+      return;
+    }
+
     this.computeLeaf(node);
   }
 
@@ -237,6 +243,11 @@ export class LayoutEngine {
       node.container.margin || { top: 0, right: 0, bottom: 0, left: 0 },
     );
     node.bbox = bbox;
+  }
+
+  static computeFrame(node) {
+    this.computeLayout(node.child);
+    node.updateBBoxFromChild();
   }
 
   static computeLeaf(node) {

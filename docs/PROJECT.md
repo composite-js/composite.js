@@ -53,6 +53,9 @@ The project is designed for browser rendering. Tests run through a Node-based ru
 The main public exports are available through `src/index.js`.
 
 - `chart(config)` creates a leaf layout node around a chart configuration.
+- `text(config)` creates a leaf layout node for SVG text annotations, including
+  rotated labels.
+- `frame(node, options)` wraps a layout node with a rectangular SVG border.
 - `stackX(nodes, options)` arranges layout nodes horizontally.
 - `stackY(nodes, options)` arranges layout nodes vertically.
 - `repeatX(domain, fn, options)` creates a horizontal repeated layout from a domain and node factory.
@@ -98,6 +101,11 @@ The layout pipeline has three main parts:
 
 Rendering is D3-backed. `src/chart.js` selects a mark renderer for the configured mark type, and mark renderers return axis configuration when axes should be drawn by `AxisRenderer`.
 
+Supported chart marks include bars, grouped bars, stacked bars, lines,
+matrices, scatters, boxes, bubbles, pies, flows, and stream graphs. Grouped
+bars use `encoding: { x, y, group }`. Stream graphs use long-form data with
+`encoding: { x, y, color }` and render stacked areas with a wiggle baseline.
+
 ## Directory Guide
 
 - `src/index.js` is the public entrypoint.
@@ -106,6 +114,10 @@ Rendering is D3-backed. `src/chart.js` selects a mark renderer for the configure
 - `src/layout.js` re-exports the layout subsystem.
 - `src/layout/` contains layout nodes, compositions, measurement, calculation, engine, and rendering logic.
 - `src/mark/` contains D3-backed renderers for supported chart marks.
+- `src/layout/text.js` contains the renderable element behind the `text()`
+  layout factory.
+- `src/layout/frame.js` contains the wrapper element behind the `frame()`
+  layout factory.
 - `src/container/` contains reusable container abstractions for embedded layouts.
 - `src/utils/` contains shared utilities such as bounding boxes.
 - `examples/` contains browser examples used by the development server.

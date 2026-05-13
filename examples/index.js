@@ -1,4 +1,4 @@
-import { chart, repeatX, stackX, stackY } from "../src/layout.js";
+import { chart, repeatX, stackX, stackY } from "../src/index.js";
 
 const data = [
   { sets: ["Drama"], intersectionSize: 20, setSize: 45 },
@@ -199,5 +199,4 @@ const final = stackY([topBarChart, composite, pieRow], {
   align: [null, matrixChart, null],
 });
 
-// composite.render(app);
 final.render(app);

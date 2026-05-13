@@ -1,6 +1,6 @@
 # composite.js
 
-A visualization grammar for building composite visualizations. It provides composition operators such as `stack` and `repeat` so you can compose marks such as bar charts and matrix views into a single coordinated layout (for example, an UpSet-style intersection visualization).
+A visualization grammar for building composite visualizations. It provides composition operators such as `stack` and `repeat` so you can compose marks such as bar charts, stream graphs, and matrix views into a single coordinated layout (for example, an UpSet-style intersection visualization).
 
 ## Requirements
 
@@ -51,6 +51,8 @@ pnpm run dev --example dropoutseer
 The repository includes a demo entry (`examples/index.js`) that shows how to compose charts: a top bar chart, a left bar chart, a center matrix view, and repeated pie charts.
 
 - Use `chart({...})` to create a leaf layout node for an individual chart.
+- Use `text({...})` to create SVG text annotations that participate in layout.
+- Use `frame(node, {...})` to draw a border around an existing layout node.
 - Use `stackX([a, b])` or `stackY([a, b])` to compose layout nodes horizontally or vertically.
 - Use `repeatX(domain, fn)` or `repeatY(domain, fn)` for repeated small multiples.
 - Pass only layout nodes into compositions. Wrap chart configs with `chart({...})` instead of passing `new Chart(...)`.
@@ -80,6 +82,10 @@ const matrix = chart({
 const view = stackY([top, matrix], { align: [matrix, matrix] });
 view.render(document.getElementById("app"));
 ```
+
+Supported chart marks include `bar`, `groupbar`, `stackbar`, `line`, `matrix`,
+`scatter`, `box`, `bubble`, `pie`, `flow`, and `stream`. The `stream` mark expects
+long-form data with `encoding: { x, y, color }`.
 
 ## Build & Deploy
 

@@ -1,5 +1,9 @@
 import assert from "node:assert/strict";
-import { BarChartRenderer, StackBarChartRenderer } from "../../src/mark/bar.js";
+import {
+  BarChartRenderer,
+  GroupBarChartRenderer,
+  StackBarChartRenderer,
+} from "../../src/mark/bar.js";
 import { createFakeSvg, findFirstElement } from "../helpers/fake-svg.mjs";
 
 function baseOptions(overrides = {}) {
@@ -54,6 +58,18 @@ function baseOptions(overrides = {}) {
 
 {
   const svg = createFakeSvg();
+  const renderer = new BarChartRenderer({
+    ...baseOptions(),
+    encoding: { x: "category", y: "value", yDomain: [0, 50] },
+  });
+
+  const axisConfig = renderer.render(svg, [{ category: "A", value: 10 }]);
+
+  assert.deepEqual(axisConfig.scales.y.domain(), [0, 50]);
+}
+
+{
+  const svg = createFakeSvg();
   const renderer = new StackBarChartRenderer({
     ...baseOptions({ showLabels: true }),
     colorScheme: ["red", "blue"],
@@ -99,4 +115,57 @@ function baseOptions(overrides = {}) {
   assert.ok(svg.querySelectorAll("text").length > 0);
   assert.equal(axisConfig.scales.x.domain()[1], 25);
   assert.deepEqual(axisConfig.scales.y.domain(), ["A", "B"]);
+}
+
+{
+  const svg = createFakeSvg();
+  const renderer = new GroupBarChartRenderer({
+    ...baseOptions(),
+    colorScheme: ["orange", "purple"],
+    encoding: {
+      x: "date",
+      y: "count",
+      group: "kind",
+      yDomain: [0, 50],
+    },
+  });
+
+  const axisConfig = renderer.render(svg, [
+    { date: "18-Jun", kind: "posts", count: 20 },
+    { date: "18-Jun", kind: "views", count: 30 },
+    { date: "25-Jun", kind: "posts", count: 10 },
+    { date: "25-Jun", kind: "views", count: 15 },
+  ]);
+
+  const rects = svg.querySelectorAll("rect");
+  assert.equal(rects.length, 4);
+  assert.equal(rects[0].getAttribute("fill"), "orange");
+  assert.equal(rects[1].getAttribute("fill"), "purple");
+  assert.deepEqual(axisConfig.scales.x.domain(), ["18-Jun", "25-Jun"]);
+  assert.deepEqual(axisConfig.scales.group.domain(), ["posts", "views"]);
+  assert.deepEqual(axisConfig.scales.y.domain(), [0, 50]);
+}
+
+{
+  const svg = createFakeSvg();
+  const renderer = new GroupBarChartRenderer({
+    ...baseOptions(),
+    colorScheme: ["orange", "purple"],
+    padding: { xInner: 0.42, xOuter: 0.02, yInner: 0.1, yOuter: 0.1 },
+    encoding: {
+      x: "date",
+      y: "count",
+      group: "kind",
+      yDomain: [0, 50],
+    },
+  });
+
+  renderer.render(svg, [
+    { date: "18-Jun", kind: "posts", count: 20 },
+    { date: "18-Jun", kind: "views", count: 30 },
+  ]);
+
+  svg.querySelectorAll("rect").forEach((rect) => {
+    assert.notEqual(rect.getAttribute("x"), "NaN");
+  });
 }

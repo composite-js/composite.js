@@ -1,4 +1,8 @@
-import { BarChartRenderer, StackBarChartRenderer } from "./mark/bar.js";
+import {
+  BarChartRenderer,
+  GroupBarChartRenderer,
+  StackBarChartRenderer,
+} from "./mark/bar.js";
 import { LineChartRenderer } from "./mark/line.js";
 import { MatrixChartRenderer } from "./mark/matrix.js";
 import { ScatterChartRenderer } from "./mark/scatter.js";
@@ -6,6 +10,7 @@ import { BoxPlotRenderer } from "./mark/box.js";
 import { BubbleChartRenderer } from "./mark/bubble.js";
 import { PieChartRenderer } from "./mark/pie.js";
 import { FlowDiagramRenderer } from "./mark/flow.js";
+import { StreamGraphRenderer } from "./mark/stream.js";
 import { AxisRenderer } from "./axis.js";
 import * as d3 from "d3";
 
@@ -41,6 +46,7 @@ export class Chart {
       padding.outer !== undefined ? padding.outer : defaultPaddingValue;
 
     this.padding = {
+      ...padding,
       xInner: padding.xInner !== undefined ? padding.xInner : defaultInner,
       xOuter: padding.xOuter !== undefined ? padding.xOuter : defaultOuter,
       yInner: padding.yInner !== undefined ? padding.yInner : defaultInner,
@@ -71,6 +77,9 @@ export class Chart {
       case "stackbar":
         this.renderer = new StackBarChartRenderer(rendererOptions);
         break;
+      case "groupbar":
+        this.renderer = new GroupBarChartRenderer(rendererOptions);
+        break;
       case "line":
         this.renderer = new LineChartRenderer(rendererOptions);
         break;
@@ -91,6 +100,9 @@ export class Chart {
         break;
       case "flow":
         this.renderer = new FlowDiagramRenderer(rendererOptions);
+        break;
+      case "stream":
+        this.renderer = new StreamGraphRenderer(rendererOptions);
         break;
       default:
         throw new Error(`Unsupported mark type: ${this.mark}`);
