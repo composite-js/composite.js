@@ -1,6 +1,6 @@
 # composite.js
 
-A small JavaScript visualization grammar demo library for building composite visualizations using Vite and pnpm. It provides a function-style DSL with `chart`, `stackX`, `stackY`, `repeatX`, and `repeatY` so you can compose marks such as bar charts and matrix views into a single coordinated layout (for example, an UpSet-style intersection visualization).
+A visualization grammar for building composite visualizations. It provides composition operators such as `stack` and `repeat` so you can compose marks such as bar charts and matrix views into a single coordinated layout (for example, an UpSet-style intersection visualization).
 
 ## Requirements
 
