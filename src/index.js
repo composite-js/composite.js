@@ -30,6 +30,7 @@ export {
   GroupBarChartRenderer,
   StackBarChartRenderer,
 } from "./mark/bar.js";
+export { AreaChartRenderer } from "./mark/area.js";
 export { BoxPlotRenderer } from "./mark/box.js";
 export { BubbleChartRenderer } from "./mark/bubble.js";
 export { DumbbellChartRenderer } from "./mark/dumbbell.js";

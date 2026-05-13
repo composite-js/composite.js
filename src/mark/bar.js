@@ -372,7 +372,7 @@ export class BarChartRenderer extends MarkRenderer {
 
     const yScale = d3
       .scaleBand()
-      .domain(data.map((d) => d[yField]))
+      .domain(this.encoding.yDomain || data.map((d) => d[yField]))
       .range([0, chartHeight])
       .paddingInner(this.padding.yInner)
       .paddingOuter(this.padding.yOuter);
@@ -380,7 +380,7 @@ export class BarChartRenderer extends MarkRenderer {
     const reverseX = this.yAxisPos === "right";
     const xScale = d3
       .scaleLinear()
-      .domain([0, maxValue])
+      .domain(this.encoding.xDomain || [0, maxValue])
       .range(reverseX ? [chartWidth, 0] : [0, chartWidth]);
 
     data.forEach((d) => {

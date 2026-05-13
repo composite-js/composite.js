@@ -101,7 +101,7 @@ The layout pipeline has three main parts:
 
 Rendering is D3-backed. `src/chart.js` selects a mark renderer for the configured mark type, and mark renderers return axis configuration when axes should be drawn by `AxisRenderer`.
 
-Supported chart marks include bars, grouped bars, stacked bars, lines, matrices, scatters, boxes, bubbles, dumbbells, proportional area charts, pies, flows, and stream graphs. Flow diagrams use `encoding: { source, target, value }`, support horizontal and vertical directions, can render endpoint headings, and can map an array of colors to either the source or target domain.
+Supported chart marks include bars, grouped bars, stacked bars, area charts, lines, matrices, scatters, boxes, bubbles, dumbbells, proportional area charts, pies, flows, and stream graphs. Flow diagrams use `encoding: { source, target, value }`, support horizontal and vertical directions, can render endpoint headings, and can map an array of colors to either the source or target domain.
 
 ## Directory Guide
 

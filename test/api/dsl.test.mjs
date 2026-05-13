@@ -73,6 +73,16 @@ import {
 
 {
   const node = chart({
+    mark: "area",
+    data: [{ year: 2020, age: 61 }],
+    encoding: { x: "year", y: "age" },
+  });
+
+  assert.equal(node.element.mark, "area");
+}
+
+{
+  const node = chart({
     mark: "stream",
     data: [
       { period: "Q1", series: "A", value: 1 },

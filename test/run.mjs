@@ -7,6 +7,7 @@ import "./container/sequence.test.mjs";
 import "./mark/bar.test.mjs";
 import "./mark/scatter.test.mjs";
 import "./mark/bubble.test.mjs";
+import "./mark/area.test.mjs";
 import "./mark/line.test.mjs";
 import "./mark/matrix.test.mjs";
 import "./mark/box.test.mjs";

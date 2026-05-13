@@ -59,6 +59,25 @@ function baseOptions(overrides = {}) {
 {
   const svg = createFakeSvg();
   const renderer = new BarChartRenderer({
+    ...baseOptions({ direction: "horizontal" }),
+    encoding: {
+      x: "value",
+      y: "category",
+      yDomain: ["A", "B", "C"],
+    },
+  });
+
+  const axisConfig = renderer.render(svg, [
+    { category: "A", value: 10 },
+    { category: "C", value: 20 },
+  ]);
+
+  assert.deepEqual(axisConfig.scales.y.domain(), ["A", "B", "C"]);
+}
+
+{
+  const svg = createFakeSvg();
+  const renderer = new BarChartRenderer({
     ...baseOptions(),
     encoding: { x: "category", y: "value", yDomain: [0, 50] },
   });

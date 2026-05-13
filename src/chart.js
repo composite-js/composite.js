@@ -3,6 +3,7 @@ import {
   GroupBarChartRenderer,
   StackBarChartRenderer,
 } from "./mark/bar.js";
+import { AreaChartRenderer } from "./mark/area.js";
 import { LineChartRenderer } from "./mark/line.js";
 import { MatrixChartRenderer } from "./mark/matrix.js";
 import { ScatterChartRenderer } from "./mark/scatter.js";
@@ -81,6 +82,9 @@ export class Chart {
         break;
       case "groupbar":
         this.renderer = new GroupBarChartRenderer(rendererOptions);
+        break;
+      case "area":
+        this.renderer = new AreaChartRenderer(rendererOptions);
         break;
       case "line":
         this.renderer = new LineChartRenderer(rendererOptions);
