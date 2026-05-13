@@ -11,6 +11,15 @@ export class MatrixChartRenderer extends MarkRenderer {
    */
   constructor(options = {}) {
     super(options);
+    this.color = options.color || "black";
+    this.showXAxis =
+      options.showXAxis !== undefined ? options.showXAxis : false;
+    this.showYAxis =
+      options.showYAxis !== undefined ? options.showYAxis : false;
+    this.xAxisPos = options.xAxisPos || "bottom";
+    this.yAxisPos = options.yAxisPos || "left";
+    this.labelFontSize = options.labelFontSize || 10;
+    this.circleRadius = options.circleRadius || 5;
     this.stripe = options.stripe !== undefined ? options.stripe : true;
     this.padding = options.padding || {
       xInner: 0,
@@ -18,6 +27,90 @@ export class MatrixChartRenderer extends MarkRenderer {
       yInner: 0,
       yOuter: 0,
     };
+  }
+
+  _domainFromData(data, field, fallback = []) {
+    if (fallback?.length) {
+      return fallback;
+    }
+
+    return [...new Set(data.map((d) => d[field]))];
+  }
+
+  _clamp01(value) {
+    const numeric = Number(value);
+    if (!Number.isFinite(numeric)) {
+      return 0;
+    }
+
+    return Math.max(0, Math.min(1, numeric));
+  }
+
+  _isNeutralColor(color) {
+    const parsed = d3.color(color);
+    if (!parsed) {
+      return false;
+    }
+
+    return parsed.r === parsed.g && parsed.g === parsed.b;
+  }
+
+  _continuousFill(value) {
+    const amount = this._clamp01(value);
+    const parsed = d3.color(this.color);
+    if (!parsed || this._isNeutralColor(this.color)) {
+      return d3.interpolateRgb("#e0e0e0", parsed || "black")(amount);
+    }
+
+    const target = d3.hsl(parsed);
+    const source = d3.hsl(parsed);
+    source.s = Math.max(0.08, target.s * 0.18);
+    source.l = Math.min(0.92, Math.max(target.l, 0.86));
+
+    return d3.interpolateHsl(source, target)(amount);
+  }
+
+  _drawLabels(container, xScale, yScale, xDomain, yDomain) {
+    const margin = this.margin;
+    const chartHeight = this.height;
+    const chartWidth = this.width;
+
+    if (this.showXAxis) {
+      const y =
+        this.xAxisPos === "top"
+          ? margin.top - 6
+          : margin.top + chartHeight + this.labelFontSize + 4;
+
+      xDomain.forEach((label) => {
+        container
+          .append("text")
+          .attr("class", "matrix-column-label")
+          .attr("x", margin.left + xScale(label) + xScale.bandwidth() * 0.5)
+          .attr("y", y)
+          .attr("text-anchor", "middle")
+          .attr("font-size", `${this.labelFontSize}px`)
+          .text(label);
+      });
+    }
+
+    if (this.showYAxis) {
+      const x =
+        this.yAxisPos === "right"
+          ? margin.left + chartWidth + 8
+          : margin.left - 8;
+      const anchor = this.yAxisPos === "right" ? "start" : "end";
+
+      yDomain.forEach((label) => {
+        container
+          .append("text")
+          .attr("class", "matrix-row-label")
+          .attr("x", x)
+          .attr("y", margin.top + yScale(label) + yScale.bandwidth() * 0.5 + 3)
+          .attr("text-anchor", anchor)
+          .attr("font-size", `${this.labelFontSize}px`)
+          .text(label);
+      });
+    }
   }
 
   /**
@@ -30,14 +123,18 @@ export class MatrixChartRenderer extends MarkRenderer {
     const container = d3.select(svg);
     const xField = this.encoding.x;
     const yField = this.encoding.y; // Expecting an array of strings
+    const valueField = this.encoding.value;
     const margin = this.margin;
     const chartWidth = this.width;
     const chartHeight = this.height;
+    const isValueMatrix = Boolean(valueField);
 
     // Identify all unique categories for Y axis (the sets)
     let sortedSets;
     if (this.encoding.yDomain) {
       sortedSets = this.encoding.yDomain;
+    } else if (isValueMatrix) {
+      sortedSets = this._domainFromData(data, yField);
     } else {
       const allSets = new Set();
       data.forEach((d) => {
@@ -50,7 +147,9 @@ export class MatrixChartRenderer extends MarkRenderer {
     }
 
     // Use scaleBand for X axis
-    const xDomain = data.map((d) => d[xField]);
+    const xDomain = isValueMatrix
+      ? this._domainFromData(data, xField, this.encoding.xDomain)
+      : data.map((d) => d[xField]);
     const xScale = d3
       .scaleBand()
       .domain(xDomain)
@@ -87,6 +186,24 @@ export class MatrixChartRenderer extends MarkRenderer {
           .attr("fill", "#f9f9f9");
       }
     });
+
+    this._drawLabels(container, xScale, yScale, xDomain, sortedSets);
+
+    if (isValueMatrix) {
+      data.forEach((d) => {
+        const x = margin.left + xScale(d[xField]) + stepWidth * 0.5;
+        const y = margin.top + yScale(d[yField]) + stepHeight * 0.5;
+
+        container
+          .append("circle")
+          .attr("cx", x)
+          .attr("cy", y)
+          .attr("r", this.circleRadius)
+          .attr("fill", this._continuousFill(d[valueField]));
+      });
+
+      return null;
+    }
 
     // Draw Columns (Intersections)
     data.forEach((d, i) => {
@@ -125,8 +242,8 @@ export class MatrixChartRenderer extends MarkRenderer {
           .append("circle")
           .attr("cx", x)
           .attr("cy", y)
-          .attr("r", 5) // Slightly larger
-          .attr("fill", isActive ? "black" : "#e0e0e0");
+          .attr("r", this.circleRadius)
+          .attr("fill", isActive ? this.color : "#e0e0e0");
         // No stroke for inactive, just fill
       });
     });
