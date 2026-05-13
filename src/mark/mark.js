@@ -74,6 +74,8 @@ export class MarkRenderer {
    * @returns {Object|null} Axis configuration object or null.
    */
   render(svg, data) {
+    void svg;
+    void data;
     throw new Error("render method must be implemented by subclass");
   }
 }

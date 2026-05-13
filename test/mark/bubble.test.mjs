@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { BubbleChartRenderer } from "../../src/marks/bubble.js";
+import { BubbleChartRenderer } from "../../src/mark/bubble.js";
 import { createFakeSvg } from "../helpers/fake-svg.mjs";
 
 {

@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { MatrixChartRenderer } from "../../src/marks/matrix.js";
+import { MatrixChartRenderer } from "../../src/mark/matrix.js";
 import { createFakeSvg } from "../helpers/fake-svg.mjs";
 
 {

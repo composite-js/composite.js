@@ -13,6 +13,7 @@ export class PieChartRenderer extends MarkRenderer {
     super(options);
     this.colorScheme = options.colorScheme || d3.schemeCategory10;
     this.showLabels = options.showLabels || false;
+    this.innerRadius = options.innerRadius || 0;
   }
 
   /**
@@ -31,7 +32,7 @@ export class PieChartRenderer extends MarkRenderer {
 
     const radius = Math.min(this.width, this.height) / 2;
     const pie = d3.pie().value((d) => d[valueField]);
-    const arc = d3.arc().innerRadius(0).outerRadius(radius);
+    const arc = d3.arc().innerRadius(this.innerRadius).outerRadius(radius);
 
     // Create color scale
     const uniqueCategories = [...new Set(data.map((d) => d[categoryField]))];

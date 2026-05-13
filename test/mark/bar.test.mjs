@@ -1,8 +1,5 @@
 import assert from "node:assert/strict";
-import {
-  BarChartRenderer,
-  StackBarChartRenderer,
-} from "../../src/marks/bar.js";
+import { BarChartRenderer, StackBarChartRenderer } from "../../src/mark/bar.js";
 import { createFakeSvg, findFirstElement } from "../helpers/fake-svg.mjs";
 
 function baseOptions(overrides = {}) {

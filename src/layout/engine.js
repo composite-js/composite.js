@@ -1,5 +1,5 @@
 import { BBox } from "../utils/bbox.js";
-import { Composition, Repeat, RepeatX, RepeatY, Stack } from "./composition.js";
+import { Embedded, Repeat, RepeatX, RepeatY, Stack } from "./composition.js";
 import { LayoutCalculator } from "./calculator.js";
 import { renderComputedLayout } from "./renderer.js";
 import { Node, assertLayoutNode } from "./node.js";
@@ -136,6 +136,11 @@ export class LayoutEngine {
       return;
     }
 
+    if (node instanceof Embedded) {
+      this.computeEmbedded(node);
+      return;
+    }
+
     this.computeLeaf(node);
   }
 
@@ -219,6 +224,18 @@ export class LayoutEngine {
 
     const bbox = new BBox(0, 0, width, height);
     bbox.setMargin(node.options.margin);
+    node.bbox = bbox;
+  }
+
+  static computeEmbedded(node) {
+    node.instantiateChildren().forEach((child) => {
+      this.computeLayout(child);
+    });
+
+    const bbox = new BBox(0, 0, node.container.width, node.container.height);
+    bbox.setMargin(
+      node.container.margin || { top: 0, right: 0, bottom: 0, left: 0 },
+    );
     node.bbox = bbox;
   }
 

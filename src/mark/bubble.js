@@ -38,7 +38,7 @@ export class BubbleChartRenderer extends MarkRenderer {
     const chartHeight = this.height;
 
     container.selectAll("*").remove();
-    const g = container
+    const _g = container
       .append("g")
       .attr("transform", `translate(${margin.left},${margin.top})`);
 

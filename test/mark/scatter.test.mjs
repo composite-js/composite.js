@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { ScatterChartRenderer } from "../../src/marks/scatter.js";
+import { ScatterChartRenderer } from "../../src/mark/scatter.js";
 import { createFakeSvg } from "../helpers/fake-svg.mjs";
 
 const svg = createFakeSvg();

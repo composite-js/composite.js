@@ -28,13 +28,22 @@ Available npm scripts (see `package.json`):
 - `pnpm run dev` — start Vite dev server.
 - `pnpm run build` — build production bundle (outputs to `dist/`).
 - `pnpm run test` — run the Node-based test script `test/run.mjs`.
-- `pnpm run lint` — placeholder lint command.
+- `pnpm run lint` — run ESLint.
 - `pnpm run format` — run Prettier to format code.
 
 Example: start the dev server and open the default Vite port:
 
 ```bash
 pnpm run dev
+```
+
+## Example Selection
+
+The dev script loads `examples/index.js` by default. To open a specific
+example, pass its filename without the `.js` extension:
+
+```bash
+pnpm run dev --example dropoutseer
 ```
 
 ## Quick Usage (demo in `examples/index.js`)

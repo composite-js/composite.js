@@ -1,10 +1,11 @@
-import { BarChartRenderer, StackBarChartRenderer } from "./marks/bar.js";
-import { LineChartRenderer } from "./marks/line.js";
-import { MatrixChartRenderer } from "./marks/matrix.js";
-import { ScatterChartRenderer } from "./marks/scatter.js";
-import { BoxPlotRenderer } from "./marks/box.js";
-import { BubbleChartRenderer } from "./marks/bubble.js";
-import { PieChartRenderer } from "./marks/pie.js";
+import { BarChartRenderer, StackBarChartRenderer } from "./mark/bar.js";
+import { LineChartRenderer } from "./mark/line.js";
+import { MatrixChartRenderer } from "./mark/matrix.js";
+import { ScatterChartRenderer } from "./mark/scatter.js";
+import { BoxPlotRenderer } from "./mark/box.js";
+import { BubbleChartRenderer } from "./mark/bubble.js";
+import { PieChartRenderer } from "./mark/pie.js";
+import { FlowDiagramRenderer } from "./mark/flow.js";
 import { AxisRenderer } from "./axis.js";
 import * as d3 from "d3";
 
@@ -88,6 +89,9 @@ export class Chart {
       case "pie":
         this.renderer = new PieChartRenderer(rendererOptions);
         break;
+      case "flow":
+        this.renderer = new FlowDiagramRenderer(rendererOptions);
+        break;
       default:
         throw new Error(`Unsupported mark type: ${this.mark}`);
     }
@@ -153,7 +157,12 @@ export class Chart {
     const yField = this.encoding.y;
     const xField = this.encoding.x;
 
-    if (this.mark !== "matrix" && this.mark !== "pie" && (!yField || !xField)) {
+    if (
+      this.mark !== "matrix" &&
+      this.mark !== "pie" &&
+      this.mark !== "flow" &&
+      (!yField || !xField)
+    ) {
       console.warn("Missing encoding configuration for x or y.");
       return;
     }

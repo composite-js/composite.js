@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { LineChartRenderer } from "../../src/marks/line.js";
+import { LineChartRenderer } from "../../src/mark/line.js";
 import { createFakeSvg } from "../helpers/fake-svg.mjs";
 
 const svg = createFakeSvg();

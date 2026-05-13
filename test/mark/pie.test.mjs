@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { PieChartRenderer } from "../../src/marks/pie.js";
+import { PieChartRenderer } from "../../src/mark/pie.js";
 import { createFakeSvg } from "../helpers/fake-svg.mjs";
 
 {
@@ -44,4 +44,22 @@ import { createFakeSvg } from "../helpers/fake-svg.mjs";
 
   assert.equal(svg.querySelectorAll("path").length, 2);
   assert.equal(svg.querySelectorAll("text").length, 0);
+}
+
+{
+  const svg = createFakeSvg();
+  const renderer = new PieChartRenderer({
+    width: 100,
+    height: 100,
+    innerRadius: 18,
+    encoding: { category: "category", value: "value" },
+  });
+
+  renderer.render(svg, [
+    { category: "A", value: 1 },
+    { category: "B", value: 1 },
+  ]);
+
+  const firstPath = svg.querySelectorAll("path")[0].getAttribute("d");
+  assert.match(firstPath, /A18,18/);
 }

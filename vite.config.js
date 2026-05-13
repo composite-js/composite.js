@@ -1,6 +1,15 @@
 import { defineConfig } from "vite";
 
 export default defineConfig({
+  plugins: [
+    {
+      name: "composite-example-entry",
+      transformIndexHtml(html) {
+        const example = process.env.COMPOSITE_EXAMPLE || "index";
+        return html.replace("/examples/index.js", `/examples/${example}.js`);
+      },
+    },
+  ],
   build: {
     lib: {
       entry: "src/index.js",

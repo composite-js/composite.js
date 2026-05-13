@@ -10,10 +10,10 @@
     "dist"
   ],
   "scripts": {
-    "dev": "vite",
+    "dev": "node scripts/dev-example.mjs",
     "build": "vite build",
     "test": "node test/run.mjs",
-    "lint": "echo 'add lint step'",
+    "lint": "eslint . --max-warnings=0",
     "format": "prettier --write ."
   },
   "keywords": [
@@ -25,6 +25,10 @@
   "author": "",
   "license": "MIT",
   "devDependencies": {
+    "@eslint/js": "^9",
+    "eslint": "^9",
+    "eslint-config-prettier": "^10.1.8",
+    "globals": "^17.6.0",
     "prettier": "^3.7.4",
     "vite": "^5.0.0",
     "vitest": "^1.0.0"

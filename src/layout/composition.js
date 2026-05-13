@@ -128,6 +128,92 @@ export class Repeat extends Composition {
   }
 }
 
+export class DirectionlessRepeat {
+  constructor(domain, func, options = {}) {
+    this.domain = domain || [];
+    this.func = func;
+    this.options = options;
+    this.type = "repeat";
+  }
+}
+
+export class Embedded extends Node {
+  constructor(container, repeated, mapping = {}) {
+    super();
+    this.container = container;
+    this.repeated = repeated;
+    this.mapping = mapping;
+    this.classTag = "embed";
+    this.type = "embed";
+    this.options = {
+      width: container.width,
+      height: container.height,
+      margin: container.margin || { top: 0, right: 0, bottom: 0, left: 0 },
+    };
+    this.embeddedChildren = [];
+  }
+
+  instantiateChildren() {
+    this.embeddedChildren = this.repeated.domain.map((datum, index) => {
+      const child = this.repeated.func(datum, index);
+      assertLayoutNode(child, `repeat child ${index}`);
+      return child;
+    });
+    return this.embeddedChildren;
+  }
+
+  render(svg, renderOptions = {}) {
+    const width = renderOptions.width || this.container.width;
+    const height = renderOptions.height || this.container.height;
+    const margin = renderOptions.margin || this.container.margin;
+    const children = this.embeddedChildren.length
+      ? this.embeddedChildren
+      : this.instantiateChildren();
+    const slots = this.container.slots(this.repeated.domain, this.mapping, {
+      width,
+      height,
+    });
+
+    this.container.render(svg, { width, height, margin });
+
+    const parent = d3.select(svg);
+    children.forEach((child, index) => {
+      const slot = slots[index];
+      const childRect = child.bbox.contentRect();
+      const childWidth = slot.width || childRect.width;
+      const childHeight = slot.height || childRect.height;
+      const group = parent
+        .append("g")
+        .attr(
+          "transform",
+          `translate(${slot.x - childWidth / 2}, ${slot.y - childHeight / 2})`,
+        );
+
+      child.render(group.node(), {
+        width: childWidth,
+        height: childHeight,
+        margin: child.bbox.getMargin(),
+      });
+    });
+  }
+}
+
+export function repeat(domain, func, options = {}) {
+  return new DirectionlessRepeat(domain, func, options);
+}
+
+export function embed(container, repeated, mapping = {}) {
+  if (!(repeated instanceof DirectionlessRepeat)) {
+    throw new TypeError("embed() expects a repeat() result.");
+  }
+
+  if (!container || typeof container.slots !== "function") {
+    throw new TypeError("embed() expects a container with slots().");
+  }
+
+  return new Embedded(container, repeated, mapping);
+}
+
 export class RepeatX extends Repeat {
   constructor(domain, func, options = {}) {
     super(domain, func, options);

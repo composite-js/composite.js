@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { BoxPlotRenderer } from "../../src/marks/box.js";
+import { BoxPlotRenderer } from "../../src/mark/box.js";
 import { createFakeSvg, findFirstElement } from "../helpers/fake-svg.mjs";
 
 const data = [
