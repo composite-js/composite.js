@@ -1,3 +1,5 @@
+// Link: https://www.pinterest.com/pin/1026820783831525388/
+
 import { chart, stackX } from "../src/index.js";
 
 const rows = [
