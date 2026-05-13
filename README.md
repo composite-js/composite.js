@@ -83,9 +83,7 @@ const view = stackY([top, matrix], { align: [matrix, matrix] });
 view.render(document.getElementById("app"));
 ```
 
-Supported chart marks include `bar`, `groupbar`, `stackbar`, `line`, `matrix`,
-`scatter`, `box`, `bubble`, `pie`, `flow`, and `stream`. The `stream` mark expects
-long-form data with `encoding: { x, y, color }`.
+Supported chart marks include `bar`, `groupbar`, `stackbar`, `line`, `matrix`, `scatter`, `box`, `bubble`, `dumbbell`, `pac`, `pie`, `flow`, and `stream`. `flow` accepts `sourceLabelName` and `targetLabelName` for endpoint headings, and can map `colors` to either `sourceDomain` or `targetDomain` with `colorBy`.
 
 ## Build & Deploy
 

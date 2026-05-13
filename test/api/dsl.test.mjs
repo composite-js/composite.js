@@ -96,3 +96,26 @@ import {
 
   assert.equal(node.element.mark, "groupbar");
 }
+
+{
+  const node = chart({
+    mark: "dumbbell",
+    data: [
+      { period: "Q1", value: 1 },
+      { period: "Q1", value: 2 },
+    ],
+    encoding: { x: "value", y: "period" },
+  });
+
+  assert.equal(node.element.mark, "dumbbell");
+}
+
+{
+  const node = chart({
+    mark: "pac",
+    data: [{ period: "Q1", value: 1 }],
+    encoding: { category: "period", value: "value" },
+  });
+
+  assert.equal(node.element.mark, "pac");
+}

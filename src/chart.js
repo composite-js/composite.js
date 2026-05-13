@@ -8,7 +8,9 @@ import { MatrixChartRenderer } from "./mark/matrix.js";
 import { ScatterChartRenderer } from "./mark/scatter.js";
 import { BoxPlotRenderer } from "./mark/box.js";
 import { BubbleChartRenderer } from "./mark/bubble.js";
+import { DumbbellChartRenderer } from "./mark/dumbbell.js";
 import { PieChartRenderer } from "./mark/pie.js";
+import { ProportionalAreaChartRenderer } from "./mark/pac.js";
 import { FlowDiagramRenderer } from "./mark/flow.js";
 import { StreamGraphRenderer } from "./mark/stream.js";
 import { AxisRenderer } from "./axis.js";
@@ -95,6 +97,12 @@ export class Chart {
       case "bubble":
         this.renderer = new BubbleChartRenderer(rendererOptions);
         break;
+      case "dumbbell":
+        this.renderer = new DumbbellChartRenderer(rendererOptions);
+        break;
+      case "pac":
+        this.renderer = new ProportionalAreaChartRenderer(rendererOptions);
+        break;
       case "pie":
         this.renderer = new PieChartRenderer(rendererOptions);
         break;
@@ -172,6 +180,7 @@ export class Chart {
     if (
       this.mark !== "matrix" &&
       this.mark !== "pie" &&
+      this.mark !== "pac" &&
       this.mark !== "flow" &&
       (!yField || !xField)
     ) {

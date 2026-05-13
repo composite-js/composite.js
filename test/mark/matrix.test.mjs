@@ -144,7 +144,10 @@ import { createFakeSvg } from "../helpers/fake-svg.mjs";
 
   const circles = svg.querySelectorAll("circle");
   assert.equal(circles.length, 2);
-  assert.notEqual(circles[0].getAttribute("fill"), circles[1].getAttribute("fill"));
+  assert.notEqual(
+    circles[0].getAttribute("fill"),
+    circles[1].getAttribute("fill"),
+  );
 }
 
 {
@@ -168,6 +171,8 @@ import { createFakeSvg } from "../helpers/fake-svg.mjs";
     { quarter: "Q2", institution: "Radio", score: 1 },
   ]);
 
-  const fills = svg.querySelectorAll("circle").map((circle) => circle.getAttribute("fill"));
+  const fills = svg
+    .querySelectorAll("circle")
+    .map((circle) => circle.getAttribute("fill"));
   assert.deepEqual(fills, ["rgb(224, 224, 224)", "rgb(0, 0, 0)"]);
 }

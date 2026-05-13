@@ -32,10 +32,12 @@ export {
 } from "./mark/bar.js";
 export { BoxPlotRenderer } from "./mark/box.js";
 export { BubbleChartRenderer } from "./mark/bubble.js";
+export { DumbbellChartRenderer } from "./mark/dumbbell.js";
 export { FlowDiagramRenderer } from "./mark/flow.js";
 export { LineChartRenderer } from "./mark/line.js";
 export { MarkRenderer } from "./mark/mark.js";
 export { MatrixChartRenderer } from "./mark/matrix.js";
+export { ProportionalAreaChartRenderer } from "./mark/pac.js";
 export { PieChartRenderer } from "./mark/pie.js";
 export { ScatterChartRenderer } from "./mark/scatter.js";
 export { StreamGraphRenderer } from "./mark/stream.js";
