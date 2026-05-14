@@ -7,17 +7,94 @@ import { MarkRenderer } from "./mark.js";
 export class GroupBarChartRenderer extends MarkRenderer {
   constructor(options = {}) {
     super(options);
+    this.direction = options.direction || "vertical";
     this.colorScheme = options.colorScheme || d3.schemeCategory10;
     this.showLabels = options.showLabels || false;
     const padding = options.padding || {};
     this.padding = {
       xInner: padding.xInner !== undefined ? padding.xInner : 0.2,
       xOuter: padding.xOuter !== undefined ? padding.xOuter : 0.1,
+      yInner: padding.yInner !== undefined ? padding.yInner : 0.2,
+      yOuter: padding.yOuter !== undefined ? padding.yOuter : 0.1,
       groupInner: padding.groupInner !== undefined ? padding.groupInner : 0.08,
     };
   }
 
   render(svg, data) {
+    return this.direction === "horizontal"
+      ? this._renderHorizontal(svg, data)
+      : this._renderVertical(svg, data);
+  }
+
+  _renderHorizontal(svg, data) {
+    const container = d3.select(svg);
+    const xField = this.encoding.x;
+    const yField = this.encoding.y;
+    const groupField = this.encoding.group;
+    const margin = this.margin;
+    const chartWidth = this.width;
+    const chartHeight = this.height;
+
+    container.selectAll("*").remove();
+
+    const categories = [...new Set(data.map((d) => d[yField]))];
+    const groups = [...new Set(data.map((d) => d[groupField]))];
+    const maxValue = Math.max(...data.map((d) => d[xField] || 0));
+
+    const yScale = d3
+      .scaleBand()
+      .domain(categories)
+      .range([0, chartHeight])
+      .paddingInner(this.padding.yInner)
+      .paddingOuter(this.padding.yOuter);
+
+    const groupScale = d3
+      .scaleBand()
+      .domain(groups)
+      .range([0, yScale.bandwidth()])
+      .paddingInner(this.padding.groupInner);
+
+    const xScale = d3
+      .scaleLinear()
+      .domain(this.encoding.xDomain || [0, maxValue])
+      .range([0, chartWidth]);
+
+    const colorScale = d3.scaleOrdinal().domain(groups).range(this.colorScheme);
+
+    data.forEach((d) => {
+      const value = d[xField];
+      const x = margin.left + xScale(0);
+      const y = margin.top + yScale(d[yField]) + groupScale(d[groupField]);
+      const barWidth = xScale(value) - xScale(0);
+      const barHeight = groupScale.bandwidth();
+      const rect = container
+        .append("rect")
+        .attr("x", x)
+        .attr("y", y)
+        .attr("width", barWidth)
+        .attr("height", barHeight);
+
+      this.applyFillHover(rect, colorScale(d[groupField]));
+      rect.append("title").text(`${d[yField]} - ${d[groupField]}: ${value}`);
+
+      if (this.showLabels && barWidth > 20) {
+        container
+          .append("text")
+          .attr("x", x + barWidth + 4)
+          .attr("y", y + barHeight / 2 + 4)
+          .attr("text-anchor", "start")
+          .attr("font-size", "10px")
+          .text(value);
+      }
+    });
+
+    return this.axisConfig(
+      { x: xScale, y: yScale, group: groupScale },
+      { margin, width: chartWidth, height: chartHeight },
+    );
+  }
+
+  _renderVertical(svg, data) {
     const container = d3.select(svg);
     const xField = this.encoding.x;
     const yField = this.encoding.y;

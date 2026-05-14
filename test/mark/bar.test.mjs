@@ -169,3 +169,38 @@ function baseOptions(overrides = {}) {
     assert.notEqual(rect.getAttribute("x"), "NaN");
   });
 }
+
+{
+  const svg = createFakeSvg();
+  const renderer = new GroupBarChartRenderer({
+    ...baseOptions({ direction: "horizontal" }),
+    colorScheme: ["orange", "purple"],
+    encoding: {
+      x: "count",
+      y: "date",
+      group: "kind",
+    },
+  });
+
+  const axisConfig = renderer.render(svg, [
+    { date: "18-Jun", kind: "posts", count: 20 },
+    { date: "18-Jun", kind: "views", count: 30 },
+    { date: "25-Jun", kind: "posts", count: 10 },
+    { date: "25-Jun", kind: "views", count: 15 },
+  ]);
+
+  const rects = svg.querySelectorAll("rect");
+  assert.equal(rects.length, 4);
+  assert.equal(rects[0].getAttribute("fill"), "orange");
+  assert.equal(rects[1].getAttribute("fill"), "purple");
+  assert.equal(axisConfig.scales.x.domain()[1], 30);
+  assert.deepEqual(axisConfig.scales.y.domain(), ["18-Jun", "25-Jun"]);
+  assert.deepEqual(axisConfig.scales.group.domain(), ["posts", "views"]);
+
+  rects.forEach((rect) => {
+    assert.notEqual(rect.getAttribute("x"), "NaN");
+    assert.notEqual(rect.getAttribute("y"), "NaN");
+    assert.notEqual(rect.getAttribute("width"), "NaN");
+    assert.notEqual(rect.getAttribute("height"), "NaN");
+  });
+}
