@@ -109,9 +109,10 @@ export class DumbbellChartRenderer extends MarkRenderer {
       "category",
       this.encoding.yDomain,
     );
+    const reverseX = this.xAxisPos === "top";
     const xScale = linearScale(
       this._valueDomain(data, valueField, this.encoding.xDomain),
-      xRange(chartWidth),
+      xRange(chartWidth, reverseX),
     );
     const yScale = bandScale(categories, bandRange(chartHeight), {
       inner: this.padding.yInner,
@@ -150,13 +151,15 @@ export class DumbbellChartRenderer extends MarkRenderer {
       "category",
       this.encoding.xDomain,
     );
-    const xScale = bandScale(categories, xRange(chartWidth), {
+    const reverseX = this.xAxisPos === "top";
+    const xScale = bandScale(categories, xRange(chartWidth, reverseX), {
       inner: this.padding.xInner,
       outer: this.padding.xOuter,
     });
+    const reverseY = this.yAxisPos === "right";
     const yScale = linearScale(
       this._valueDomain(data, valueField, this.encoding.yDomain),
-      yRange(chartHeight),
+      yRange(chartHeight, reverseY),
     );
 
     pairs.forEach((pair) => {

@@ -290,9 +290,10 @@ export class BoxPlotRenderer extends MarkRenderer {
       outer: this.padding.xOuter,
     });
 
+    const reverseY = this.yAxisPos === "right";
     const yScale = linearScale(
       this.encoding.yDomain || valueExtent,
-      yRange(chartHeight),
+      yRange(chartHeight, reverseY),
       { nice: !this.encoding.yDomain },
     );
 

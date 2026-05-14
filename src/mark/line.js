@@ -39,6 +39,8 @@ export class LineChartRenderer extends MarkRenderer {
     const margin = this.margin;
     const chartWidth = this.width;
     const chartHeight = this.height;
+    const reverseX = this.xAxisPos === "top";
+    const reverseY = this.yAxisPos === "right";
 
     container.selectAll("*").remove();
     const g = container
@@ -49,12 +51,12 @@ export class LineChartRenderer extends MarkRenderer {
 
     const xScale = linearScale(
       continuousDomain(data, xField, this.encoding.xDomain),
-      xRange(chartWidth),
+      xRange(chartWidth, reverseX),
     );
 
     const yScale = linearScale(
       valueDomain(maxValue, this.encoding.yDomain),
-      yRange(chartHeight),
+      yRange(chartHeight, reverseY),
     );
 
     // Helper functions for coordinates

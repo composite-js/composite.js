@@ -43,6 +43,8 @@ export class AreaChartRenderer extends MarkRenderer {
     const values = [...data].sort(
       (a, b) => Number(a[xField]) - Number(b[xField]),
     );
+    const reverseX = this.xAxisPos === "top";
+    const reverseY = this.yAxisPos === "right";
 
     container.selectAll("*").remove();
     const g = container
@@ -55,12 +57,12 @@ export class AreaChartRenderer extends MarkRenderer {
       continuousDomain(values, xField, this.encoding.xDomain, {
         fallback: [0, 1],
       }),
-      xRange(chartWidth),
+      xRange(chartWidth, reverseX),
     );
 
     const yScale = linearScale(
       valueDomain(yMax, this.encoding.yDomain),
-      yRange(chartHeight),
+      yRange(chartHeight, reverseY),
     );
 
     const area = d3
