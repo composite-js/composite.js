@@ -42,6 +42,12 @@ export class Node {
           : this.bbox.getMargin(),
     });
   }
+
+  async export(options = {}) {
+    const exportModulePath = "../export/index.js";
+    const { exportNode } = await import(/* @vite-ignore */ exportModulePath);
+    return exportNode(this, options);
+  }
 }
 
 export function isLayoutNode(value) {

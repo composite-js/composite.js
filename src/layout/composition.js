@@ -13,6 +13,10 @@ function assertNodeArray(nodes, label) {
   });
 }
 
+function isSvgContainer(container) {
+  return container?.namespaceURI === "http://www.w3.org/2000/svg";
+}
+
 /**
  * Base class for all compositions.
  */
@@ -221,13 +225,17 @@ export class RepeatX extends Repeat {
   }
 
   render(container, renderOptions = {}) {
+    if (!isSvgContainer(container)) {
+      return LayoutEngine.layout(this, container, renderOptions);
+    }
+
     if (!this.domain || this.domain.length === 0) {
-      if (container.innerHTML) container.innerHTML = "";
+      if (container.innerHTML !== undefined) container.innerHTML = "";
       return;
     }
 
     const { width = 400, height = 300 } = renderOptions;
-    if (container.innerHTML) container.innerHTML = "";
+    if (container.innerHTML !== undefined) container.innerHTML = "";
     const gParent = d3.select(container);
 
     const xScale = d3
@@ -259,13 +267,17 @@ export class RepeatY extends Repeat {
   }
 
   render(container, renderOptions = {}) {
+    if (!isSvgContainer(container)) {
+      return LayoutEngine.layout(this, container, renderOptions);
+    }
+
     if (!this.domain || this.domain.length === 0) {
-      if (container.innerHTML) container.innerHTML = "";
+      if (container.innerHTML !== undefined) container.innerHTML = "";
       return;
     }
 
     const { width = 400, height = 300 } = renderOptions;
-    if (container.innerHTML) container.innerHTML = "";
+    if (container.innerHTML !== undefined) container.innerHTML = "";
     const gParent = d3.select(container);
 
     const yScale = d3
