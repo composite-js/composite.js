@@ -22,6 +22,8 @@ import "./dev-example.test.mjs";
 import "./site/homepage.test.mjs";
 import "./site/example-assets.test.mjs";
 import "./site/example-card-style.test.mjs";
+import "./site/example-editor.test.mjs";
+import "./site/example-snippet-sync.test.mjs";
 import "./export/node-export.test.mjs";
 
 console.log("All tests passed");
