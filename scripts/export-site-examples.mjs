@@ -172,7 +172,8 @@ export async function exportSiteExamples(options = {}) {
   const logger = options.logger || console.log;
 
   for (const example of exampleList) {
-    await syncExampleSnippet(example, options);
+    const snippet = await syncExampleSnippet(example, options);
+    logger(`Exported ${path.relative(process.cwd(), snippet.outputPath)}`);
     const node = await loadExample(example, options);
 
     for (const format of formats) {

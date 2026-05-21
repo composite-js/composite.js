@@ -16,24 +16,91 @@ const { example, snippet, runnerSrc } = Astro.props;
     <span class="example-editor__status" data-editor-status>Loading</span>
   </div>
   <div class="example-editor__workspace">
-    <textarea
-      class="example-editor__code"
-      spellcheck="false"
-      data-editor-code>{snippet}</textarea>
     <iframe
       class="example-editor__preview"
       title={`${example.title} rendered preview`}
       src={runnerSrc}
       sandbox="allow-scripts allow-same-origin"
       data-editor-preview></iframe>
+    <textarea
+      class="example-editor__code"
+      spellcheck="false"
+      data-editor-code>{snippet}</textarea>
   </div>
   <pre class="example-editor__error" data-editor-error hidden></pre>
 </div>
 
 <script>
+  import { basicSetup, EditorView } from "codemirror";
+  import { indentWithTab } from "@codemirror/commands";
+  import { javascript } from "@codemirror/lang-javascript";
+  import { keymap } from "@codemirror/view";
+
   const editorMessageSource = "composite-example-editor";
   const runnerMessageSource = "composite-example-runner";
   const debounceMs = 450;
+  const editorTheme = EditorView.theme(
+    {
+      "&": {
+        backgroundColor: "#ffffff",
+        color: "#172033",
+        fontSize: "0.86rem",
+        height: "360px",
+      },
+      ".cm-scroller": {
+        fontFamily:
+          '"SFMono-Regular", Consolas, "Liberation Mono", Menlo, ui-monospace, monospace',
+        lineHeight: "1.55",
+      },
+      ".cm-content": {
+        padding: "16px 0",
+      },
+      ".cm-line": {
+        padding: "0 16px",
+      },
+      ".cm-gutters": {
+        backgroundColor: "#f8fafc",
+        borderRightColor: "#d8dee9",
+        color: "#64748b",
+      },
+      ".cm-activeLine": {
+        backgroundColor: "#eff6ff",
+      },
+      ".cm-activeLineGutter": {
+        backgroundColor: "#eff6ff",
+      },
+      "&.cm-focused": {
+        outline: "2px solid #2563eb",
+        outlineOffset: "-2px",
+      },
+    },
+    { dark: false },
+  );
+
+  function createCodeEditor(textarea, onChange) {
+    const editorHost = document.createElement("div");
+    editorHost.className = "example-editor__cm";
+    textarea.after(editorHost);
+    textarea.hidden = true;
+    textarea.setAttribute("aria-hidden", "true");
+
+    return new EditorView({
+      doc: textarea.value,
+      parent: editorHost,
+      extensions: [
+        basicSetup,
+        javascript(),
+        keymap.of([indentWithTab]),
+        editorTheme,
+        EditorView.updateListener.of((update) => {
+          if (!update.docChanged) return;
+
+          textarea.value = update.state.doc.toString();
+          onChange();
+        }),
+      ],
+    });
+  }
 
   function initializeExampleEditor(editor) {
     if (editor.dataset.editorReady === "true") return;
@@ -46,8 +113,34 @@ const { example, snippet, runnerSrc } = Astro.props;
     const errorOutput = editor.querySelector("[data-editor-error]");
     const initialSnippet = code.value;
     let debounceId;
+    let suppressEditorChange = false;
+    const editorView = createCodeEditor(code, () => {
+      if (!suppressEditorChange) scheduleRun();
+    });
 
     editor.dataset.editorReady = "true";
+
+    function getSnippet() {
+      return editorView.state.doc.toString();
+    }
+
+    function replaceSnippet(snippet) {
+      suppressEditorChange = true;
+
+      try {
+        editorView.dispatch({
+          changes: {
+            from: 0,
+            to: editorView.state.doc.length,
+            insert: snippet,
+          },
+        });
+      } finally {
+        suppressEditorChange = false;
+      }
+
+      code.value = snippet;
+    }
 
     function setStatus(state, message) {
       editor.dataset.editorState = state;
@@ -77,7 +170,7 @@ const { example, snippet, runnerSrc } = Astro.props;
         {
           source: editorMessageSource,
           type: "run",
-          snippet: code.value,
+          snippet: getSnippet(),
         },
         window.location.origin,
       );
@@ -95,7 +188,7 @@ const { example, snippet, runnerSrc } = Astro.props;
     });
 
     resetButton.addEventListener("click", () => {
-      code.value = initialSnippet;
+      replaceSnippet(initialSnippet);
       window.clearTimeout(debounceId);
       sendRun();
     });

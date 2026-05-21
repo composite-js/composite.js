@@ -113,6 +113,7 @@ export function createExample() {
   return final;
 }
 `;
+  const messages = [];
 
   try {
     mkdirSync(examplesDir, { recursive: true });
@@ -121,7 +122,7 @@ export function createExample() {
     await exportSiteExamples({
       examples: [{ slug: "foo" }],
       examplesDir,
-      logger: () => {},
+      logger: (message) => messages.push(message),
       outputDir,
       snippetDir,
     });
@@ -134,6 +135,11 @@ export function createExample() {
 
 return final;\n`,
     );
+    assert.deepEqual(messages, [
+      `Exported ${path.relative(process.cwd(), path.join(snippetDir, "foo.txt"))}`,
+      `Exported ${path.relative(process.cwd(), path.join(outputDir, "foo.svg"))}`,
+      `Exported ${path.relative(process.cwd(), path.join(outputDir, "foo.png"))}`,
+    ]);
   } finally {
     rmSync(tempRoot, { recursive: true, force: true });
   }
