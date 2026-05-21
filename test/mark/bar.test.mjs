@@ -140,7 +140,7 @@ function baseOptions(overrides = {}) {
   const renderer = new StackBarChartRenderer({
     ...baseOptions({ showLabels: true }),
     colorScheme: ["red", "blue"],
-    encoding: { x: "value", y: "category", stack: "group" },
+    encoding: { x: "category", y: "value", group: "group" },
   });
 
   const axisConfig = renderer.render(svg, [
@@ -168,7 +168,7 @@ function baseOptions(overrides = {}) {
   const renderer = new StackBarChartRenderer({
     ...baseOptions({ direction: "horizontal", showLabels: true }),
     colorScheme: ["red", "blue"],
-    encoding: { x: "value", y: "category", stack: "group" },
+    encoding: { x: "value", y: "category", group: "group" },
   });
 
   const axisConfig = renderer.render(svg, [
@@ -190,9 +190,9 @@ function baseOptions(overrides = {}) {
     ...baseOptions(),
     colorScheme: ["red", "blue"],
     encoding: {
-      x: "value",
-      y: "category",
-      stack: "group",
+      x: "category",
+      y: "value",
+      group: "group",
       xDomain: ["B", "A", "C"],
       yDomain: [0, 50],
     },
@@ -217,7 +217,7 @@ function baseOptions(overrides = {}) {
     encoding: {
       x: "value",
       y: "category",
-      stack: "group",
+      group: "group",
       xDomain: [0, 50],
       yDomain: ["B", "A", "C"],
     },

@@ -48,7 +48,9 @@ export class GroupBarChartRenderer extends MarkRenderer {
     container.selectAll("*").remove();
 
     const categories = [...new Set(data.map((d) => d[yField]))];
-    const groups = [...new Set(data.map((d) => d[groupField]))];
+    const groups = this.encoding.groupDomain || [
+      ...new Set(data.map((d) => d[groupField])),
+    ];
     const maxValue = Math.max(...data.map((d) => d[xField] || 0));
 
     const yScale = d3
@@ -116,7 +118,9 @@ export class GroupBarChartRenderer extends MarkRenderer {
     container.selectAll("*").remove();
 
     const categories = categoricalDomain(data, xField, this.encoding.xDomain);
-    const groups = [...new Set(data.map((d) => d[groupField]))];
+    const groups = this.encoding.groupDomain || [
+      ...new Set(data.map((d) => d[groupField])),
+    ];
     const maxValue = Math.max(...data.map((d) => d[yField] || 0));
 
     const reverseX = this.xAxisPos === "top";
@@ -219,7 +223,7 @@ export class StackBarChartRenderer extends MarkRenderer {
     const container = d3.select(svg);
     const categoryField = this.encoding.y;
     const valueField = this.encoding.x;
-    const stackField = this.encoding.stack;
+    const groupField = this.encoding.group;
 
     const chartWidth = this.width;
     const chartHeight = this.height;
@@ -232,26 +236,28 @@ export class StackBarChartRenderer extends MarkRenderer {
       categoryField,
       this.encoding.yDomain,
     );
-    const stackKeys = [...new Set(data.map((d) => d[stackField]))];
+    const groupKeys = this.encoding.groupDomain || [
+      ...new Set(data.map((d) => d[groupField])),
+    ];
 
     const pivotedData = categories.map((cat) => {
       const entry = { [categoryField]: cat };
-      stackKeys.forEach((key) => {
+      groupKeys.forEach((key) => {
         const item = data.find(
-          (d) => d[categoryField] === cat && d[stackField] === key,
+          (d) => d[categoryField] === cat && d[groupField] === key,
         );
         entry[key] = item ? item[valueField] : 0;
       });
       return entry;
     });
 
-    const stack = d3.stack().keys(stackKeys);
+    const stack = d3.stack().keys(groupKeys);
     const stackedData = stack(pivotedData);
     const maxValue = d3.max(stackedData, (layer) => d3.max(layer, (d) => d[1]));
 
     const colorScale = d3
       .scaleOrdinal()
-      .domain(stackKeys)
+      .domain(groupKeys)
       .range(this.colorScheme);
 
     const reverseY = this.xAxisPos === "top";
@@ -313,9 +319,9 @@ export class StackBarChartRenderer extends MarkRenderer {
    */
   _renderVertical(svg, data) {
     const container = d3.select(svg);
-    const categoryField = this.encoding.y;
-    const valueField = this.encoding.x;
-    const stackField = this.encoding.stack;
+    const categoryField = this.encoding.x;
+    const valueField = this.encoding.y;
+    const groupField = this.encoding.group;
 
     const chartWidth = this.width;
     const chartHeight = this.height;
@@ -328,26 +334,28 @@ export class StackBarChartRenderer extends MarkRenderer {
       categoryField,
       this.encoding.xDomain,
     );
-    const stackKeys = [...new Set(data.map((d) => d[stackField]))];
+    const groupKeys = this.encoding.groupDomain || [
+      ...new Set(data.map((d) => d[groupField])),
+    ];
 
     const pivotedData = categories.map((cat) => {
       const entry = { [categoryField]: cat };
-      stackKeys.forEach((key) => {
+      groupKeys.forEach((key) => {
         const item = data.find(
-          (d) => d[categoryField] === cat && d[stackField] === key,
+          (d) => d[categoryField] === cat && d[groupField] === key,
         );
         entry[key] = item ? item[valueField] : 0;
       });
       return entry;
     });
 
-    const stack = d3.stack().keys(stackKeys);
+    const stack = d3.stack().keys(groupKeys);
     const stackedData = stack(pivotedData);
     const maxValue = d3.max(stackedData, (layer) => d3.max(layer, (d) => d[1]));
 
     const colorScale = d3
       .scaleOrdinal()
-      .domain(stackKeys)
+      .domain(groupKeys)
       .range(this.colorScheme);
 
     const reverseX = this.xAxisPos === "top";

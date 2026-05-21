@@ -16,7 +16,7 @@ const renderer = new StreamGraphRenderer({
   width: 180,
   height: 90,
   margin: { top: 0, right: 0, bottom: 0, left: 0 },
-  encoding: { x: "week", y: "value", color: "type" },
+  encoding: { x: "week", y: "value", group: "type" },
   colors: ["#fbb4ae", "#b3cde3"],
   opacity: 0.6,
 });
@@ -39,7 +39,7 @@ assert.equal(axisConfig.scales.y.domain().length, 2);
     height: 180,
     margin: { top: 0, right: 0, bottom: 0, left: 0 },
     direction: "vertical",
-    encoding: { x: "week", y: "value", color: "type" },
+    encoding: { x: "week", y: "value", group: "type" },
     colors: ["#fbb4ae", "#b3cde3"],
   });
 
@@ -63,7 +63,7 @@ assert.equal(axisConfig.scales.y.domain().length, 2);
     encoding: {
       x: "week",
       y: "value",
-      color: "type",
+      group: "type",
       xDomain: ["02-Jul", "25-Jun", "18-Jun", "09-Jul"],
       yDomain: [-30, 30],
     },

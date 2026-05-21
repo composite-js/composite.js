@@ -162,7 +162,7 @@ dates.forEach((date, rowIndex) => {
 const streamGraph = chart({
   data: streamData,
   mark: "stream",
-  encoding: { x: "date", y: "value", color: "type" },
+  encoding: { x: "date", y: "value", group: "type" },
   width: streamWidth,
   height: bodyHeight,
   margin: { top: 0, right: 0, bottom: 0, left: 0 },

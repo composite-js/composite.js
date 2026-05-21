@@ -7,7 +7,7 @@ import { createFakeSvg } from "../helpers/fake-svg.mjs";
   const renderer = new PieChartRenderer({
     width: 100,
     height: 100,
-    encoding: { category: "category", value: "value" },
+    encoding: { x: "category", y: "value" },
     colorScheme: ["red", "blue"],
     showLabels: true,
   });
@@ -34,7 +34,7 @@ import { createFakeSvg } from "../helpers/fake-svg.mjs";
   const renderer = new PieChartRenderer({
     width: 100,
     height: 100,
-    encoding: { category: "category", value: "value" },
+    encoding: { x: "category", y: "value" },
   });
 
   renderer.render(svg, [
@@ -52,7 +52,7 @@ import { createFakeSvg } from "../helpers/fake-svg.mjs";
     width: 100,
     height: 100,
     innerRadius: 18,
-    encoding: { category: "category", value: "value" },
+    encoding: { x: "category", y: "value" },
   });
 
   renderer.render(svg, [

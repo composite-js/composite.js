@@ -102,12 +102,13 @@ const topBarChart = chart({
 
 // 2. Matrix (Intersections)
 const matrixChart = chart({
-  data: intersections,
+  data: matrixData,
   mark: "matrix",
   encoding: {
     x: "id",
-    y: "sets",
-    yDomain: genres, // Enforce specific order
+    group: "genre",
+    y: "active",
+    groupDomain: genres, // Enforce specific order
   },
   width: 600,
   height: 300,
@@ -155,7 +156,7 @@ const stackBarChart = chart({
   encoding: {
     x: "count",
     y: "genre",
-    stack: "type",
+    group: "type",
   },
   width: 150,
   direction: "horizontal",
@@ -182,8 +183,8 @@ const pieRow = repeatX(
       data: pieDataMap[id],
       mark: "pie",
       encoding: {
+        x: "category",
         y: "value",
-        color: "category",
       },
       width: 40,
       height: 40,

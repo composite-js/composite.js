@@ -15,15 +15,15 @@ const top = chart({
 
 const matrix = chart({
   mark: "matrix",
-  data,
-  encoding: { x: "id", y: "sets" },
+  data: matrixCells,
+  encoding: { x: "id", group: "set", y: "active" },
 });
 
 const pies = repeatX(ids, (id) =>
   chart({
     mark: "pie",
     data: details[id],
-    encoding: { y: "value", color: "category" },
+    encoding: { x: "category", y: "value" },
   }),
 );
 

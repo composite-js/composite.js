@@ -1,4 +1,5 @@
 import * as d3 from "d3";
+import { validateChartConfig } from "./validation.js";
 
 /**
  * Base class for mark renderers.
@@ -25,6 +26,16 @@ export class MarkRenderer {
     this.yAxisName = options.yAxisName || "";
     this.xAxisPos = options.xAxisPos || "bottom";
     this.yAxisPos = options.yAxisPos || "left";
+  }
+
+  validate(data = this.options.data) {
+    if (!this.options.mark) return;
+
+    validateChartConfig({
+      ...this.options,
+      data,
+      encoding: this.encoding,
+    });
   }
 
   getAxisOptions() {

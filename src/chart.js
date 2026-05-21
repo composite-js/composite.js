@@ -15,6 +15,7 @@ import { ProportionalAreaChartRenderer } from "./mark/pac.js";
 import { FlowDiagramRenderer } from "./mark/flow.js";
 import { StreamGraphRenderer } from "./mark/stream.js";
 import { AxisRenderer } from "./axis.js";
+import { validateChartConfig } from "./mark/validation.js";
 import * as d3 from "d3";
 
 /**
@@ -56,7 +57,17 @@ export class Chart {
       yOuter: padding.yOuter !== undefined ? padding.yOuter : defaultOuter,
     };
 
+    this.validate();
     this._createRenderer();
+  }
+
+  validate() {
+    validateChartConfig({
+      ...this.options,
+      data: this.data,
+      mark: this.mark,
+      encoding: this.encoding,
+    });
   }
 
   /**
@@ -143,6 +154,8 @@ export class Chart {
    * @param {Object} [renderOptions] - Optional render overrides.
    */
   render(container, renderOptions = {}) {
+    this.validate();
+
     // Clear container
     container.innerHTML = "";
 
@@ -175,21 +188,6 @@ export class Chart {
         )
         .node();
       container.appendChild(svg);
-    }
-
-    // Validate encoding (skip for marks that don't use x/y)
-    const yField = this.encoding.y;
-    const xField = this.encoding.x;
-
-    if (
-      this.mark !== "matrix" &&
-      this.mark !== "pie" &&
-      this.mark !== "pac" &&
-      this.mark !== "flow" &&
-      (!yField || !xField)
-    ) {
-      console.warn("Missing encoding configuration for x or y.");
-      return;
     }
 
     // Update renderer with new options

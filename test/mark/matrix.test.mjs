@@ -8,12 +8,18 @@ import { createFakeSvg } from "../helpers/fake-svg.mjs";
     width: 90,
     height: 60,
     margin: { top: 0, right: 0, bottom: 0, left: 0 },
-    encoding: { x: "id", y: "sets", yDomain: ["B", "A", "C"] },
+    encoding: {
+      x: "id",
+      group: "genre",
+      y: "active",
+      groupDomain: ["B", "A", "C"],
+    },
   });
 
   const axisConfig = renderer.render(svg, [
-    { id: "i1", sets: ["A", "C"] },
-    { id: "i2", sets: ["B"] },
+    { id: "i1", genre: "A", active: true },
+    { id: "i1", genre: "C", active: true },
+    { id: "i2", genre: "B", active: true },
   ]);
 
   const circles = svg.querySelectorAll("circle");
@@ -38,15 +44,16 @@ import { createFakeSvg } from "../helpers/fake-svg.mjs";
     showXAxis: true,
     encoding: {
       x: "id",
-      y: "sets",
+      group: "genre",
+      y: "active",
       xDomain: ["i2", "i1", "i3"],
-      yDomain: ["B", "A"],
+      groupDomain: ["B", "A"],
     },
   });
 
   renderer.render(svg, [
-    { id: "i1", sets: ["A"] },
-    { id: "i2", sets: ["B"] },
+    { id: "i1", genre: "A", active: true },
+    { id: "i2", genre: "B", active: true },
   ]);
 
   const labels = svg.querySelectorAll("text").map((text) => text.textContent);
@@ -61,12 +68,13 @@ import { createFakeSvg } from "../helpers/fake-svg.mjs";
     height: 60,
     margin: { top: 0, right: 0, bottom: 0, left: 0 },
     stripe: false,
-    encoding: { x: "id", y: "sets" },
+    encoding: { x: "id", group: "genre", y: "active" },
   });
 
   renderer.render(svg, [
-    { id: "i1", sets: ["B", "A"] },
-    { id: "i2", sets: ["C"] },
+    { id: "i1", genre: "B", active: true },
+    { id: "i1", genre: "A", active: true },
+    { id: "i2", genre: "C", active: true },
   ]);
 
   assert.equal(svg.querySelectorAll("rect").length, 0);
@@ -80,10 +88,15 @@ import { createFakeSvg } from "../helpers/fake-svg.mjs";
     height: 60,
     margin: { top: 0, right: 0, bottom: 0, left: 0 },
     color: "tomato",
-    encoding: { x: "id", y: "sets", yDomain: ["A", "B"] },
+    encoding: {
+      x: "id",
+      group: "genre",
+      y: "active",
+      groupDomain: ["A", "B"],
+    },
   });
 
-  renderer.render(svg, [{ id: "i1", sets: ["A"] }]);
+  renderer.render(svg, [{ id: "i1", genre: "A", active: true }]);
 
   const circles = svg.querySelectorAll("circle");
   assert.equal(circles[0].getAttribute("fill"), "tomato");
@@ -102,10 +115,10 @@ import { createFakeSvg } from "../helpers/fake-svg.mjs";
     yAxisPos: "left",
     encoding: {
       x: "quarter",
-      y: "institution",
-      value: "score",
+      group: "institution",
+      y: "score",
       xDomain: ["Q1", "Q2"],
-      yDomain: ["Radio", "ONPE"],
+      groupDomain: ["Radio", "ONPE"],
     },
   });
 
@@ -130,10 +143,10 @@ import { createFakeSvg } from "../helpers/fake-svg.mjs";
     showYAxis: false,
     encoding: {
       x: "quarter",
-      y: "institution",
-      value: "score",
+      group: "institution",
+      y: "score",
       xDomain: ["Q1", "Q2"],
-      yDomain: ["Radio", "ONPE"],
+      groupDomain: ["Radio", "ONPE"],
     },
   });
 
@@ -155,10 +168,10 @@ import { createFakeSvg } from "../helpers/fake-svg.mjs";
     color: "red",
     encoding: {
       x: "quarter",
-      y: "institution",
-      value: "score",
+      group: "institution",
+      y: "score",
       xDomain: ["Q1", "Q2"],
-      yDomain: ["Radio"],
+      groupDomain: ["Radio"],
     },
   });
 
@@ -184,10 +197,10 @@ import { createFakeSvg } from "../helpers/fake-svg.mjs";
     color: "black",
     encoding: {
       x: "quarter",
-      y: "institution",
-      value: "score",
+      group: "institution",
+      y: "score",
       xDomain: ["Q1", "Q2"],
-      yDomain: ["Radio"],
+      groupDomain: ["Radio"],
     },
   });
 

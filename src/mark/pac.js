@@ -30,14 +30,8 @@ export class ProportionalAreaChartRenderer extends MarkRenderer {
   }
 
   _domains(data) {
-    const categoryField = this.encoding.category;
-    return categoricalDomain(
-      data,
-      categoryField,
-      this.encoding.categoryDomain ||
-        this.encoding.xDomain ||
-        this.encoding.yDomain,
-    );
+    const categoryField = this.encoding.x;
+    return categoricalDomain(data, categoryField, this.encoding.xDomain);
   }
 
   _maxShapeSize(bandwidth, crossSize) {
@@ -45,7 +39,7 @@ export class ProportionalAreaChartRenderer extends MarkRenderer {
   }
 
   _sizeScale(data, maxShapeSize) {
-    const valueField = this.encoding.value;
+    const valueField = this.encoding.y;
     const maxValue = d3.max(data, (d) =>
       Math.max(0, Number(d[valueField]) || 0),
     );
@@ -98,8 +92,8 @@ export class ProportionalAreaChartRenderer extends MarkRenderer {
 
   _renderVertical(svg, data) {
     const container = d3.select(svg);
-    const categoryField = this.encoding.category;
-    const valueField = this.encoding.value;
+    const categoryField = this.encoding.x;
+    const valueField = this.encoding.y;
     const margin = this.margin;
     const chartWidth = this.width;
     const chartHeight = this.height;
@@ -140,8 +134,8 @@ export class ProportionalAreaChartRenderer extends MarkRenderer {
 
   _renderHorizontal(svg, data) {
     const container = d3.select(svg);
-    const categoryField = this.encoding.category;
-    const valueField = this.encoding.value;
+    const categoryField = this.encoding.x;
+    const valueField = this.encoding.y;
     const margin = this.margin;
     const chartWidth = this.width;
     const chartHeight = this.height;

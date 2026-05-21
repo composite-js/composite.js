@@ -77,8 +77,8 @@ const top = chart({
 
 const matrix = chart({
   mark: "matrix",
-  data,
-  encoding: { x: "id", y: "sets" },
+  data: matrixCells,
+  encoding: { x: "id", group: "set", y: "active" },
 });
 
 const view = stackY([top, matrix], { align: [matrix, matrix] });
@@ -101,7 +101,7 @@ The layout pipeline has three main parts:
 
 Rendering is D3-backed. `src/chart.js` selects a mark renderer for the configured mark type, and mark renderers return axis configuration when axes should be drawn by `AxisRenderer`.
 
-Supported chart marks include bars, grouped bars, stacked bars, area charts, lines, matrices, scatters, boxes, bubbles, dumbbells, proportional area charts, pies, flows, and stream graphs. Flow diagrams use `encoding: { source, target, value }`, support horizontal and vertical directions, can render endpoint headings, and can map an array of colors to either the source or target domain.
+Supported chart marks include bars, grouped bars, stacked bars, area charts, lines, matrices, scatters, boxes, bubbles, dumbbells, proportional area charts, pies, flows, and stream graphs. Marks use `encoding.x` and `encoding.y` for primary channels and `encoding.group` for secondary categorical grouping. Flow diagrams use `encoding: { x, group, y }`, support horizontal and vertical directions, can render endpoint headings with `xLabelName` and `groupLabelName`, and can map an array of colors to either `xDomain` or `groupDomain` with `colorBy`.
 
 ## Directory Guide
 

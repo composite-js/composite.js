@@ -9,7 +9,7 @@ function baseOptions(overrides = {}) {
     width: 120,
     height: 60,
     margin: { top: 0, right: 0, bottom: 0, left: 0 },
-    encoding: { category: "year", value: "count" },
+    encoding: { x: "year", y: "count" },
     ...overrides,
   };
 }
@@ -61,7 +61,7 @@ function baseOptions(overrides = {}) {
   const chart = new Chart({
     mark: "pac",
     data: [{ year: "2000", count: 100 }],
-    encoding: { category: "year", value: "count" },
+    encoding: { x: "year", y: "count" },
   });
 
   assert.equal(chart.mark, "pac");
@@ -73,7 +73,7 @@ function baseOptions(overrides = {}) {
     width: 80,
     height: 100,
     margin: { top: 0, right: 0, bottom: 0, left: 0 },
-    encoding: { category: "year", value: "count" },
+    encoding: { x: "year", y: "count" },
   });
 
   renderer.render(svg, [
@@ -109,7 +109,7 @@ function baseOptions(overrides = {}) {
     width: 50,
     height: 90,
     margin: { top: 0, right: 0, bottom: 0, left: 0 },
-    encoding: { category: "year", value: "count", categoryDomain: years },
+    encoding: { x: "year", y: "count", xDomain: years },
     padding,
   });
   const dumbbellRenderer = new DumbbellChartRenderer({

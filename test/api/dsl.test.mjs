@@ -88,7 +88,7 @@ import {
       { period: "Q1", series: "A", value: 1 },
       { period: "Q1", series: "B", value: 2 },
     ],
-    encoding: { x: "period", y: "value", color: "series" },
+    encoding: { x: "period", y: "value", group: "series" },
   });
 
   assert.equal(node.element.mark, "stream");
@@ -124,7 +124,7 @@ import {
   const node = chart({
     mark: "pac",
     data: [{ period: "Q1", value: 1 }],
-    encoding: { category: "period", value: "value" },
+    encoding: { x: "period", y: "value" },
   });
 
   assert.equal(node.element.mark, "pac");

@@ -24,8 +24,8 @@ export class PieChartRenderer extends MarkRenderer {
    */
   render(svg, data) {
     const container = d3.select(svg);
-    const valueField = this.encoding.y || this.encoding.value;
-    const categoryField = this.encoding.color || this.encoding.category || "id";
+    const categoryField = this.encoding.x;
+    const valueField = this.encoding.y;
 
     // Clear content
     container.selectAll("*").remove();
@@ -35,7 +35,9 @@ export class PieChartRenderer extends MarkRenderer {
     const arc = d3.arc().innerRadius(this.innerRadius).outerRadius(radius);
 
     // Create color scale
-    const uniqueCategories = [...new Set(data.map((d) => d[categoryField]))];
+    const uniqueCategories = this.encoding.xDomain || [
+      ...new Set(data.map((d) => d[categoryField])),
+    ];
     const color = d3.scaleOrdinal(this.colorScheme).domain(uniqueCategories);
 
     const g = container

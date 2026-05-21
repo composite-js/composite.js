@@ -123,29 +123,14 @@ export class MatrixChartRenderer extends MarkRenderer {
   render(svg, data) {
     const container = d3.select(svg);
     const xField = this.encoding.x;
-    const yField = this.encoding.y; // Expecting an array of strings
-    const valueField = this.encoding.value;
+    const groupField = this.encoding.group;
+    const valueField = this.encoding.y;
     const margin = this.margin;
     const chartWidth = this.width;
     const chartHeight = this.height;
-    const isValueMatrix = Boolean(valueField);
-
-    // Identify all unique categories for Y axis (the sets)
-    let sortedSets;
-    if (this.encoding.yDomain) {
-      sortedSets = this.encoding.yDomain;
-    } else if (isValueMatrix) {
-      sortedSets = categoricalDomain(data, yField, this.encoding.yDomain);
-    } else {
-      const allSets = new Set();
-      data.forEach((d) => {
-        const sets = d[yField];
-        if (Array.isArray(sets)) {
-          sets.forEach((s) => allSets.add(s));
-        }
-      });
-      sortedSets = Array.from(allSets).sort();
-    }
+    const isNumericMatrix = data.some(
+      (d) => typeof d[valueField] !== "boolean",
+    );
 
     // Use scaleBand for X axis
     const xDomain = categoricalDomain(data, xField, this.encoding.xDomain);
@@ -156,10 +141,15 @@ export class MatrixChartRenderer extends MarkRenderer {
       .paddingInner(this.padding.xInner)
       .paddingOuter(this.padding.xOuter);
 
-    // Use scaleBand for Y axis
+    // Use scaleBand for row groups
+    const groupDomain = categoricalDomain(
+      data,
+      groupField,
+      this.encoding.groupDomain,
+    );
     const yScale = d3
       .scaleBand()
-      .domain(sortedSets)
+      .domain(groupDomain)
       .range([0, chartHeight])
       .paddingInner(this.padding.yInner)
       .paddingOuter(this.padding.yOuter);
@@ -169,75 +159,85 @@ export class MatrixChartRenderer extends MarkRenderer {
 
     // Helper to get coordinates
     const getX = (value) => margin.left + xScale(value) + stepWidth * 0.5;
-    const getY = (setIndex) =>
-      margin.top + yScale(sortedSets[setIndex]) + stepHeight * 0.5;
+    const getY = (groupIndex) =>
+      margin.top + yScale(groupDomain[groupIndex]) + stepHeight * 0.5;
 
     // Draw Rows (Sets)
-    sortedSets.forEach((setName, setIndex) => {
+    groupDomain.forEach((groupName, groupIndex) => {
       // Draw Background Stripe
-      if (this.stripe && setIndex % 2 === 0) {
+      if (this.stripe && groupIndex % 2 === 0) {
         container
           .append("rect")
           .attr("x", margin.left)
-          .attr("y", margin.top + yScale(setName))
+          .attr("y", margin.top + yScale(groupName))
           .attr("width", chartWidth)
           .attr("height", stepHeight)
           .attr("fill", "#f9f9f9");
       }
     });
 
-    this._drawLabels(container, xScale, yScale, xDomain, sortedSets);
+    this._drawLabels(container, xScale, yScale, xDomain, groupDomain);
 
-    if (isValueMatrix) {
-      data.forEach((d) => {
-        const x = margin.left + xScale(d[xField]) + stepWidth * 0.5;
-        const y = margin.top + yScale(d[yField]) + stepHeight * 0.5;
+    const cellByKey = new Map(
+      data.map((d) => [`${d[xField]}\u0000${d[groupField]}`, d]),
+    );
 
-        container
-          .append("circle")
-          .attr("cx", x)
-          .attr("cy", y)
-          .attr("r", this.circleRadius)
-          .attr("fill", this._continuousFill(d[valueField]));
+    if (isNumericMatrix) {
+      xDomain.forEach((xValue) => {
+        groupDomain.forEach((groupValue) => {
+          const d = cellByKey.get(`${xValue}\u0000${groupValue}`);
+          const value =
+            d === undefined
+              ? 0
+              : typeof d[valueField] === "boolean"
+                ? d[valueField]
+                  ? 1
+                  : 0
+                : d[valueField];
+          const x = margin.left + xScale(xValue) + stepWidth * 0.5;
+          const y = margin.top + yScale(groupValue) + stepHeight * 0.5;
+
+          container
+            .append("circle")
+            .attr("cx", x)
+            .attr("cy", y)
+            .attr("r", this.circleRadius)
+            .attr("fill", this._continuousFill(value));
+        });
       });
 
       return null;
     }
 
-    // Draw Columns (Intersections)
-    const dataByX = new Map(data.map((d) => [d[xField], d]));
+    // Draw boolean columns with connector lines between active row groups.
     xDomain.forEach((xValue) => {
-      const d = dataByX.get(xValue) || { [xField]: xValue, [yField]: [] };
-      const activeSets = new Set(d[yField] || []);
       const x = getX(xValue);
+      const activeIndexes = [];
 
-      // Find range of active sets for the vertical connecting line
-      let minIndex = Infinity;
-      let maxIndex = -Infinity;
-
-      sortedSets.forEach((setName, setIndex) => {
-        if (activeSets.has(setName)) {
-          if (setIndex < minIndex) minIndex = setIndex;
-          if (setIndex > maxIndex) maxIndex = setIndex;
+      groupDomain.forEach((groupName, groupIndex) => {
+        const d = cellByKey.get(`${xValue}\u0000${groupName}`);
+        if (d?.[valueField] === true) {
+          activeIndexes.push(groupIndex);
         }
       });
 
       // Draw connecting line
-      if (minIndex < maxIndex) {
+      if (activeIndexes.length > 1) {
         container
           .append("line")
           .attr("x1", x)
-          .attr("y1", getY(minIndex))
+          .attr("y1", getY(activeIndexes[0]))
           .attr("x2", x)
-          .attr("y2", getY(maxIndex))
+          .attr("y2", getY(activeIndexes[activeIndexes.length - 1]))
           .attr("stroke", "black")
           .attr("stroke-width", "2");
       }
 
       // Draw circles for each set
-      sortedSets.forEach((setName, setIndex) => {
-        const y = getY(setIndex);
-        const isActive = activeSets.has(setName);
+      groupDomain.forEach((groupName, groupIndex) => {
+        const y = getY(groupIndex);
+        const d = cellByKey.get(`${xValue}\u0000${groupName}`);
+        const isActive = d?.[valueField] === true;
 
         container
           .append("circle")

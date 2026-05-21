@@ -43,4 +43,5 @@ export { ProportionalAreaChartRenderer } from "./mark/pac.js";
 export { PieChartRenderer } from "./mark/pie.js";
 export { ScatterChartRenderer } from "./mark/scatter.js";
 export { StreamGraphRenderer } from "./mark/stream.js";
+export { MARK_DEFINITIONS, validateChartConfig } from "./mark/validation.js";
 export { BBox } from "./utils/bbox.js";

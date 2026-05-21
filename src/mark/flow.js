@@ -4,28 +4,24 @@ import { MarkRenderer } from "./mark.js";
 export class FlowDiagramRenderer extends MarkRenderer {
   constructor(options = {}) {
     super(options);
-    this.sourceDomain = options.sourceDomain;
-    this.targetDomain = options.targetDomain;
     this.direction = options.direction || "horizontal";
     this.colors =
       options.colors || (Array.isArray(options.color) ? options.color : null);
     this.color = Array.isArray(options.color)
       ? options.color[0] || "#f5b27c"
       : options.color || "#f5b27c";
-    this.colorBy = options.colorBy || "target";
+    this.colorBy = options.colorBy || "group";
     this.opacity = options.opacity !== undefined ? options.opacity : 0.18;
     this.showLabels =
       options.showLabels !== undefined ? options.showLabels : false;
-    this.showSourceLabels =
-      options.showSourceLabels !== undefined
-        ? options.showSourceLabels
+    this.showXLabels =
+      options.showXLabels !== undefined ? options.showXLabels : this.showLabels;
+    this.showGroupLabels =
+      options.showGroupLabels !== undefined
+        ? options.showGroupLabels
         : this.showLabels;
-    this.showTargetLabels =
-      options.showTargetLabels !== undefined
-        ? options.showTargetLabels
-        : this.showLabels;
-    this.sourceLabelName = options.sourceLabelName || "";
-    this.targetLabelName = options.targetLabelName || "";
+    this.xLabelName = options.xLabelName || "";
+    this.groupLabelName = options.groupLabelName || "";
     this.labelFill = options.labelFill || "currentColor";
     this.labelFontSize = options.labelFontSize || 10;
     this.labelPadding =
@@ -43,9 +39,10 @@ export class FlowDiagramRenderer extends MarkRenderer {
   }
 
   _strokeScale(data, valueField) {
+    const domain = this.encoding.yDomain;
     const values = data.map((d) => d[valueField] || 0);
-    const minValue = d3.min(values) ?? 0;
-    const maxValue = d3.max(values) ?? 0;
+    const minValue = domain ? domain[0] : (d3.min(values) ?? 0);
+    const maxValue = domain ? domain[1] : (d3.max(values) ?? 0);
 
     return minValue === maxValue
       ? () => this.maxStrokeWidth
@@ -55,23 +52,23 @@ export class FlowDiagramRenderer extends MarkRenderer {
           .range([this.minStrokeWidth, this.maxStrokeWidth]);
   }
 
-  _domains(data, sourceField, targetField) {
+  _domains(data, xField, groupField) {
     return {
-      sourceDomain: this.sourceDomain || [
-        ...new Set(data.map((d) => d[sourceField])),
+      xDomain: this.encoding.xDomain || [
+        ...new Set(data.map((d) => d[xField])),
       ],
-      targetDomain: this.targetDomain || [
-        ...new Set(data.map((d) => d[targetField])),
+      groupDomain: this.encoding.groupDomain || [
+        ...new Set(data.map((d) => d[groupField])),
       ],
     };
   }
 
-  _colorScale(sourceDomain, targetDomain) {
+  _colorScale(xDomain, groupDomain) {
     if (!this.colors) {
       return () => this.color;
     }
 
-    const domain = this.colorBy === "source" ? sourceDomain : targetDomain;
+    const domain = this.colorBy === "x" ? xDomain : groupDomain;
     return d3.scaleOrdinal().domain(domain).range(this.colors);
   }
 
@@ -88,108 +85,96 @@ export class FlowDiagramRenderer extends MarkRenderer {
       .text(text);
   }
 
-  _drawHorizontalLabels(
-    container,
-    sourceScale,
-    targetScale,
-    sourceDomain,
-    targetDomain,
-  ) {
+  _drawHorizontalLabels(container, xScale, groupScale, xDomain, groupDomain) {
     const margin = this.margin;
     const width = this.width;
 
-    if (this.sourceLabelName) {
+    if (this.xLabelName) {
       this._drawText(
         container,
-        this.sourceLabelName,
+        this.xLabelName,
         margin.left,
         margin.top - this.labelPadding * 2,
         { anchor: "start", weight: "700" },
       );
     }
 
-    if (this.targetLabelName) {
+    if (this.groupLabelName) {
       this._drawText(
         container,
-        this.targetLabelName,
+        this.groupLabelName,
         margin.left + width,
         margin.top - this.labelPadding * 2,
         { anchor: "end", weight: "700" },
       );
     }
 
-    if (this.showSourceLabels) {
-      sourceDomain.forEach((value) => {
+    if (this.showXLabels) {
+      xDomain.forEach((value) => {
         this._drawText(
           container,
           value,
           margin.left - this.labelPadding,
-          margin.top + sourceScale(value) + sourceScale.bandwidth() / 2,
+          margin.top + xScale(value) + xScale.bandwidth() / 2,
           { anchor: "end" },
         );
       });
     }
 
-    if (this.showTargetLabels) {
-      targetDomain.forEach((value) => {
+    if (this.showGroupLabels) {
+      groupDomain.forEach((value) => {
         this._drawText(
           container,
           value,
           margin.left + width + this.labelPadding,
-          margin.top + targetScale(value) + targetScale.bandwidth() / 2,
+          margin.top + groupScale(value) + groupScale.bandwidth() / 2,
           { anchor: "start" },
         );
       });
     }
   }
 
-  _drawVerticalLabels(
-    container,
-    sourceScale,
-    targetScale,
-    sourceDomain,
-    targetDomain,
-  ) {
+  _drawVerticalLabels(container, xScale, groupScale, xDomain, groupDomain) {
     const margin = this.margin;
     const height = this.height;
 
-    if (this.sourceLabelName) {
+    if (this.xLabelName) {
       this._drawText(
         container,
-        this.sourceLabelName,
+        this.xLabelName,
         margin.left,
         margin.top - this.labelPadding * 2,
         { anchor: "start", weight: "700" },
       );
     }
 
-    if (this.targetLabelName) {
+    if (this.groupLabelName) {
       this._drawText(
         container,
-        this.targetLabelName,
+        this.groupLabelName,
         margin.left,
         margin.top + height + this.labelPadding * 2,
         { anchor: "start", weight: "700" },
       );
     }
 
-    if (this.showSourceLabels) {
-      sourceDomain.forEach((value) => {
+    if (this.showXLabels) {
+      xDomain.forEach((value) => {
         this._drawText(
           container,
           value,
-          margin.left + sourceScale(value) + sourceScale.bandwidth() / 2,
+          margin.left + xScale(value) + xScale.bandwidth() / 2,
           margin.top - this.labelPadding,
         );
       });
     }
 
-    if (this.showTargetLabels) {
-      targetDomain.forEach((value) => {
+    if (this.showGroupLabels) {
+      groupDomain.forEach((value) => {
         this._drawText(
           container,
           value,
-          margin.left + targetScale(value) + targetScale.bandwidth() / 2,
+          margin.left + groupScale(value) + groupScale.bandwidth() / 2,
           margin.top + height + this.labelPadding,
         );
       });
@@ -198,42 +183,37 @@ export class FlowDiagramRenderer extends MarkRenderer {
 
   _renderHorizontal(svg, data) {
     const container = d3.select(svg);
-    const sourceField = this.encoding.source;
-    const targetField = this.encoding.target;
-    const valueField = this.encoding.value;
+    const xField = this.encoding.x;
+    const groupField = this.encoding.group;
+    const valueField = this.encoding.y;
     const margin = this.margin;
     const width = this.width;
     const height = this.height;
 
     container.selectAll("*").remove();
 
-    const { sourceDomain, targetDomain } = this._domains(
-      data,
-      sourceField,
-      targetField,
-    );
+    const { xDomain, groupDomain } = this._domains(data, xField, groupField);
 
-    const sourceScale = d3.scaleBand().domain(sourceDomain).range([0, height]);
-    const targetScale = d3.scaleBand().domain(targetDomain).range([0, height]);
+    const xScale = d3.scaleBand().domain(xDomain).range([0, height]);
+    const groupScale = d3.scaleBand().domain(groupDomain).range([0, height]);
 
     const strokeScale = this._strokeScale(data, valueField);
-    const colorScale = this._colorScale(sourceDomain, targetDomain);
+    const colorScale = this._colorScale(xDomain, groupDomain);
 
     this._drawHorizontalLabels(
       container,
-      sourceScale,
-      targetScale,
-      sourceDomain,
-      targetDomain,
+      xScale,
+      groupScale,
+      xDomain,
+      groupDomain,
     );
 
     data.forEach((d) => {
       const x1 = margin.left;
       const x2 = margin.left + width;
-      const y1 =
-        margin.top + sourceScale(d[sourceField]) + sourceScale.bandwidth() / 2;
+      const y1 = margin.top + xScale(d[xField]) + xScale.bandwidth() / 2;
       const y2 =
-        margin.top + targetScale(d[targetField]) + targetScale.bandwidth() / 2;
+        margin.top + groupScale(d[groupField]) + groupScale.bandwidth() / 2;
       const midX = margin.left + width / 2;
 
       container
@@ -242,9 +222,7 @@ export class FlowDiagramRenderer extends MarkRenderer {
         .attr("fill", "none")
         .attr(
           "stroke",
-          colorScale(
-            this.colorBy === "source" ? d[sourceField] : d[targetField],
-          ),
+          colorScale(this.colorBy === "x" ? d[xField] : d[groupField]),
         )
         .attr("stroke-width", strokeScale(d[valueField] || 0))
         .attr("stroke-linecap", "round")
@@ -256,39 +234,34 @@ export class FlowDiagramRenderer extends MarkRenderer {
 
   _renderVertical(svg, data) {
     const container = d3.select(svg);
-    const sourceField = this.encoding.source;
-    const targetField = this.encoding.target;
-    const valueField = this.encoding.value;
+    const xField = this.encoding.x;
+    const groupField = this.encoding.group;
+    const valueField = this.encoding.y;
     const margin = this.margin;
     const width = this.width;
     const height = this.height;
 
     container.selectAll("*").remove();
 
-    const { sourceDomain, targetDomain } = this._domains(
-      data,
-      sourceField,
-      targetField,
-    );
+    const { xDomain, groupDomain } = this._domains(data, xField, groupField);
 
-    const sourceScale = d3.scaleBand().domain(sourceDomain).range([0, width]);
-    const targetScale = d3.scaleBand().domain(targetDomain).range([0, width]);
+    const xScale = d3.scaleBand().domain(xDomain).range([0, width]);
+    const groupScale = d3.scaleBand().domain(groupDomain).range([0, width]);
     const strokeScale = this._strokeScale(data, valueField);
-    const colorScale = this._colorScale(sourceDomain, targetDomain);
+    const colorScale = this._colorScale(xDomain, groupDomain);
 
     this._drawVerticalLabels(
       container,
-      sourceScale,
-      targetScale,
-      sourceDomain,
-      targetDomain,
+      xScale,
+      groupScale,
+      xDomain,
+      groupDomain,
     );
 
     data.forEach((d) => {
-      const x1 =
-        margin.left + sourceScale(d[sourceField]) + sourceScale.bandwidth() / 2;
+      const x1 = margin.left + xScale(d[xField]) + xScale.bandwidth() / 2;
       const x2 =
-        margin.left + targetScale(d[targetField]) + targetScale.bandwidth() / 2;
+        margin.left + groupScale(d[groupField]) + groupScale.bandwidth() / 2;
       const y1 = margin.top;
       const y2 = margin.top + height;
       const midY = margin.top + height / 2;
@@ -299,9 +272,7 @@ export class FlowDiagramRenderer extends MarkRenderer {
         .attr("fill", "none")
         .attr(
           "stroke",
-          colorScale(
-            this.colorBy === "source" ? d[sourceField] : d[targetField],
-          ),
+          colorScale(this.colorBy === "x" ? d[xField] : d[groupField]),
         )
         .attr("stroke-width", strokeScale(d[valueField] || 0))
         .attr("stroke-linecap", "round")

@@ -17,6 +17,7 @@ import "./mark/flow.test.mjs";
 import "./mark/dumbbell.test.mjs";
 import "./mark/pac.test.mjs";
 import "./mark/pie.test.mjs";
+import "./mark/validation.test.mjs";
 import "./layout/text.test.mjs";
 import "./dev-example.test.mjs";
 import "./package-metadata.test.mjs";

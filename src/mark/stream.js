@@ -29,7 +29,7 @@ export class StreamGraphRenderer extends MarkRenderer {
     const container = d3.select(svg);
     const xField = this.encoding.x;
     const yField = this.encoding.y;
-    const colorField = this.encoding.color;
+    const groupField = this.encoding.group;
     const margin = this.margin;
     const chartWidth = this.width;
     const chartHeight = this.height;
@@ -37,7 +37,9 @@ export class StreamGraphRenderer extends MarkRenderer {
     container.selectAll("*").remove();
 
     const xDomain = categoricalDomain(data, xField, this.encoding.xDomain);
-    const seriesKeys = [...new Set(data.map((d) => d[colorField]))];
+    const seriesKeys = this.encoding.groupDomain || [
+      ...new Set(data.map((d) => d[groupField])),
+    ];
 
     const byX = d3.group(data, (d) => d[xField]);
     const pivotedData = xDomain.map((xValue) => {
@@ -45,7 +47,7 @@ export class StreamGraphRenderer extends MarkRenderer {
       const rows = byX.get(xValue) || [];
 
       seriesKeys.forEach((key) => {
-        const datum = rows.find((d) => d[colorField] === key);
+        const datum = rows.find((d) => d[groupField] === key);
         row[key] = datum ? Number(datum[yField]) || 0 : 0;
       });
 
