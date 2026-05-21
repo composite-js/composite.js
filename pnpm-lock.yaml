@@ -10,6 +10,10 @@ importers:
       d3:
         specifier: ^7.9.0
         version: 7.9.0
+    optionalDependencies:
+      sharp:
+        specifier: ^0.34.5
+        version: 0.34.5
     devDependencies:
       "@codemirror/commands":
         specifier: ^6.10.3
@@ -41,9 +45,6 @@ importers:
       prettier:
         specifier: ^3.7.4
         version: 3.7.4
-      sharp:
-        specifier: ^0.34.5
-        version: 0.34.5
       vite:
         specifier: ^5.0.0
         version: 5.4.21

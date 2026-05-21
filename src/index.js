@@ -13,6 +13,7 @@ export {
   RepeatX,
   RepeatY,
   Stack,
+  assertLayoutNode,
   chart,
   embed,
   frame,
