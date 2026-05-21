@@ -39,16 +39,16 @@ pnpm run dev
 
 ## Example Selection
 
-The dev script loads `examples/index.js` by default. To open a specific
+The dev script loads `examples/upset.js` by default. To open a specific
 example, pass its filename without the `.js` extension:
 
 ```bash
 pnpm run dev --example dropoutseer
 ```
 
-## Quick Usage (demo in `examples/index.js`)
+## Quick Usage (demo in `examples/upset.js`)
 
-The repository includes a demo entry (`examples/index.js`) that shows how to compose charts: a top bar chart, a left bar chart, a center matrix view, and repeated pie charts.
+The repository includes a demo entry (`examples/upset.js`) that shows how to compose charts: a top bar chart, a left bar chart, a center matrix view, and repeated pie charts.
 
 - Use `chart({...})` to create a leaf layout node for an individual chart.
 - Use `text({...})` to create SVG text annotations that participate in layout.

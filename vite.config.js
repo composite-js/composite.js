@@ -5,8 +5,8 @@ export default defineConfig({
     {
       name: "composite-example-entry",
       transformIndexHtml(html) {
-        const example = process.env.COMPOSITE_EXAMPLE || "index";
-        return html.replace("/examples/index.js", `/examples/${example}.js`);
+        const example = process.env.COMPOSITE_EXAMPLE || "upset";
+        return html.replace("/examples/upset.js", `/examples/${example}.js`);
       },
     },
   ],

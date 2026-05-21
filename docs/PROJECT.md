@@ -22,7 +22,7 @@ Start the development server:
 pnpm run dev
 ```
 
-The dev script loads `examples/index.js` by default. To load a specific example, pass the filename without `.js`:
+The dev script loads `examples/upset.js` by default. To load a specific example, pass the filename without `.js`:
 
 ```bash
 pnpm run dev --example dropoutseer

@@ -5,19 +5,19 @@ import { spawn } from "node:child_process";
 
 export function parseDevArgs(argv) {
   const passthrough = [];
-  let example = "index";
+  let example = "upset";
 
   for (let i = 0; i < argv.length; i += 1) {
     const arg = argv[i];
 
     if (arg === "--example") {
-      example = argv[i + 1] || "index";
+      example = argv[i + 1] || "upset";
       i += 1;
       continue;
     }
 
     if (arg.startsWith("--example=")) {
-      example = arg.slice("--example=".length) || "index";
+      example = arg.slice("--example=".length) || "upset";
       continue;
     }
 

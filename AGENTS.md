@@ -20,7 +20,7 @@ pnpm run lint
 ```
 
 - `pnpm run dev` starts the Vite development server through `scripts/dev-example.mjs`.
-- `pnpm run dev --example dropoutseer` loads `examples/dropoutseer.js`; omit the flag to load `examples/index.js`.
+- `pnpm run dev --example dropoutseer` loads `examples/dropoutseer.js`; omit the flag to load `examples/upset.js`.
 - `pnpm run build` creates the production bundle through Vite.
 - `pnpm run test` runs the Node-based test runner at `test/run.mjs`.
 - `pnpm run lint` runs ESLint across the repository.

@@ -7,7 +7,7 @@ import {
 } from "../scripts/dev-example.mjs";
 
 {
-  assert.equal(parseExampleName([]), "index");
+  assert.equal(parseExampleName([]), "upset");
   assert.equal(parseExampleName(["--example", "dropoutseer"]), "dropoutseer");
   assert.equal(parseExampleName(["--example=dropoutseer"]), "dropoutseer");
 }

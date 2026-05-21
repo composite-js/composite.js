@@ -1,10 +1,9 @@
 export const examples = [
   {
-    slug: "upset-style",
-    source: "index",
-    title: "UpSet-style composition",
+    slug: "upset",
+    title: "UpSet",
     summary: "A stacked matrix view with bars and repeated pies.",
-    image: "/examples/upset-style.svg",
+    image: "/examples/upset.svg",
     tags: ["stackY", "stackX", "repeatX"],
   },
   {
