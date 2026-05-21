@@ -9,6 +9,7 @@ import {
 import os from "node:os";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
+import { examples } from "../../site/src/data/examples.js";
 import {
   createExampleSnippet,
   exportSiteExamples,
@@ -99,6 +100,32 @@ return final;`;
   } finally {
     rmSync(tempRoot, { recursive: true, force: true });
   }
+}
+
+{
+  examples.forEach((example) => {
+    const source = example.source || example.slug;
+    const examplePath = path.join(process.cwd(), "examples", `${source}.js`);
+    const snippetPath = path.join(
+      process.cwd(),
+      "site",
+      "src",
+      "data",
+      "example-snippets",
+      `${source}.txt`,
+    );
+
+    assert.doesNotMatch(
+      readFileSync(examplePath, "utf8"),
+      /Math\.random/u,
+      `${source} example should use deterministic data`,
+    );
+    assert.doesNotMatch(
+      readFileSync(snippetPath, "utf8"),
+      /Math\.random/u,
+      `${source} snippet should use deterministic data`,
+    );
+  });
 }
 
 {

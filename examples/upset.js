@@ -62,13 +62,13 @@ const setSizeData = genres.map((genre) => {
   };
 });
 
-// Box Plot Data (Randomly generated for demonstration)
+// Box Plot Data
 const boxData = [];
-genres.forEach((genre) => {
+genres.forEach((genre, genreIndex) => {
   for (let i = 0; i < 20; i++) {
     boxData.push({
       genre: genre,
-      value: Math.random() * 50 + Math.random() * 30,
+      value: 18 + genreIndex * 3 + ((i * 7 + genreIndex * 5) % 31),
     });
   }
 });
@@ -76,12 +76,12 @@ genres.forEach((genre) => {
 // Stack Bar Chart Data
 const stackBarData = [];
 const types = ["Type A", "Type B", "Type C"];
-genres.forEach((genre) => {
-  types.forEach((type) => {
+genres.forEach((genre, genreIndex) => {
+  types.forEach((type, typeIndex) => {
     stackBarData.push({
       genre: genre,
       type: type,
-      count: Math.floor(Math.random() * 20) + 5,
+      count: 5 + (((genreIndex + 1) * (typeIndex + 2) * 3) % 20),
     });
   });
 });
@@ -167,11 +167,11 @@ const stackBarChart = chart({
 // 6. Pie Chart Row (below Matrix)
 // Create fake data for pie charts
 const pieDataMap = {};
-intersections.forEach((d) => {
+intersections.forEach((d, index) => {
   pieDataMap[d.id] = [
-    { category: "A", value: Math.random() * 10 },
-    { category: "B", value: Math.random() * 10 },
-    { category: "C", value: Math.random() * 10 },
+    { category: "A", value: 4 + ((index * 3) % 10) },
+    { category: "B", value: 3 + ((index * 5) % 9) },
+    { category: "C", value: 2 + ((index * 7) % 8) },
   ];
 });
 

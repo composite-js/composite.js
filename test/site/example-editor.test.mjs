@@ -107,10 +107,10 @@ const snippetDir = path.resolve(root, "site/src/data/example-snippets");
     "ExampleEditor should render the preview before the code editor",
   );
   [
-    'from "codemirror"',
-    'from "@codemirror/commands"',
-    'from "@codemirror/lang-javascript"',
-    'from "@codemirror/view"',
+    'import("codemirror")',
+    'import("@codemirror/commands")',
+    'import("@codemirror/lang-javascript")',
+    'import("@codemirror/view")',
     "new EditorView",
     "basicSetup",
     "javascript()",
@@ -120,7 +120,18 @@ const snippetDir = path.resolve(root, "site/src/data/example-snippets");
   ].forEach((expectedSource) => {
     assert.ok(
       editorSource.includes(expectedSource),
-      `ExampleEditor should initialize CodeMirror: ${expectedSource}`,
+      `ExampleEditor should lazy-initialize CodeMirror: ${expectedSource}`,
+    );
+  });
+  [
+    'from "codemirror"',
+    'from "@codemirror/commands"',
+    'from "@codemirror/lang-javascript"',
+    'from "@codemirror/view"',
+  ].forEach((staticImport) => {
+    assert.ok(
+      !editorSource.includes(staticImport),
+      `ExampleEditor should not statically import CodeMirror: ${staticImport}`,
     );
   });
   assert.ok(

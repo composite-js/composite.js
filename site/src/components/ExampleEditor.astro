@@ -31,53 +31,74 @@ const { example, snippet, runnerSrc } = Astro.props;
 </div>
 
 <script>
-  import { basicSetup, EditorView } from "codemirror";
-  import { indentWithTab } from "@codemirror/commands";
-  import { javascript } from "@codemirror/lang-javascript";
-  import { keymap } from "@codemirror/view";
-
   const editorMessageSource = "composite-example-editor";
   const runnerMessageSource = "composite-example-runner";
   const debounceMs = 450;
-  const editorTheme = EditorView.theme(
-    {
-      "&": {
-        backgroundColor: "#ffffff",
-        color: "#172033",
-        fontSize: "0.86rem",
-        height: "360px",
-      },
-      ".cm-scroller": {
-        fontFamily:
-          '"SFMono-Regular", Consolas, "Liberation Mono", Menlo, ui-monospace, monospace',
-        lineHeight: "1.55",
-      },
-      ".cm-content": {
-        padding: "16px 0",
-      },
-      ".cm-line": {
-        padding: "0 16px",
-      },
-      ".cm-gutters": {
-        backgroundColor: "#f8fafc",
-        borderRightColor: "#d8dee9",
-        color: "#64748b",
-      },
-      ".cm-activeLine": {
-        backgroundColor: "#eff6ff",
-      },
-      ".cm-activeLineGutter": {
-        backgroundColor: "#eff6ff",
-      },
-      "&.cm-focused": {
-        outline: "2px solid #2563eb",
-        outlineOffset: "-2px",
-      },
-    },
-    { dark: false },
-  );
+  let codeMirrorModulesPromise;
 
-  function createCodeEditor(textarea, onChange) {
+  function loadCodeMirrorModules() {
+    if (!codeMirrorModulesPromise) {
+      codeMirrorModulesPromise = Promise.all([
+        import("codemirror"),
+        import("@codemirror/commands"),
+        import("@codemirror/lang-javascript"),
+        import("@codemirror/view"),
+      ]).then(([codemirrorModule, commandsModule, javascriptModule, viewModule]) => ({
+        basicSetup: codemirrorModule.basicSetup,
+        EditorView: codemirrorModule.EditorView,
+        indentWithTab: commandsModule.indentWithTab,
+        javascript: javascriptModule.javascript,
+        keymap: viewModule.keymap,
+      }));
+    }
+
+    return codeMirrorModulesPromise;
+  }
+
+  function createEditorTheme(EditorView) {
+    return EditorView.theme(
+      {
+        "&": {
+          backgroundColor: "#ffffff",
+          color: "#172033",
+          fontSize: "0.86rem",
+          height: "360px",
+        },
+        ".cm-scroller": {
+          fontFamily:
+            '"SFMono-Regular", Consolas, "Liberation Mono", Menlo, ui-monospace, monospace',
+          lineHeight: "1.55",
+        },
+        ".cm-content": {
+          padding: "16px 0",
+        },
+        ".cm-line": {
+          padding: "0 16px",
+        },
+        ".cm-gutters": {
+          backgroundColor: "#f8fafc",
+          borderRightColor: "#d8dee9",
+          color: "#64748b",
+        },
+        ".cm-activeLine": {
+          backgroundColor: "#eff6ff",
+        },
+        ".cm-activeLineGutter": {
+          backgroundColor: "#eff6ff",
+        },
+        "&.cm-focused": {
+          outline: "2px solid #2563eb",
+          outlineOffset: "-2px",
+        },
+      },
+      { dark: false },
+    );
+  }
+
+  async function createCodeEditor(textarea, onChange) {
+    const { basicSetup, EditorView, indentWithTab, javascript, keymap } =
+      await loadCodeMirrorModules();
+    const editorTheme = createEditorTheme(EditorView);
     const editorHost = document.createElement("div");
     editorHost.className = "example-editor__cm";
     textarea.after(editorHost);
@@ -102,7 +123,7 @@ const { example, snippet, runnerSrc } = Astro.props;
     });
   }
 
-  function initializeExampleEditor(editor) {
+  async function initializeExampleEditor(editor) {
     if (editor.dataset.editorReady === "true") return;
 
     const code = editor.querySelector("[data-editor-code]");
@@ -114,7 +135,7 @@ const { example, snippet, runnerSrc } = Astro.props;
     const initialSnippet = code.value;
     let debounceId;
     let suppressEditorChange = false;
-    const editorView = createCodeEditor(code, () => {
+    const editorView = await createCodeEditor(code, () => {
       if (!suppressEditorChange) scheduleRun();
     });
 
