@@ -1,0 +1,12 @@
+---
+const { title = "Section placeholder" } = Astro.props;
+---
+
+<section class="section-shell">
+  <div class="site-container">
+    <div class="section-shell__header">
+      <h2 class="section-shell__title">{title}</h2>
+    </div>
+    <slot />
+  </div>
+</section>

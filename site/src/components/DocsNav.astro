@@ -1,0 +1,21 @@
+---
+import { docsNavItems } from "../data/docs.js";
+
+const base = import.meta.env.BASE_URL;
+const currentPath = Astro.url.pathname;
+const hrefFor = (href) => `${base}${href.replace(/^\//, "")}`;
+---
+
+<nav class="docs-nav" aria-label="Documentation navigation">
+  {
+    docsNavItems.map((item) => {
+      const href = hrefFor(item.href);
+      const isCurrent = currentPath === href;
+      return (
+        <a href={href} aria-current={isCurrent ? "page" : undefined}>
+          {item.label}
+        </a>
+      );
+    })
+  }
+</nav>

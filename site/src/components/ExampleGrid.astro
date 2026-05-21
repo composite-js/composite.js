@@ -1,0 +1,9 @@
+---
+import ExampleCard from "./ExampleCard.astro";
+
+const { examples = [] } = Astro.props;
+---
+
+<div class="example-grid">
+  {examples.map((example) => <ExampleCard example={example} />)}
+</div>

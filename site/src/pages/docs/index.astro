@@ -1,0 +1,15 @@
+---
+import DocsLayout from "../../layouts/DocsLayout.astro";
+import PlaceholderViz from "../../components/PlaceholderViz.astro";
+import { docsCards } from "../../data/docs.js";
+
+const base = import.meta.env.BASE_URL;
+const hrefFor = (href) => `${base}${href.replace(/^\//, "")}`;
+---
+
+<DocsLayout title="Documentation placeholder">
+  <PlaceholderViz label="Docs overview placeholder" />
+  <div class="example-grid" style="margin-top: 16px;">
+    {docsCards.map((item) => <a class="example-card" href={hrefFor(item.href)}>{item.label}</a>)}
+  </div>
+</DocsLayout>

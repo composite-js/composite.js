@@ -1,0 +1,130 @@
+---
+import SiteLayout from "../layouts/SiteLayout.astro";
+import SectionShell from "../components/SectionShell.astro";
+import ExampleGrid from "../components/ExampleGrid.astro";
+import CodePanel from "../components/CodePanel.astro";
+import { examples } from "../data/examples.js";
+
+const quickStartCode = `import { chart, stackY, repeatX } from "composite-js";
+
+const top = chart({
+  mark: "bar",
+  data,
+  encoding: { x: "id", y: "value" },
+});
+
+const matrix = chart({
+  mark: "matrix",
+  data,
+  encoding: { x: "id", y: "sets" },
+});
+
+const pies = repeatX(ids, (id) =>
+  chart({
+    mark: "pie",
+    data: details[id],
+    encoding: { y: "value", color: "category" },
+  }),
+);
+
+stackY([top, matrix, pies]).render(document.querySelector("#app"));`;
+---
+
+<SiteLayout title="composite.js | Composite visualization grammar">
+  <section class="hero-shell">
+    <div class="site-container hero-shell__grid">
+      <div class="hero-copy">
+        <p class="eyebrow">composite.js</p>
+        <h1>A JavaScript grammar for composite visualizations</h1>
+        <p class="hero-copy__lead">
+          Compose charts as layout nodes, then stack, repeat, align, and embed
+          them into coordinated browser visualizations.
+        </p>
+        <div class="hero-actions">
+          <a class="button button--primary" href={`${import.meta.env.BASE_URL}docs/`}>
+            Get started
+          </a>
+          <a class="button" href={`${import.meta.env.BASE_URL}examples/`}>
+            View examples
+          </a>
+        </div>
+        <div class="hero-metrics" aria-label="Core composition operators">
+          <span>chart()</span>
+          <span>stackX / stackY</span>
+          <span>repeatX / repeatY</span>
+          <span>embed()</span>
+        </div>
+      </div>
+      <div class="composition-diagram" aria-label="Composite visualization structure">
+        <div class="diagram-node diagram-node--wide">top bar chart</div>
+        <div class="diagram-row">
+          <div class="diagram-node">set size bars</div>
+          <div class="diagram-node diagram-node--strong">matrix</div>
+          <div class="diagram-node">box plot</div>
+        </div>
+        <div class="diagram-row diagram-row--small">
+          <div class="diagram-node">pie</div>
+          <div class="diagram-node">pie</div>
+          <div class="diagram-node">pie</div>
+          <div class="diagram-node">pie</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <SectionShell title="Build a composite view step by step">
+    <div class="split-section">
+      <div>
+        <p class="section-lead">
+          Start with ordinary chart configs, wrap them with <code>chart()</code>,
+          and pass layout nodes into composition operators. The same tree can
+          render a single chart, a nested view, or a larger analytical display.
+        </p>
+        <div class="feature-list">
+          <span>Create chart leaves</span>
+          <span>Align stacked layouts</span>
+          <span>Repeat small multiples</span>
+        </div>
+      </div>
+      <CodePanel label={quickStartCode} />
+    </div>
+  </SectionShell>
+
+  <SectionShell title="Why composite visualizations">
+    <div class="feature-grid">
+      <article class="feature-card">
+        <h3>Layout tree model</h3>
+        <p>Charts and compositions share one layout-node contract.</p>
+      </article>
+      <article class="feature-card">
+        <h3>Composition operators</h3>
+        <p>Use stack, repeat, align, and embed patterns to build larger views.</p>
+      </article>
+      <article class="feature-card">
+        <h3>D3-backed marks</h3>
+        <p>Render bars, lines, matrices, pies, flows, boxes, and more.</p>
+      </article>
+    </div>
+  </SectionShell>
+
+  <SectionShell title="Featured examples">
+    <ExampleGrid examples={examples} />
+  </SectionShell>
+
+  <SectionShell title="Documentation">
+    <div class="docs-entry-grid">
+      <a class="docs-entry" href={`${import.meta.env.BASE_URL}docs/concepts/`}>
+        <span>Core concepts</span>
+        <small>Layout nodes, chart leaves, and recursive composition.</small>
+      </a>
+      <a class="docs-entry" href={`${import.meta.env.BASE_URL}docs/api/`}>
+        <span>Composition API</span>
+        <small>chart, stackX, stackY, repeatX, repeatY, repeat, and embed.</small>
+      </a>
+      <a class="docs-entry" href={`${import.meta.env.BASE_URL}docs/marks/`}>
+        <span>Marks</span>
+        <small>Supported chart marks and their encoding patterns.</small>
+      </a>
+    </div>
+  </SectionShell>
+</SiteLayout>

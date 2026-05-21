@@ -1,0 +1,18 @@
+---
+import SiteLayout from "../../layouts/SiteLayout.astro";
+import SectionShell from "../../components/SectionShell.astro";
+import ExampleGrid from "../../components/ExampleGrid.astro";
+import { examples } from "../../data/examples.js";
+---
+
+<SiteLayout title="Examples | composite.js">
+  <SectionShell title="Example gallery">
+    <p class="section-lead">
+      Browse rendered composite visualization examples generated from the
+      repository's reusable example definitions.
+    </p>
+  </SectionShell>
+  <SectionShell title="Examples">
+    <ExampleGrid examples={examples} />
+  </SectionShell>
+</SiteLayout>

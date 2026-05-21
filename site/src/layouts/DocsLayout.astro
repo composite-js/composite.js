@@ -1,0 +1,15 @@
+---
+import SiteLayout from "./SiteLayout.astro";
+import DocsNav from "../components/DocsNav.astro";
+
+const { title = "Documentation placeholder" } = Astro.props;
+---
+
+<SiteLayout title={title}>
+  <div class="site-container docs-layout">
+    <DocsNav />
+    <article>
+      <slot />
+    </article>
+  </div>
+</SiteLayout>
