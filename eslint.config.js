@@ -16,7 +16,7 @@ const commonRules = {
 
 export default [
   {
-    ignores: ["dist/**", "node_modules/**"],
+    ignores: ["dist/**", "node_modules/**", "site/dist/**"],
   },
   {
     files: ["**/*.{js,mjs}"],
@@ -27,7 +27,11 @@ export default [
     rules: commonRules,
   },
   {
-    files: ["src/**/*.{js,mjs}", "examples/**/*.{js,mjs}"],
+    files: [
+      "src/**/*.{js,mjs}",
+      "examples/**/*.{js,mjs}",
+      "site/src/scripts/**/*.{js,mjs}",
+    ],
     languageOptions: {
       globals: { ...globals.browser, ...globals.es2021 },
     },

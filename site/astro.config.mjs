@@ -6,5 +6,8 @@ const site = env.SITE_URL || undefined;
 
 export default defineConfig({
   base,
+  devToolbar: {
+    enabled: false,
+  },
   site,
 });

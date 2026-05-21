@@ -1,8 +1,9 @@
 ---
 import SiteLayout from "../../layouts/SiteLayout.astro";
 import SectionShell from "../../components/SectionShell.astro";
-import CodePanel from "../../components/CodePanel.astro";
+import ExampleEditor from "../../components/ExampleEditor.astro";
 import { examples } from "../../data/examples.js";
+import { getExampleSnippet } from "../../data/example-snippets.js";
 
 export function getStaticPaths() {
   return examples.map((example) => ({
@@ -13,21 +14,13 @@ export function getStaticPaths() {
 
 const { example } = Astro.props;
 const base = import.meta.env.BASE_URL;
-const imageSrc = example.image
-  ? `${base}${example.image.replace(/^\//, "")}`
-  : undefined;
-const sourcePath = `examples/${example.source || example.slug}.js`;
+const snippet = getExampleSnippet(example);
+const runnerSrc = `${base}examples/editor-runner/`;
 ---
 
 <SiteLayout title={`${example.title} | composite.js`}>
   <SectionShell title={example.title}>
-    {
-      imageSrc && (
-        <div class="example-detail-preview">
-          <img src={imageSrc} alt="" />
-        </div>
-      )
-    }
+    <ExampleEditor example={example} snippet={snippet} runnerSrc={runnerSrc} />
   </SectionShell>
   <SectionShell title="Example metadata">
     <div class="feature-card">
@@ -36,8 +29,5 @@ const sourcePath = `examples/${example.source || example.slug}.js`;
         {example.tags.map((tag) => <span class="tag">{tag}</span>)}
       </div>
     </div>
-  </SectionShell>
-  <SectionShell title="Example source">
-    <CodePanel label={sourcePath} />
   </SectionShell>
 </SiteLayout>

@@ -1,0 +1,133 @@
+---
+const { example, snippet, runnerSrc } = Astro.props;
+---
+
+<div class="example-editor" data-example-editor>
+  <div class="example-editor__toolbar">
+    <span class="example-editor__label">{example.title}</span>
+    <div class="example-editor__actions">
+      <button class="example-editor__button" type="button" data-editor-run>
+        Run
+      </button>
+      <button class="example-editor__button" type="button" data-editor-reset>
+        Reset
+      </button>
+    </div>
+    <span class="example-editor__status" data-editor-status>Loading</span>
+  </div>
+  <div class="example-editor__workspace">
+    <textarea
+      class="example-editor__code"
+      spellcheck="false"
+      data-editor-code>{snippet}</textarea>
+    <iframe
+      class="example-editor__preview"
+      title={`${example.title} rendered preview`}
+      src={runnerSrc}
+      sandbox="allow-scripts allow-same-origin"
+      data-editor-preview></iframe>
+  </div>
+  <pre class="example-editor__error" data-editor-error hidden></pre>
+</div>
+
+<script>
+  const editorMessageSource = "composite-example-editor";
+  const runnerMessageSource = "composite-example-runner";
+  const debounceMs = 450;
+
+  function initializeExampleEditor(editor) {
+    if (editor.dataset.editorReady === "true") return;
+
+    const code = editor.querySelector("[data-editor-code]");
+    const iframe = editor.querySelector("[data-editor-preview]");
+    const runButton = editor.querySelector("[data-editor-run]");
+    const resetButton = editor.querySelector("[data-editor-reset]");
+    const status = editor.querySelector("[data-editor-status]");
+    const errorOutput = editor.querySelector("[data-editor-error]");
+    const initialSnippet = code.value;
+    let debounceId;
+
+    editor.dataset.editorReady = "true";
+
+    function setStatus(state, message) {
+      editor.dataset.editorState = state;
+      status.textContent = message;
+    }
+
+    function clearError() {
+      errorOutput.hidden = true;
+      errorOutput.textContent = "";
+    }
+
+    function showError(message, stack) {
+      errorOutput.hidden = false;
+      errorOutput.textContent =
+        stack && stack !== message ? `${message}\n\n${stack}` : message;
+    }
+
+    function sendRun() {
+      if (!iframe.contentWindow) {
+        setStatus("error", "Preview unavailable");
+        return;
+      }
+
+      clearError();
+      setStatus("running", "Running");
+      iframe.contentWindow.postMessage(
+        {
+          source: editorMessageSource,
+          type: "run",
+          snippet: code.value,
+        },
+        window.location.origin,
+      );
+    }
+
+    function scheduleRun() {
+      window.clearTimeout(debounceId);
+      setStatus("pending", "Edited");
+      debounceId = window.setTimeout(sendRun, debounceMs);
+    }
+
+    runButton.addEventListener("click", () => {
+      window.clearTimeout(debounceId);
+      sendRun();
+    });
+
+    resetButton.addEventListener("click", () => {
+      code.value = initialSnippet;
+      window.clearTimeout(debounceId);
+      sendRun();
+    });
+
+    code.addEventListener("input", scheduleRun);
+
+    window.addEventListener("message", (event) => {
+      if (event.source !== iframe.contentWindow) return;
+      if (event.origin !== window.location.origin) return;
+
+      const message = event.data;
+      if (!message || message.source !== runnerMessageSource) return;
+
+      if (message.type === "ready") {
+        sendRun();
+        return;
+      }
+
+      if (message.type === "success") {
+        clearError();
+        setStatus("success", "Rendered");
+        return;
+      }
+
+      if (message.type === "error") {
+        setStatus("error", "Error");
+        showError(message.message || "Unknown error", message.stack || "");
+      }
+    });
+  }
+
+  document
+    .querySelectorAll("[data-example-editor]")
+    .forEach((editor) => initializeExampleEditor(editor));
+</script>
