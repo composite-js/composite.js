@@ -25,6 +25,9 @@
     "site:export-examples": "node scripts/export-site-examples.mjs",
     "test": "node test/run.mjs",
     "lint": "eslint . --max-warnings=0",
+    "format:check": "prettier --check .",
+    "check": "pnpm run lint && pnpm run build && pnpm run test",
+    "check:site": "pnpm run site:build",
     "format": "prettier --write ."
   },
   "keywords": [

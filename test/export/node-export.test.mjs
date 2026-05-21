@@ -74,8 +74,14 @@ const node = chart({
   });
   const svg = await distNode.export({ format: "svg" });
 
-  assert.ok(svg.startsWith("<svg"), "dist export() should return serialized SVG");
-  assert.ok(svg.includes("<rect"), "dist serialized SVG should contain chart marks");
+  assert.ok(
+    svg.startsWith("<svg"),
+    "dist export() should return serialized SVG",
+  );
+  assert.ok(
+    svg.includes("<rect"),
+    "dist serialized SVG should contain chart marks",
+  );
 }
 
 {
@@ -92,8 +98,14 @@ const node = chart({
   });
   const svg = await distNode.export({ format: "svg" });
 
-  assert.ok(svg.startsWith("<svg"), "CJS dist export() should return serialized SVG");
-  assert.ok(svg.includes("<rect"), "CJS dist serialized SVG should contain chart marks");
+  assert.ok(
+    svg.startsWith("<svg"),
+    "CJS dist export() should return serialized SVG",
+  );
+  assert.ok(
+    svg.includes("<rect"),
+    "CJS dist serialized SVG should contain chart marks",
+  );
 }
 
 {

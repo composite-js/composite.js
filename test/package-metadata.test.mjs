@@ -25,7 +25,10 @@ assert.deepEqual(packageJson.repository, {
 assert.deepEqual(packageJson.bugs, {
   url: "https://github.com/shenzhiy21/composite.js/issues",
 });
-assert.equal(packageJson.homepage, "https://github.com/shenzhiy21/composite.js#readme");
+assert.equal(
+  packageJson.homepage,
+  "https://github.com/shenzhiy21/composite.js#readme",
+);
 assert.deepEqual(packageJson.exports, {
   ".": {
     import: "./dist/esm/index.js",

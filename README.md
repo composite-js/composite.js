@@ -98,7 +98,13 @@ pnpm run build
 ## Development Tips
 
 - Use `pnpm run dev` for a hot-reloading development server.
-- Run `pnpm run format` before committing to keep consistent code style.
+- Run `pnpm run format:check` before committing to check formatting without
+  rewriting files.
+- Enable the repository hooks once per clone:
+
+```bash
+git config core.hooksPath .githooks
+```
 
 ## Tests
 
@@ -111,7 +117,7 @@ pnpm run test
 ## Contributing
 
 - Issues and pull requests are welcome. Keep changes small and focused.
-- Run `pnpm run format` before submitting a PR.
+- Run `pnpm run check` before submitting a PR.
 
 ## License
 

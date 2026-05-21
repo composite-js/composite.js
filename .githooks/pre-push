@@ -1,0 +1,6 @@
+#!/bin/sh
+set -eu
+
+pnpm run format:check
+pnpm run check
+pnpm run check:site
