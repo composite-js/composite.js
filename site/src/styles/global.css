@@ -296,11 +296,7 @@ a {
   display: grid;
   place-items: center;
   border: 1px solid #cbd5e1;
-  background:
-    linear-gradient(90deg, rgba(37, 99, 235, 0.08) 1px, transparent 1px),
-    linear-gradient(rgba(249, 115, 22, 0.1) 1px, transparent 1px),
-    #ffffff;
-  background-size: 18px 18px;
+  background: #ffffff;
   color: #1e293b;
   padding: 16px;
   text-align: center;
