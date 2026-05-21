@@ -17,13 +17,19 @@ import {
 } from "../../scripts/export-site-examples.mjs";
 
 {
-  const scriptPath = path.join(process.cwd(), "scripts/export-site-examples.mjs");
+  const scriptPath = path.join(
+    process.cwd(),
+    "scripts/export-site-examples.mjs",
+  );
 
   assert.equal(
     isDirectExecution(undefined, pathToFileURL(scriptPath).href),
     false,
   );
-  assert.equal(isDirectExecution(scriptPath, pathToFileURL(scriptPath).href), true);
+  assert.equal(
+    isDirectExecution(scriptPath, pathToFileURL(scriptPath).href),
+    true,
+  );
 }
 
 const exampleSource = `import { chart, stackY } from "../src/index.js";
@@ -85,10 +91,7 @@ return final;`;
     );
 
     assert.equal(result.source, "foo");
-    assert.equal(
-      result.outputPath,
-      path.join(snippetDir, "foo.txt"),
-    );
+    assert.equal(result.outputPath, path.join(snippetDir, "foo.txt"));
     assert.equal(
       readFileSync(result.outputPath, "utf8"),
       `${expectedSnippet}\n`,

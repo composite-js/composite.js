@@ -13,6 +13,7 @@
 ## Task 1: Source-Level Coverage
 
 **Files:**
+
 - Modify: `test/site/example-editor.test.mjs`
 
 - [ ] **Step 1: Add failing assertions**
@@ -30,6 +31,7 @@ Expected: FAIL because runner markup and pan/zoom script are not implemented.
 ## Task 2: Runner Markup and Interaction
 
 **Files:**
+
 - Modify: `site/src/pages/examples/editor-runner.astro`
 - Modify: `site/src/scripts/example-runner.js`
 
@@ -70,6 +72,7 @@ from a clean view state.
 ## Task 3: Verification
 
 **Files:**
+
 - No additional files expected.
 
 - [ ] **Step 1: Run focused test**

@@ -22,7 +22,10 @@ const node = chart({
 
   assert.ok(svg.startsWith("<svg"), "export() should return serialized SVG");
   assert.ok(svg.includes("<rect"), "serialized SVG should contain chart marks");
-  assert.ok(svg.includes("Category"), "serialized SVG should include axis labels");
+  assert.ok(
+    svg.includes("Category"),
+    "serialized SVG should include axis labels",
+  );
 }
 
 {

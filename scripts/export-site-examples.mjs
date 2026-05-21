@@ -102,9 +102,10 @@ function dedentBlock(source) {
 
 export function createExampleSnippet(source) {
   const normalizedSource = source.replace(/\r\n/g, "\n");
-  const createExampleMatch = /export\s+function\s+createExample\s*\([^)]*\)\s*\{/u.exec(
-    normalizedSource,
-  );
+  const createExampleMatch =
+    /export\s+function\s+createExample\s*\([^)]*\)\s*\{/u.exec(
+      normalizedSource,
+    );
 
   if (!createExampleMatch) {
     throw new Error("Example source must export createExample().");
@@ -154,9 +155,7 @@ export async function syncExampleSnippet(example, options = {}) {
 async function loadExample(example, options = {}) {
   const source = example.source || example.slug;
   const examplesDir = options.examplesDir || defaultExamplesDir;
-  const moduleUrl = pathToFileURL(
-    path.join(examplesDir, `${source}.js`),
-  ).href;
+  const moduleUrl = pathToFileURL(path.join(examplesDir, `${source}.js`)).href;
   const module = await import(moduleUrl);
 
   if (typeof module.createExample !== "function") {
@@ -188,9 +187,7 @@ export function isDirectExecution(
   entryPoint = process.argv[1],
   moduleUrl = import.meta.url,
 ) {
-  return (
-    Boolean(entryPoint) && moduleUrl === pathToFileURL(entryPoint).href
-  );
+  return Boolean(entryPoint) && moduleUrl === pathToFileURL(entryPoint).href;
 }
 
 if (isDirectExecution()) {

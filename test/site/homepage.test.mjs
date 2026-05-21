@@ -12,7 +12,10 @@ import { navItems } from "../../site/src/data/nav.js";
 }
 
 {
-  const homepagePath = path.resolve(process.cwd(), "site/src/pages/index.astro");
+  const homepagePath = path.resolve(
+    process.cwd(),
+    "site/src/pages/index.astro",
+  );
   const homepageSource = readFileSync(homepagePath, "utf8");
 
   [

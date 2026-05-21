@@ -5,7 +5,10 @@ import { examples } from "../../site/src/data/examples.js";
 
 const root = process.cwd();
 const detailPath = path.resolve(root, "site/src/pages/examples/[slug].astro");
-const editorPath = path.resolve(root, "site/src/components/ExampleEditor.astro");
+const editorPath = path.resolve(
+  root,
+  "site/src/components/ExampleEditor.astro",
+);
 const packagePath = path.resolve(root, "package.json");
 const stylesheetPath = path.resolve(root, "site/src/styles/global.css");
 const runnerPath = path.resolve(

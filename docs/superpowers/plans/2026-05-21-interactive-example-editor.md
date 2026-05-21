@@ -24,6 +24,7 @@
 ## Task 1: Add Failing Site Editor Tests
 
 **Files:**
+
 - Create: `test/site/example-editor.test.mjs`
 - Modify: `test/run.mjs`
 
@@ -39,7 +40,10 @@ import { examples } from "../../site/src/data/examples.js";
 
 const root = process.cwd();
 const detailPath = path.resolve(root, "site/src/pages/examples/[slug].astro");
-const editorPath = path.resolve(root, "site/src/components/ExampleEditor.astro");
+const editorPath = path.resolve(
+  root,
+  "site/src/components/ExampleEditor.astro",
+);
 const runnerPath = path.resolve(
   root,
   "site/src/pages/examples/editor-runner.astro",
@@ -74,7 +78,11 @@ const snippetDir = path.resolve(root, "site/src/data/example-snippets");
     );
 
     const snippet = readFileSync(snippetPath, "utf8");
-    assert.match(snippet, /\breturn\b/, `${example.slug} snippet should return a node`);
+    assert.match(
+      snippet,
+      /\breturn\b/,
+      `${example.slug} snippet should return a node`,
+    );
     assert.doesNotMatch(
       snippet,
       /^\s*import\s/m,
@@ -142,6 +150,7 @@ Expected: FAIL because `ExampleEditor.astro`, `editor-runner.astro`, and snippet
 ## Task 2: Add Snippet Data
 
 **Files:**
+
 - Create: `site/src/data/example-snippets/upset.txt`
 - Create: `site/src/data/example-snippets/dropoutseer.txt`
 - Create: `site/src/data/example-snippets/olympic.txt`
@@ -242,6 +251,7 @@ Expected: still FAIL because the editor component and runner page are not implem
 ## Task 3: Add Editor Component and Runner
 
 **Files:**
+
 - Create: `site/src/components/ExampleEditor.astro`
 - Create: `site/src/pages/examples/editor-runner.astro`
 
@@ -322,6 +332,7 @@ Expected: FAIL until the detail page uses `ExampleEditor` and removes the static
 ## Task 4: Wire the Detail Page and Styles
 
 **Files:**
+
 - Modify: `site/src/pages/examples/[slug].astro`
 - Modify: `site/src/styles/global.css`
 
@@ -378,6 +389,7 @@ Expected: PASS.
 ## Task 5: Verify the Full Change
 
 **Files:**
+
 - No additional code changes expected.
 
 - [ ] **Step 1: Run the full Node test suite**
