@@ -36,6 +36,7 @@ pnpm run lint
 - Prefer existing layout, renderer, and mark abstractions over adding parallel systems.
 - Keep changes focused. This library is small, and most behavior is covered by direct tests in `test/`.
 - Do NOT use web environments to verify.
+- Do not offer or use a visual companion for design discussions in this project; keep design collaboration text-only unless the user explicitly changes this instruction.
 
 ## Project Architecture
 
