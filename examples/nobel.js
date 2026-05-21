@@ -1,7 +1,5 @@
 import { chart, repeatY, stackX } from "../src/index.js";
 
-const app = document.getElementById("app");
-
 const fields = [
   {
     name: "Physics",
@@ -177,4 +175,10 @@ const nobelRows = repeatY(fieldNames, nobelRow, {
   paddingOuter: 0,
 });
 
-nobelRows.render(app);
+export function createExample() {
+  return nobelRows;
+}
+
+if (typeof document !== "undefined") {
+  createExample().render(document.getElementById("app"));
+}

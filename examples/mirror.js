@@ -152,9 +152,14 @@ const rightMatrix = chart({
   labelFontSize: 10,
 });
 
-const app = document.getElementById("app");
 const mirror = stackX([leftMatrix, leftBar, rightBar, rightMatrix], {
   margin: 0,
 });
 
-mirror.render(app);
+export function createExample() {
+  return mirror;
+}
+
+if (typeof document !== "undefined") {
+  createExample().render(document.getElementById("app"));
+}

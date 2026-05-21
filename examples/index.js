@@ -86,8 +86,6 @@ genres.forEach((genre) => {
   });
 });
 
-const app = document.getElementById("app");
-
 // 1. Top Bar Chart (Intersection Size)
 const topBarChart = chart({
   data: topBarData,
@@ -199,4 +197,10 @@ const final = stackY([topBarChart, composite, pieRow], {
   align: [null, matrixChart, null],
 });
 
-final.render(app);
+export function createExample() {
+  return final;
+}
+
+if (typeof document !== "undefined") {
+  createExample().render(document.getElementById("app"));
+}

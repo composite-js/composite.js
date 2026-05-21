@@ -11,22 +11,6 @@ import {
   stackX,
 } from "../src/index.js";
 
-const app = document.getElementById("app");
-
-const style = document.createElement("style");
-style.textContent = `
-  body {
-    margin: 0;
-    font-family: Georgia, "Times New Roman", serif;
-    background: #fff;
-  }
-
-  #app {
-    padding: 18px 24px;
-  }
-`;
-document.head.appendChild(style);
-
 const weeks = Array.from({ length: 10 }, (_, index) => index);
 const groups = [
   { id: "steady", size: 4, dropoutStart: 10 },
@@ -179,4 +163,27 @@ const bars = chart({
   showLabels: false,
 });
 
-stackX([sequence, flow, bars]).render(app);
+export function createExample() {
+  return stackX([sequence, flow, bars]);
+}
+
+function applyExampleStyle() {
+  const style = document.createElement("style");
+  style.textContent = `
+    body {
+      margin: 0;
+      font-family: Georgia, "Times New Roman", serif;
+      background: #fff;
+    }
+
+    #app {
+      padding: 18px 24px;
+    }
+  `;
+  document.head.appendChild(style);
+}
+
+if (typeof document !== "undefined") {
+  applyExampleStyle();
+  createExample().render(document.getElementById("app"));
+}

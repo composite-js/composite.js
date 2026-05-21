@@ -13,11 +13,6 @@ import {
   text,
 } from "../src/index.js";
 
-const app = document.getElementById("app");
-app.innerHTML = "";
-document.body.style.margin = "0";
-document.body.style.fontFamily = "Arial, Helvetica, sans-serif";
-
 const dates = [
   "18-Jun",
   "25-Jun",
@@ -219,4 +214,18 @@ const figure = stackX([streamGraph, rightColumn], {
   align: [null, boxplotGroups],
 });
 
-figure.render(app);
+export function createExample() {
+  return figure;
+}
+
+function applyExampleStyle() {
+  document.body.style.margin = "0";
+  document.body.style.fontFamily = "Arial, Helvetica, sans-serif";
+}
+
+if (typeof document !== "undefined") {
+  const app = document.getElementById("app");
+  app.innerHTML = "";
+  applyExampleStyle();
+  createExample().render(app);
+}
