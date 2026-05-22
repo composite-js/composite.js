@@ -11,10 +11,20 @@ const hrefFor = (href) => `${base}${href.replace(/^\//, "")}`;
     docsNavItems.map((item) => {
       const href = hrefFor(item.href);
       const isCurrent = currentPath === href;
+      const showChildren = isCurrent && item.children?.length;
       return (
-        <a href={href} aria-current={isCurrent ? "page" : undefined}>
-          {item.label}
-        </a>
+        <div class="docs-nav__group">
+          <a href={href} aria-current={isCurrent ? "page" : undefined}>
+            {item.label}
+          </a>
+          {showChildren && (
+            <div class="docs-nav__children" aria-label={`${item.label} sections`}>
+              {item.children.map((child) => (
+                <a href={hrefFor(child.href)}>{child.label}</a>
+              ))}
+            </div>
+          )}
+        </div>
       );
     })
   }

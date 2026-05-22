@@ -487,6 +487,11 @@ a {
   gap: 8px;
 }
 
+.docs-nav__group {
+  display: grid;
+  gap: 4px;
+}
+
 .docs-nav a {
   border-left: 3px solid transparent;
   padding: 8px 10px;
@@ -497,6 +502,18 @@ a {
   border-left-color: #2563eb;
   color: #0f172a;
   font-weight: 700;
+}
+
+.docs-nav__children {
+  display: grid;
+  gap: 2px;
+  margin-left: 12px;
+}
+
+.docs-nav__children a {
+  padding: 5px 10px;
+  color: #64748b;
+  font-size: 0.86rem;
 }
 
 .docs-content {

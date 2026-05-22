@@ -26,6 +26,7 @@ import "./site/homepage.test.mjs";
 import "./site/example-assets.test.mjs";
 import "./site/example-card-style.test.mjs";
 import "./site/code-block-style.test.mjs";
+import "./site/docs-nav.test.mjs";
 import "./site/marks-docs.test.mjs";
 import "./site/example-editor.test.mjs";
 import "./site/example-snippet-sync.test.mjs";
