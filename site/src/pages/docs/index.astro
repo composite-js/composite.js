@@ -1,15 +1,86 @@
 ---
 import DocsLayout from "../../layouts/DocsLayout.astro";
-import PlaceholderViz from "../../components/PlaceholderViz.astro";
 import { docsCards } from "../../data/docs.js";
 
 const base = import.meta.env.BASE_URL;
 const hrefFor = (href) => `${base}${href.replace(/^\//, "")}`;
+
+const layoutNodeCode = `import { chart, stackY } from "composite-js";
+
+const top = chart({
+  mark: "bar",
+  data,
+  encoding: { x: "category", y: "value" },
+});
+
+const matrix = chart({
+  mark: "matrix",
+  data: cells,
+  encoding: { x: "item", group: "set", y: "active" },
+});
+
+const view = stackY([top, matrix], { align: [matrix, matrix] });
+view.render(document.querySelector("#app"));`;
 ---
 
-<DocsLayout title="Documentation placeholder">
-  <PlaceholderViz label="Docs overview placeholder" />
-  <div class="example-grid" style="margin-top: 16px;">
-    {docsCards.map((item) => <a class="example-card" href={hrefFor(item.href)}>{item.label}</a>)}
+<DocsLayout title="Documentation | composite.js">
+  <div class="docs-content">
+    <header class="docs-hero">
+      <p class="eyebrow">Documentation</p>
+      <h1>Build composite visualizations from layout nodes</h1>
+      <p>
+        composite.js represents a visualization as a tree. Leaf nodes render
+        individual charts, and composition nodes arrange those leaves through
+        stacking, repetition, alignment, and embedding.
+      </p>
+      <pre class="docs-code"><code>{layoutNodeCode}</code></pre>
+    </header>
+
+    <section class="docs-section">
+      <h2>Recommended path</h2>
+      <p>
+        Start with installation and rendering, then learn the layout-node model
+        before using the API and marks reference. The pages below are ordered
+        for a first pass through the library.
+      </p>
+      <div class="docs-entry-grid">
+        {
+          docsCards.map((item) => (
+            <a class="docs-entry" href={hrefFor(item.href)}>
+              <span>{item.label}</span>
+              <small>{item.summary}</small>
+            </a>
+          ))
+        }
+      </div>
+    </section>
+
+    <section class="docs-section">
+      <h2>What the grammar gives you</h2>
+      <dl class="api-list">
+        <div>
+          <dt>Chart leaves</dt>
+          <dd>
+            Create browser-rendered charts with <code>chart()</code> and the
+            supported mark definitions.
+          </dd>
+        </div>
+        <div>
+          <dt>Recursive layouts</dt>
+          <dd>
+            Compose charts and compositions with <code>stackX()</code>,
+            <code>stackY()</code>, <code>repeatX()</code>, and
+            <code>repeatY()</code>.
+          </dd>
+        </div>
+        <div>
+          <dt>Coordinated views</dt>
+          <dd>
+            Align nested views or embed repeated children into container slots
+            to build richer analytical displays.
+          </dd>
+        </div>
+      </dl>
+    </section>
   </div>
 </DocsLayout>

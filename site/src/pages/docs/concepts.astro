@@ -1,8 +1,103 @@
 ---
 import DocsLayout from "../../layouts/DocsLayout.astro";
-import PlaceholderViz from "../../components/PlaceholderViz.astro";
+
+const treeCode = `const top = chart({
+  mark: "bar",
+  data: totals,
+  encoding: { x: "id", y: "value" },
+});
+
+const matrix = chart({
+  mark: "matrix",
+  data: cells,
+  encoding: { x: "id", group: "set", y: "active" },
+});
+
+const body = stackX([leftBars, matrix, detailChart]);
+const view = stackY([top, body], { align: [matrix, matrix] });`;
+
+const embedCode = `const events = repeat(eventRows, (event) =>
+  chart({
+    mark: "pie",
+    data: event.parts,
+    encoding: { x: "category", y: "value" },
+  }),
+);
+
+const sequence = embed(
+  sequenceContainer({ xDomain: weeks, yDomain: learners }),
+  events,
+  { x: "week", y: "learner", key: "id", width: 32, height: 32 },
+);`;
 ---
 
-<DocsLayout title="Concepts placeholder">
-  <PlaceholderViz label="Concepts page placeholder" />
+<DocsLayout title="Core Concepts | composite.js">
+  <div class="docs-content">
+    <header class="docs-hero">
+      <p class="eyebrow">Concepts</p>
+      <h1>The layout tree</h1>
+      <p>
+        composite.js uses one layout-node contract for charts and compositions.
+        That shared contract lets you render one chart, stack several charts, or
+        treat the result as a child inside a larger view.
+      </p>
+    </header>
+
+    <section class="docs-section">
+      <h2>Layout nodes</h2>
+      <p>
+        A layout node is anything created by the public factory helpers. Chart
+        leaves come from <code>chart()</code>, annotations come from
+        <code>text()</code>, framed groups come from <code>frame()</code>, and
+        composition nodes come from stack, repeat, and embed helpers.
+      </p>
+      <p>
+        Composition helpers expect layout nodes. Wrap chart configuration with
+        <code>chart(&#123;...&#125;)</code> before passing it into a stack or
+        repeat.
+      </p>
+    </section>
+
+    <section class="docs-section">
+      <h2>Chart leaves</h2>
+      <p>
+        A chart leaf owns a mark, its data rows, and an encoding object. Encoding
+        values are field names from your rows, while keys such as <code>x</code>,
+        <code>y</code>, <code>group</code>, and <code>size</code> describe
+        visual channels.
+      </p>
+    </section>
+
+    <section class="docs-section">
+      <h2>Recursive composition</h2>
+      <p>
+        <code>stackX()</code> arranges nodes left to right and
+        <code>stackY()</code> arranges nodes top to bottom. Because stacks are
+        nodes too, a stack can contain charts, repeats, framed nodes, or other
+        stacks.
+      </p>
+      <pre class="docs-code"><code>{treeCode}</code></pre>
+    </section>
+
+    <section class="docs-section">
+      <h2>Repeats and embedding</h2>
+      <p>
+        <code>repeatX()</code> and <code>repeatY()</code> create small multiples
+        along one axis. Use directionless <code>repeat()</code> with
+        <code>embed()</code> when repeated children should be placed into slots
+        from a container such as <code>sequenceContainer()</code>.
+      </p>
+      <pre class="docs-code"><code>{embedCode}</code></pre>
+    </section>
+
+    <section class="docs-section">
+      <h2>Alignment basics</h2>
+      <p>
+        Stack alignment lets a child align against a nested node instead of the
+        child as a whole. In an UpSet-style layout, for example, a top bar chart
+        can align to the matrix inside the row beneath it while the full row
+        still includes side charts.
+      </p>
+    </section>
+  </div>
 </DocsLayout>

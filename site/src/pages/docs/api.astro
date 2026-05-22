@@ -1,12 +1,136 @@
 ---
 import DocsLayout from "../../layouts/DocsLayout.astro";
-import CodePanel from "../../components/CodePanel.astro";
-import PlaceholderViz from "../../components/PlaceholderViz.astro";
+
+const chartCode = `const bars = chart({
+  mark: "bar",
+  data,
+  encoding: { x: "category", y: "value" },
+  width: 360,
+  height: 240,
+});`;
+
+const stackCode = `const row = stackX([leftBars, matrix, details], { margin: 12 });
+const view = stackY([topBars, row], {
+  align: [matrix, matrix],
+});`;
+
+const repeatCode = `const pies = repeatX(ids, (id) =>
+  chart({
+    mark: "pie",
+    data: detailsById[id],
+    encoding: { x: "category", y: "value" },
+  }),
+  { paddingInner: 0.2 },
+);`;
+
+const embedCode = `const repeated = repeat(events, (event) =>
+  chart({
+    mark: "bubble",
+    data: event.points,
+    encoding: { x: "x", y: "y", size: "size" },
+  }),
+);
+
+const view = embed(
+  sequenceContainer({ xDomain: weeks, yDomain: learners }),
+  repeated,
+  { x: "week", y: "learner", key: "id", width: 48, height: 48 },
+);`;
+
+const annotationCode = `const label = text({
+  text: "Intersections",
+  width: 120,
+  height: 24,
+  fontWeight: 700,
+});
+
+const boxed = frame(stackY([label, matrix]), {
+  padding: 8,
+  stroke: "#94a3b8",
+});`;
+
+const renderCode = `const root = document.querySelector("#app");
+view.render(root, { width: 720, height: 420 });
+
+const svg = await view.export({ format: "svg" });
+await view.export({ format: "png", path: "chart.png" });`;
 ---
 
-<DocsLayout title="API placeholder">
-  <PlaceholderViz label="API page placeholder" />
-  <div style="margin-top: 16px;">
-    <CodePanel />
+<DocsLayout title="Composition API | composite.js">
+  <div class="docs-content">
+    <header class="docs-hero">
+      <p class="eyebrow">API</p>
+      <h1>Factory functions for layout trees</h1>
+      <p>
+        The primary API is a small set of factory helpers. They create layout
+        nodes, compose those nodes, and render or export the resulting tree.
+      </p>
+    </header>
+
+    <section class="docs-section">
+      <h2><code>chart(config)</code></h2>
+      <p>
+        Creates a chart leaf node. The config includes <code>mark</code>,
+        <code>data</code>, <code>encoding</code>, and optional sizing, color,
+        padding, label, and axis options supported by the selected mark.
+      </p>
+      <pre class="docs-code"><code>{chartCode}</code></pre>
+    </section>
+
+    <section class="docs-section">
+      <h2><code>stackX(nodes, options)</code> and <code>stackY(nodes, options)</code></h2>
+      <p>
+        Arrange layout nodes horizontally or vertically. Pass only layout nodes,
+        not raw chart instances. Use <code>margin</code> for spacing and
+        <code>align</code> when a stack child should align to a nested node.
+      </p>
+      <pre class="docs-code"><code>{stackCode}</code></pre>
+    </section>
+
+    <section class="docs-section">
+      <h2><code>repeatX(domain, fn, options)</code> and <code>repeatY(domain, fn, options)</code></h2>
+      <p>
+        Generate repeated child nodes along one axis. The factory callback
+        receives each domain value and returns a layout node. Use
+        <code>paddingInner</code>, <code>paddingOuter</code>, <code>width</code>,
+        and <code>height</code> to tune repeat sizing.
+      </p>
+      <pre class="docs-code"><code>{repeatCode}</code></pre>
+    </section>
+
+    <section class="docs-section">
+      <h2>
+        <code>repeat(domain, fn, options)</code>, <code>embed(container, repeated, mapping)</code>,
+        and <code>sequenceContainer(options)</code>
+      </h2>
+      <p>
+        Use directionless repeats when children should be placed into container
+        slots. <code>sequenceContainer()</code> creates slots from
+        <code>xDomain</code> and <code>yDomain</code>; <code>embed()</code>
+        maps repeated data fields onto those slots.
+      </p>
+      <pre class="docs-code"><code>{embedCode}</code></pre>
+    </section>
+
+    <section class="docs-section">
+      <h2><code>text(config)</code> and <code>frame(node, options)</code></h2>
+      <p>
+        <code>text()</code> creates SVG text that participates in layout.
+        <code>frame()</code> wraps an existing layout node with padding and a
+        border, which is useful for grouping or highlighting a composed region.
+      </p>
+      <pre class="docs-code"><code>{annotationCode}</code></pre>
+    </section>
+
+    <section class="docs-section">
+      <h2><code>.render(container, options)</code> and <code>.export(options)</code></h2>
+      <p>
+        Render any layout node into a browser DOM element with
+        <code>.render()</code>. In Node-based workflows, <code>.export()</code>
+        can serialize SVG or write SVG/PNG output depending on the requested
+        format and path.
+      </p>
+      <pre class="docs-code"><code>{renderCode}</code></pre>
+    </section>
   </div>
 </DocsLayout>

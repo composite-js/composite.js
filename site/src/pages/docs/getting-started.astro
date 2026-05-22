@@ -1,0 +1,94 @@
+---
+import DocsLayout from "../../layouts/DocsLayout.astro";
+
+const installCode = `pnpm add composite-js`;
+
+const createCode = `import { chart, stackY } from "composite-js";
+
+const totals = [
+  { category: "A", value: 12 },
+  { category: "B", value: 18 },
+];
+
+const trend = [
+  { year: 2023, value: 8 },
+  { year: 2024, value: 14 },
+  { year: 2025, value: 17 },
+];
+
+const bars = chart({
+  mark: "bar",
+  data: totals,
+  encoding: { x: "category", y: "value" },
+});
+
+const line = chart({
+  mark: "line",
+  data: trend,
+  encoding: { x: "year", y: "value" },
+});
+
+const view = stackY([bars, line], { margin: 16 });`;
+
+const renderCode = `<div id="app"></div>
+
+<script type="module">
+  view.render(document.querySelector("#app"));
+</script>`;
+---
+
+<DocsLayout title="Getting Started | composite.js">
+  <div class="docs-content">
+    <header class="docs-hero">
+      <p class="eyebrow">Getting Started</p>
+      <h1>Create and render your first composite view</h1>
+      <p>
+        Install the package, build chart leaves with <code>chart()</code>, pass
+        those leaves into composition helpers, and render the resulting layout
+        node into a browser element.
+      </p>
+    </header>
+
+    <section class="docs-section">
+      <h2>Install</h2>
+      <pre class="docs-code"><code>{installCode}</code></pre>
+    </section>
+
+    <section class="docs-section">
+      <h2>Create chart leaves</h2>
+      <p>
+        Each chart leaf uses a mark, rows of data, and an encoding object. The
+        encoding keys are visual channels; the values are field names from your
+        rows.
+      </p>
+      <pre class="docs-code"><code>{createCode}</code></pre>
+    </section>
+
+    <section class="docs-section">
+      <h2>Render</h2>
+      <p>
+        Every layout node exposes <code>render()</code>. When you render a
+        composed node, composite.js measures and draws the whole tree.
+      </p>
+      <pre class="docs-code"><code>{renderCode}</code></pre>
+    </section>
+
+    <section class="docs-section">
+      <h2>Next steps</h2>
+      <dl class="api-list">
+        <div>
+          <dt>Learn the model</dt>
+          <dd>Read Concepts for layout nodes, repeats, embedding, and alignment.</dd>
+        </div>
+        <div>
+          <dt>Check signatures</dt>
+          <dd>Use the API page when you need function names, options, or render/export behavior.</dd>
+        </div>
+        <div>
+          <dt>Choose marks</dt>
+          <dd>Use the Marks page to match each chart type with its required encoding channels.</dd>
+        </div>
+      </dl>
+    </section>
+  </div>
+</DocsLayout>

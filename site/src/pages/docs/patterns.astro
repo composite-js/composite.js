@@ -1,0 +1,103 @@
+---
+import DocsLayout from "../../layouts/DocsLayout.astro";
+
+const recipes = [
+  {
+    title: "Vertical stack",
+    description:
+      "Use stackY when several views should read from top to bottom, such as a total chart above a matrix.",
+    code: `const view = stackY([topBars, matrix, pieRow], { margin: 12 });`,
+  },
+  {
+    title: "Nested aligned layout",
+    description:
+      "Use align when a stack child should line up with a nested node instead of the whole child.",
+    code: `const body = stackX([leftBars, matrix, detailChart]);
+
+const view = stackY([topBars, body], {
+  align: [matrix, matrix],
+});`,
+  },
+  {
+    title: "Small multiples",
+    description:
+      "Use repeatX or repeatY when each domain value produces the same kind of child view.",
+    code: `const pies = repeatX(ids, (id) =>
+  chart({
+    mark: "pie",
+    data: detailById[id],
+    encoding: { x: "category", y: "value" },
+  }),
+);`,
+  },
+  {
+    title: "Embedded sequence layout",
+    description:
+      "Use repeat with embed when children should be placed into slots from a container.",
+    code: `const repeated = repeat(events, (event) =>
+  chart({
+    mark: "bubble",
+    data: event.points,
+    encoding: { x: "x", y: "y", size: "size" },
+  }),
+);
+
+const sequence = embed(
+  sequenceContainer({ xDomain: weeks, yDomain: learners }),
+  repeated,
+  { x: "week", y: "learner", key: "id", width: 40, height: 40 },
+);`,
+  },
+  {
+    title: "Annotations",
+    description:
+      "Use text nodes for labels that need to participate in the same layout as charts.",
+    code: `const heading = text({
+  text: "Completion by cohort",
+  width: 180,
+  height: 24,
+  fontWeight: 700,
+});
+
+const view = stackY([heading, bars]);`,
+  },
+  {
+    title: "Framed groups",
+    description:
+      "Wrap any node with frame when a composed region needs visual grouping or emphasis.",
+    code: `const framedMatrix = frame(matrix, {
+  padding: 8,
+  stroke: "#94a3b8",
+  strokeDasharray: "4 3",
+});`,
+  },
+];
+---
+
+<DocsLayout title="Composition Patterns | composite.js">
+  <div class="docs-content">
+    <header class="docs-hero">
+      <p class="eyebrow">Patterns</p>
+      <h1>Common composition recipes</h1>
+      <p>
+        These snippets show the smallest useful shape for common composite
+        visualization patterns. Each recipe returns or uses layout nodes that
+        can be nested into larger views.
+      </p>
+    </header>
+
+    <section class="docs-section mark-grid" aria-label="Composition recipes">
+      {
+        recipes.map((recipe) => (
+          <article class="mark-reference">
+            <div class="mark-reference__header">
+              <h2>{recipe.title}</h2>
+              <p>{recipe.description}</p>
+            </div>
+            <pre class="docs-code"><code>{recipe.code}</code></pre>
+          </article>
+        ))
+      }
+    </section>
+  </div>
+</DocsLayout>
