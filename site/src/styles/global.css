@@ -499,10 +499,155 @@ a {
   font-weight: 700;
 }
 
+.docs-content {
+  max-width: 860px;
+}
+
+.docs-hero,
+.docs-section {
+  margin-bottom: 32px;
+}
+
+.docs-hero h1,
+.docs-section h2,
+.mark-reference h2 {
+  margin: 0 0 12px;
+  color: #0f172a;
+  letter-spacing: 0;
+}
+
+.docs-hero h1 {
+  font-size: 2.4rem;
+  line-height: 1.1;
+}
+
+.docs-section h2,
+.mark-reference h2 {
+  font-size: 1.35rem;
+}
+
+.docs-content p,
+.api-list dd {
+  color: #475569;
+  line-height: 1.65;
+}
+
+.docs-content p {
+  margin: 0 0 14px;
+}
+
+.docs-content code {
+  border: 1px solid #d8dee9;
+  background: #ffffff;
+  color: #0f172a;
+  padding: 1px 5px;
+  font-family:
+    "SFMono-Regular", Consolas, "Liberation Mono", Menlo, ui-monospace,
+    monospace;
+  font-size: 0.9em;
+}
+
+.docs-code {
+  border: 1px solid #d8dee9;
+  background: #ffffff;
+  color: #172033;
+  margin: 16px 0 0;
+  overflow: auto;
+  padding: 16px;
+  font-size: 0.86rem;
+  line-height: 1.55;
+}
+
+.docs-code code {
+  border: 0;
+  background: transparent;
+  color: inherit;
+  padding: 0;
+}
+
+.docs-table-wrap {
+  overflow-x: auto;
+}
+
+.api-table {
+  width: 100%;
+  min-width: 680px;
+  border-collapse: collapse;
+  background: #ffffff;
+  border: 1px solid #d8dee9;
+}
+
+.api-table th,
+.api-table td {
+  border-bottom: 1px solid #d8dee9;
+  padding: 12px;
+  text-align: left;
+  vertical-align: top;
+}
+
+.api-table th {
+  background: #f8fafc;
+  color: #0f172a;
+  font-size: 0.82rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.api-table td {
+  color: #475569;
+  line-height: 1.5;
+}
+
+.api-table tr:last-child td {
+  border-bottom: 0;
+}
+
+.api-list {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+}
+
+.api-list div {
+  display: grid;
+  grid-template-columns: 180px minmax(0, 1fr);
+  gap: 16px;
+  border-top: 1px solid #d8dee9;
+  padding-top: 12px;
+}
+
+.api-list dt {
+  color: #0f172a;
+  font-weight: 700;
+}
+
+.api-list dd {
+  margin: 0;
+}
+
+.mark-grid {
+  display: grid;
+  gap: 18px;
+}
+
+.mark-reference {
+  border: 1px solid #d8dee9;
+  background: #ffffff;
+  padding: 18px;
+}
+
+.mark-reference__header p {
+  margin-bottom: 0;
+}
+
+.api-list--compact {
+  margin-top: 16px;
+}
+
 .code-panel {
   border: 1px solid #d8dee9;
-  background: #101827;
-  color: #dbeafe;
+  background: #ffffff;
+  color: #172033;
   min-height: 180px;
   padding: 16px;
   overflow: auto;
@@ -567,5 +712,10 @@ a {
   .example-editor__preview {
     height: min(52vh, 460px);
     min-height: 360px;
+  }
+
+  .api-list div {
+    grid-template-columns: 1fr;
+    gap: 6px;
   }
 }

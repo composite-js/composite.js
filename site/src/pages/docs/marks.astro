@@ -1,8 +1,403 @@
 ---
 import DocsLayout from "../../layouts/DocsLayout.astro";
-import PlaceholderViz from "../../components/PlaceholderViz.astro";
+
+const chartShapeLabel = "chart({ mark, data, encoding, ...options })";
+
+const chartShapeCode = `chart({
+  mark: "bar",
+  data,
+  encoding: { x: "category", y: "value" },
+  width: 360,
+  height: 240,
+});`;
+
+const markSections = [
+  {
+    id: "bar",
+    summary: "Single-series bar chart.",
+    required: ["x", "y"],
+    optional: ["xDomain", "yDomain"],
+    options: [
+      "direction: vertical or horizontal",
+      "color",
+      "showLabels",
+      "padding",
+      "axis visibility, names, and positions",
+    ],
+    example: `chart({
+  mark: "bar",
+  data: sales,
+  encoding: { x: "category", y: "value" },
+  color: "steelblue",
+});`,
+  },
+  {
+    id: "groupbar",
+    summary: "Grouped bars for comparing series inside each category.",
+    required: ["x", "y", "group"],
+    optional: ["xDomain", "yDomain", "groupDomain"],
+    options: [
+      "direction: vertical or horizontal",
+      "colorScheme",
+      "showLabels",
+      "padding, including groupInner",
+      "axis visibility, names, and positions",
+    ],
+    example: `chart({
+  mark: "groupbar",
+  data: rows,
+  encoding: { x: "quarter", y: "count", group: "series" },
+  colorScheme: ["#2563eb", "#f97316"],
+});`,
+  },
+  {
+    id: "stackbar",
+    summary: "Stacked bars for totals split by a grouped series.",
+    required: ["x", "y", "group"],
+    optional: ["xDomain", "yDomain", "groupDomain"],
+    options: [
+      "direction: vertical or horizontal",
+      "colorScheme",
+      "showLabels",
+      "padding",
+      "axis visibility, names, and positions",
+    ],
+    example: `chart({
+  mark: "stackbar",
+  data: rows,
+  encoding: { x: "quarter", y: "count", group: "segment" },
+  showLabels: true,
+});`,
+  },
+  {
+    id: "area",
+    summary: "Filled area chart for continuous x/y data.",
+    required: ["x", "y"],
+    optional: ["xDomain", "yDomain"],
+    options: ["color", "fillOpacity", "strokeWidth", "showPoints"],
+    example: `chart({
+  mark: "area",
+  data: timeline,
+  encoding: { x: "year", y: "rate" },
+  fillOpacity: 0.3,
+});`,
+  },
+  {
+    id: "line",
+    summary: "Line chart for continuous x/y data.",
+    required: ["x", "y"],
+    optional: ["xDomain", "yDomain"],
+    options: ["axis visibility, names, and positions"],
+    example: `chart({
+  mark: "line",
+  data: timeline,
+  encoding: { x: "year", y: "value" },
+});`,
+  },
+  {
+    id: "scatter",
+    summary: "Scatter plot for numeric x/y points.",
+    required: ["x", "y"],
+    optional: ["xDomain", "yDomain"],
+    options: ["color", "radius", "axis visibility, names, and positions"],
+    example: `chart({
+  mark: "scatter",
+  data: points,
+  encoding: { x: "score", y: "cost" },
+  radius: 5,
+});`,
+  },
+  {
+    id: "bubble",
+    summary: "Bubble chart with optional radius encoding.",
+    required: ["x", "y"],
+    optional: ["size", "xDomain", "yDomain"],
+    options: ["color", "maxRadius", "padding", "axis visibility, names, and positions"],
+    example: `chart({
+  mark: "bubble",
+  data: points,
+  encoding: { x: "region", y: "group", size: "population" },
+  maxRadius: 18,
+});`,
+  },
+  {
+    id: "box",
+    summary: "Box plot grouped by one categorical channel.",
+    required: ["x", "y"],
+    optional: ["xDomain", "yDomain"],
+    options: [
+      "direction: vertical or horizontal",
+      "color",
+      "boxWidth",
+      "whiskerStrokeDasharray",
+      "valueRangePadding",
+      "outlierFill and outlierOpacity",
+      "padding",
+    ],
+    example: `chart({
+  mark: "box",
+  data: samples,
+  encoding: { x: "group", y: "value" },
+  boxWidth: 0.55,
+});`,
+  },
+  {
+    id: "dumbbell",
+    summary: "Paired value comparison for each category.",
+    required: ["x", "y"],
+    optional: ["xDomain", "yDomain"],
+    options: [
+      "direction: vertical or horizontal",
+      "colors or colorScheme",
+      "lineColor",
+      "lineWidth",
+      "radius",
+      "padding",
+    ],
+    example: `chart({
+  mark: "dumbbell",
+  data: pairedRows,
+  encoding: { x: "value", y: "category" },
+  colors: ["#2563eb", "#ef4444"],
+});`,
+    note: "Each category must have exactly two rows.",
+  },
+  {
+    id: "matrix",
+    summary: "Long-form matrix cells for set membership or scalar intensity.",
+    required: ["x", "group", "y"],
+    optional: ["xDomain", "groupDomain"],
+    options: [
+      "color",
+      "showXAxis and showYAxis",
+      "xAxisPos and yAxisPos",
+      "labelFontSize",
+      "circleRadius",
+      "stripe",
+      "padding",
+    ],
+    example: `chart({
+  mark: "matrix",
+  data: cells,
+  encoding: { x: "item", group: "set", y: "active" },
+  showYAxis: true,
+});`,
+    note: "Use long-cell data. The y field should contain booleans or numbers from 0 to 1.",
+  },
+  {
+    id: "pie",
+    summary: "Pie or donut chart for part-to-whole data.",
+    required: ["x", "y"],
+    optional: ["xDomain"],
+    options: ["colorScheme", "showLabels", "innerRadius"],
+    example: `chart({
+  mark: "pie",
+  data: shares,
+  encoding: { x: "category", y: "value" },
+  innerRadius: 36,
+});`,
+  },
+  {
+    id: "pac",
+    summary: "Proportional area chart using circles or squares.",
+    required: ["x", "y"],
+    optional: ["xDomain"],
+    options: [
+      "direction: vertical or horizontal",
+      "shape: circle or square",
+      "color, colors, or colorScheme",
+      "opacity",
+      "padding",
+      "axis visibility",
+    ],
+    example: `chart({
+  mark: "pac",
+  data: totals,
+  encoding: { x: "category", y: "count" },
+  shape: "square",
+});`,
+  },
+  {
+    id: "flow",
+    summary: "Flow diagram connecting x categories to group categories.",
+    required: ["x", "group", "y"],
+    optional: ["xDomain", "yDomain", "groupDomain"],
+    options: [
+      "direction: horizontal or vertical",
+      "color or colors",
+      "colorBy: x or group",
+      "opacity",
+      "showLabels, showXLabels, and showGroupLabels",
+      "xLabelName and groupLabelName",
+      "labelFill, labelFontSize, and labelPadding",
+      "minStrokeWidth and maxStrokeWidth",
+    ],
+    example: `chart({
+  mark: "flow",
+  data: links,
+  encoding: { x: "origin", group: "destination", y: "count" },
+  colorBy: "group",
+});`,
+  },
+  {
+    id: "stream",
+    summary: "Stream graph for grouped values across an ordered x domain.",
+    required: ["x", "y", "group"],
+    optional: ["xDomain", "yDomain", "groupDomain"],
+    options: [
+      "colorScheme or colors",
+      "opacity",
+      "curve",
+      "direction: horizontal or vertical",
+      "axis visibility",
+    ],
+    example: `chart({
+  mark: "stream",
+  data: rows,
+  encoding: { x: "week", y: "value", group: "topic" },
+  opacity: 0.8,
+});`,
+  },
+];
+
+const formatFields = (fields) => fields.join(", ");
 ---
 
-<DocsLayout title="Marks placeholder">
-  <PlaceholderViz label="Marks page placeholder" />
+<DocsLayout title="Marks API | composite.js">
+  <div class="docs-content">
+    <header class="docs-hero">
+      <p class="eyebrow">Marks API</p>
+      <h1>Chart marks</h1>
+      <p>
+        A mark is the rendering layer inside a chart leaf. Create one with
+        <code>{chartShapeLabel}</code>, then pass the chart node into layout
+        operators such as <code>stackX</code>, <code>stackY</code>,
+        <code>repeatX</code>, or <code>embed</code>.
+      </p>
+      <pre class="docs-code"><code>{chartShapeCode}</code></pre>
+    </header>
+
+    <section class="docs-section">
+      <h2>Encoding channels</h2>
+      <p>
+        Encoding keys describe visual channels. Use <code>x</code>,
+        <code>y</code> and <code>group</code> as channel
+        keys. Domain overrides live beside those channels as <code>xDomain</code>,
+        <code>yDomain</code>, and <code>groupDomain</code>.
+      </p>
+      <p>
+        Channel values are data field names, so the field names in your rows can
+        be descriptive names from your dataset. For example,
+        <code>{'encoding: { x: "category", y: "value" }'}</code> maps the data fields
+        named <code>category</code> and <code>value</code> onto the <code>x</code>
+        and <code>y</code> channels.
+      </p>
+    </section>
+
+    <section class="docs-section">
+      <h2>Supported marks</h2>
+      <div class="docs-table-wrap">
+        <table class="api-table">
+          <thead>
+            <tr>
+              <th>Mark</th>
+              <th>Required encoding</th>
+              <th>Optional encoding</th>
+              <th>Use</th>
+            </tr>
+          </thead>
+          <tbody>
+            {
+              markSections.map((mark) => (
+                <tr>
+                  <td>
+                    <a href={`#${mark.id}`}>
+                      <code>{mark.id}</code>
+                    </a>
+                  </td>
+                  <td>{formatFields(mark.required)}</td>
+                  <td>{formatFields(mark.optional)}</td>
+                  <td>{mark.summary}</td>
+                </tr>
+              ))
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="docs-section">
+      <h2>Common chart options</h2>
+      <dl class="api-list">
+        <div>
+          <dt><code>mark</code></dt>
+          <dd>One of the supported mark names listed below. Defaults to <code>bar</code>.</dd>
+        </div>
+        <div>
+          <dt><code>data</code></dt>
+          <dd>An array of row objects used by the encoded data fields.</dd>
+        </div>
+        <div>
+          <dt><code>encoding</code></dt>
+          <dd>An object mapping visual channels to data field names and optional domains.</dd>
+        </div>
+        <div>
+          <dt><code>width</code>, <code>height</code>, <code>margin</code></dt>
+          <dd>Content size and margins for the chart leaf.</dd>
+        </div>
+        <div>
+          <dt><code>padding</code></dt>
+          <dd>
+            Band padding for categorical scales. Use <code>inner</code> and
+            <code>outer</code>, or axis-specific <code>xInner</code>,
+            <code>xOuter</code>, <code>yInner</code>, and <code>yOuter</code>.
+          </dd>
+        </div>
+        <div>
+          <dt>Axes</dt>
+          <dd>
+            Marks with axes can use <code>showXAxis</code>, <code>showYAxis</code>,
+            <code>xAxisName</code>, <code>yAxisName</code>, <code>xAxisPos</code>,
+            and <code>yAxisPos</code>.
+          </dd>
+        </div>
+      </dl>
+    </section>
+
+    <section class="docs-section mark-grid" aria-label="Mark reference">
+      {
+        markSections.map((mark) => (
+          <article class="mark-reference" id={mark.id}>
+            <div class="mark-reference__header">
+              <h2>
+                <code>{mark.id}</code>
+              </h2>
+              <p>{mark.summary}</p>
+            </div>
+            <dl class="api-list api-list--compact">
+              <div>
+                <dt>Required encoding</dt>
+                <dd>{formatFields(mark.required)}</dd>
+              </div>
+              <div>
+                <dt>Optional encoding</dt>
+                <dd>{formatFields(mark.optional)}</dd>
+              </div>
+              <div>
+                <dt>Common options</dt>
+                <dd>{mark.options.join("; ")}</dd>
+              </div>
+              {mark.note && (
+                <div>
+                  <dt>Data note</dt>
+                  <dd>{mark.note}</dd>
+                </div>
+              )}
+            </dl>
+            <pre class="docs-code"><code>{mark.example}</code></pre>
+          </article>
+        ))
+      }
+    </section>
+  </div>
 </DocsLayout>
