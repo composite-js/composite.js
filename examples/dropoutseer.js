@@ -168,26 +168,9 @@ const bars = chart({
 });
 
 export function createExample() {
-  return stackX([sequence, flow, bars]);
-}
-
-function applyExampleStyle() {
-  const style = document.createElement("style");
-  style.textContent = `
-    body {
-      margin: 0;
-      font-family: Georgia, "Times New Roman", serif;
-      background: #fff;
-    }
-
-    #app {
-      padding: 18px 24px;
-    }
-  `;
-  document.head.appendChild(style);
+  return stackX([sequence, flow, bars], { margin: 10 });
 }
 
 if (typeof document !== "undefined") {
-  applyExampleStyle();
   createExample().render(document.getElementById("app"));
 }

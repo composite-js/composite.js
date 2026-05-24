@@ -154,6 +154,7 @@ export class LayoutEngine {
     const referenceRect = this.findReferenceAlignment(node);
     const sharedY = referenceRect.y;
     const sharedHeight = referenceRect.height;
+    const stackMargin = typeof node.margin === "number" ? node.margin : 0;
 
     let currentX = 0;
     for (let i = 0; i < node.children.length; i++) {
@@ -163,6 +164,7 @@ export class LayoutEngine {
       const target = this.alignmentTargetForChild(child, node.alignedNodes[i]);
       const targetRect = this.findTargetRectWithin(child, target);
 
+      if (i > 0) currentX += stackMargin;
       currentX += margin.left;
       bbox.translateTo(currentX, sharedY - targetRect.y);
       if (target === child) {
@@ -178,6 +180,7 @@ export class LayoutEngine {
     const referenceRect = this.findReferenceAlignment(node);
     const sharedX = referenceRect.x;
     const sharedWidth = referenceRect.width;
+    const stackMargin = typeof node.margin === "number" ? node.margin : 0;
 
     let currentY = 0;
     for (let i = 0; i < node.children.length; i++) {
@@ -187,6 +190,7 @@ export class LayoutEngine {
       const target = this.alignmentTargetForChild(child, node.alignedNodes[i]);
       const targetRect = this.findTargetRectWithin(child, target);
 
+      if (i > 0) currentY += stackMargin;
       currentY += margin.top;
       bbox.translateTo(sharedX - targetRect.x, currentY);
       if (target === child) {

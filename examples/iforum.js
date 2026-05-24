@@ -210,22 +210,15 @@ const boxplotGroups = repeatY(
 
 const rightColumn = stackY([groupedBars, dateLabels, boxplotGroups]);
 
-const figure = stackX([streamGraph, rightColumn], {
+const iforum = stackX([streamGraph, rightColumn], {
   align: [null, boxplotGroups],
+  margin: 30,
 });
 
 export function createExample() {
-  return figure;
-}
-
-function applyExampleStyle() {
-  document.body.style.margin = "0";
-  document.body.style.fontFamily = "Arial, Helvetica, sans-serif";
+  return iforum;
 }
 
 if (typeof document !== "undefined") {
-  const app = document.getElementById("app");
-  app.innerHTML = "";
-  applyExampleStyle();
-  createExample().render(app);
+  createExample().render(document.getElementById("app"));
 }

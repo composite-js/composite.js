@@ -199,8 +199,9 @@ const boxplotGroups = repeatY(
 
 const rightColumn = stackY([groupedBars, dateLabels, boxplotGroups]);
 
-const figure = stackX([streamGraph, rightColumn], {
+const iforum = stackX([streamGraph, rightColumn], {
   align: [null, boxplotGroups],
+  margin: 30,
 });
 
-return figure;
+return iforum;

@@ -158,4 +158,4 @@ const bars = chart({
   showLabels: false,
 });
 
-return stackX([sequence, flow, bars]);
+return stackX([sequence, flow, bars], { margin: 10 });

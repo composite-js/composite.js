@@ -193,7 +193,9 @@ const pieRow = repeatX(
   },
 );
 
-const composite = stackX([leftBarChart, matrixChart, boxChart, stackBarChart]);
+const composite = stackX([leftBarChart, matrixChart, boxChart, stackBarChart], {
+  margin: 5,
+});
 const final = stackY([topBarChart, composite, pieRow], {
   align: [null, matrixChart, null],
 });
