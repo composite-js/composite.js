@@ -13,7 +13,7 @@ assert.equal(
 );
 assert.equal(
   packageJson.scripts.check,
-  "pnpm run lint && pnpm run build && pnpm run test",
+  "pnpm run lint && pnpm run test && pnpm run build && pnpm run test:dist && pnpm run test:pack",
   "package scripts should include the library check sequence",
 );
 assert.equal(

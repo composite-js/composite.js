@@ -5,50 +5,26 @@ A visualization grammar for building composite visualizations. It provides compo
 ## Requirements
 
 - Node.js (>= 18 recommended)
-- pnpm (or use `npm` / `yarn` by replacing commands below)
+- A browser DOM for rendering visualizations
 
 ## Install
 
-Install dependencies in the repository root:
+Install the package in your application:
 
 ```bash
-pnpm install
+pnpm add composite-js
 ```
 
 With npm:
 
 ```bash
-npm install
+npm install composite-js
 ```
 
-## Scripts
+## Quick Usage
 
-Available npm scripts (see `package.json`):
-
-- `pnpm run dev` — start Vite dev server.
-- `pnpm run build` — build production bundle (outputs to `dist/`).
-- `pnpm run test` — run the Node-based test script `test/run.mjs`.
-- `pnpm run lint` — run ESLint.
-- `pnpm run format` — run Prettier to format code.
-
-Example: start the dev server and open the default Vite port:
-
-```bash
-pnpm run dev
-```
-
-## Example Selection
-
-The dev script loads `examples/upset.js` by default. To open a specific
-example, pass its filename without the `.js` extension:
-
-```bash
-pnpm run dev --example dropoutseer
-```
-
-## Quick Usage (demo in `examples/upset.js`)
-
-The repository includes a demo entry (`examples/upset.js`) that shows how to compose charts: a top bar chart, a left bar chart, a center matrix view, and repeated pie charts.
+Use factory helpers to create layout nodes, compose them, and render the final
+tree into a DOM element.
 
 - Use `chart({...})` to create a leaf layout node for an individual chart.
 - Use `text({...})` to create SVG text annotations that participate in layout.
@@ -65,7 +41,7 @@ Typical flow:
 4. Render the final node to a DOM element.
 
 ```javascript
-import { chart, stackY } from "./src/index.js";
+import { chart, stackY } from "composite-js";
 
 const top = chart({
   mark: "bar",
@@ -85,19 +61,47 @@ view.render(document.getElementById("app"));
 
 Supported chart marks include `bar`, `groupbar`, `stackbar`, `area`, `line`, `matrix`, `scatter`, `box`, `bubble`, `dumbbell`, `pac`, `pie`, `flow`, and `stream`.
 
-## Build & Deploy
+## Repository Development
 
-1. Build the project:
+Install dependencies in the repository root:
+
+```bash
+pnpm install
+```
+
+Available scripts:
+
+- `pnpm run dev` — start the Vite example server.
+- `pnpm run dev --example dropoutseer` — open a specific example from
+  `examples/`.
+- `pnpm run build` — build the package outputs in `dist/`.
+- `pnpm run test` — run source, docs, and site unit tests.
+- `pnpm run test:dist` — test the built ESM/CJS package outputs after a build.
+- `pnpm run test:pack` — verify the npm package contents after a build.
+- `pnpm run lint` — run ESLint.
+- `pnpm run check` — run the full library pre-release check.
+
+The dev script loads `examples/upset.js` by default. To open a specific example,
+pass its filename without the `.js` extension:
+
+```bash
+pnpm run dev --example dropoutseer
+```
+
+## Build
+
+Build the package:
 
 ```bash
 pnpm run build
 ```
 
-2. The build artifacts are output to `dist/`. Deploy `dist/` to any static hosting service (Netlify, Vercel, GitHub Pages, nginx, etc.). For GitHub Pages you can push `dist/` to a `gh-pages` branch or set up a CI job to deploy automatically.
+The build artifacts are output to `dist/` and are the files published by the
+package.
 
 ## Development Tips
 
-- Use `pnpm run dev` for a hot-reloading development server.
+- Use `pnpm run dev` for a hot-reloading example server.
 - Run `pnpm run format:check` before committing to check formatting without
   rewriting files.
 - Enable the repository hooks once per clone:

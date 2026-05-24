@@ -6,15 +6,18 @@
   "description": "A JavaScript grammar for building composite visualizations in the browser.",
   "main": "dist/cjs/index.cjs",
   "module": "dist/esm/index.js",
+  "types": "./index.d.ts",
   "exports": {
     ".": {
+      "types": "./index.d.ts",
       "import": "./dist/esm/index.js",
       "require": "./dist/cjs/index.cjs"
     },
     "./umd": "./dist/umd/composite.umd.cjs"
   },
   "files": [
-    "dist"
+    "dist",
+    "index.d.ts"
   ],
   "scripts": {
     "dev": "node scripts/dev-example.mjs",
@@ -24,9 +27,11 @@
     "site:preview": "astro preview --root site",
     "site:export-examples": "node scripts/export-site-examples.mjs",
     "test": "node test/run.mjs",
+    "test:dist": "node test/export/dist-export.test.mjs",
+    "test:pack": "pnpm pack --dry-run --json | node test/package-pack.test.mjs",
     "lint": "eslint . --max-warnings=0",
     "format:check": "prettier --check .",
-    "check": "pnpm run lint && pnpm run build && pnpm run test",
+    "check": "pnpm run lint && pnpm run test && pnpm run build && pnpm run test:dist && pnpm run test:pack",
     "check:site": "pnpm run site:build",
     "format": "prettier --write ."
   },
