@@ -93,6 +93,50 @@ try {
   LayoutCalculator.suggestWidthHeight = () => ({ width: 400, height: 300 });
 
   {
+    const first = fakeChart("first", {
+      width: 100,
+      height: 50,
+      margin: { top: 0, right: 0, bottom: 0, left: 0 },
+    });
+    const second = fakeChart("second", {
+      width: 100,
+      height: 50,
+      margin: { top: 0, right: 0, bottom: 0, left: 0 },
+    });
+
+    const root = stackY([first, second], { margin: 8 });
+
+    LayoutEngine.computeLayout(root);
+
+    const firstRect = requireGlobalContentRect(root, first);
+    const secondRect = requireGlobalContentRect(root, second);
+
+    assert.equal(secondRect.y - (firstRect.y + firstRect.height), 8);
+  }
+
+  {
+    const first = fakeChart("first", {
+      width: 100,
+      height: 50,
+      margin: { top: 0, right: 0, bottom: 0, left: 0 },
+    });
+    const second = fakeChart("second", {
+      width: 100,
+      height: 50,
+      margin: { top: 0, right: 0, bottom: 0, left: 0 },
+    });
+
+    const root = stackX([first, second], { margin: 8 });
+
+    LayoutEngine.computeLayout(root);
+
+    const firstRect = requireGlobalContentRect(root, first);
+    const secondRect = requireGlobalContentRect(root, second);
+
+    assert.equal(secondRect.x - (firstRect.x + firstRect.width), 8);
+  }
+
+  {
     const topBar = fakeChart("topBar", {
       width: 500,
       height: 120,

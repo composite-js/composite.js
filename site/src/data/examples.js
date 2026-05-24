@@ -41,7 +41,19 @@ export const examples = [
     image: "/examples/mirror.svg",
     tags: ["alignment", "comparison"],
   },
+  {
+    slug: "rainfall",
+    title: "Rainfall",
+    summary: "A seasonal rainfall example with a custom bubble grid.",
+    image: "/examples/rainfall.svg",
+    tags: ["custom", "repeatX", "stackY"],
+    featured: false,
+  },
 ];
+
+export const featuredExamples = examples.filter(
+  (example) => example.featured !== false,
+);
 
 export function getExampleBySlug(slug) {
   return examples.find((example) => example.slug === slug);

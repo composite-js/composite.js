@@ -30,4 +30,18 @@ import { navItems } from "../../site/src/data/nav.js";
       `Homepage should include actual content: ${expectedText}`,
     );
   });
+
+  assert.match(
+    homepageSource,
+    /import\s*\{\s*featuredExamples\s*\}\s*from\s*"\.\.\/data\/examples\.js"/,
+    "Homepage should import the curated featured examples list",
+  );
+  assert.ok(
+    homepageSource.includes("<ExampleGrid examples={featuredExamples} />"),
+    "Homepage should render featured examples instead of the full gallery",
+  );
+  assert.ok(
+    !homepageSource.includes("<ExampleGrid examples={examples} />"),
+    "Homepage should not render every registered example",
+  );
 }

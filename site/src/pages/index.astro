@@ -3,7 +3,7 @@ import SiteLayout from "../layouts/SiteLayout.astro";
 import SectionShell from "../components/SectionShell.astro";
 import ExampleGrid from "../components/ExampleGrid.astro";
 import CodePanel from "../components/CodePanel.astro";
-import { examples } from "../data/examples.js";
+import { featuredExamples } from "../data/examples.js";
 
 const quickStartCode = `import { chart, stackY, repeatX } from "composite-js";
 
@@ -108,7 +108,7 @@ stackY([top, matrix, pies]).render(document.querySelector("#app"));`;
   </SectionShell>
 
   <SectionShell title="Featured examples">
-    <ExampleGrid examples={examples} />
+    <ExampleGrid examples={featuredExamples} />
   </SectionShell>
 
   <SectionShell title="Documentation">

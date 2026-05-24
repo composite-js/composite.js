@@ -1,4 +1,5 @@
 import * as composite from "../../../src/index.js";
+import * as d3 from "d3";
 
 const editorMessageSource = "composite-example-editor";
 const runnerMessageSource = "composite-example-runner";
@@ -16,6 +17,7 @@ const helpers = {
   embed: composite.embed,
   frame: composite.frame,
   image: composite.image,
+  Node: composite.Node,
   repeat: composite.repeat,
   repeatX: composite.repeatX,
   repeatY: composite.repeatY,
@@ -23,6 +25,7 @@ const helpers = {
   stackX: composite.stackX,
   stackY: composite.stackY,
   text: composite.text,
+  d3,
 };
 
 function postStatus(type, payload = {}) {
