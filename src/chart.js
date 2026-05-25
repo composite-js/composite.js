@@ -132,6 +132,33 @@ export class Chart {
     }
   }
 
+  _applySharedDomains(domains = {}) {
+    const nextEncoding = { ...this.encoding };
+    let changed = false;
+
+    Object.entries(domains).forEach(([key, domain]) => {
+      if (nextEncoding[key] !== undefined || !Array.isArray(domain)) return;
+      nextEncoding[key] = [...domain];
+      changed = true;
+    });
+
+    if (!changed) return;
+
+    this.encoding = nextEncoding;
+    this.options = {
+      ...this.options,
+      encoding: nextEncoding,
+    };
+
+    if (this.renderer) {
+      this.renderer.encoding = nextEncoding;
+      this.renderer.options = {
+        ...this.renderer.options,
+        encoding: nextEncoding,
+      };
+    }
+  }
+
   /**
    * Gets the total width including margins.
    * @returns {number} Total width.

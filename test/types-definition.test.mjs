@@ -54,6 +54,12 @@ assert.match(
 
 assert.match(
   declarations,
+  /shareDomains\?: boolean;/,
+  "RepeatOptions should expose shareDomains",
+);
+
+assert.match(
+  declarations,
   /export function image\(config: ImageOptions\): LayoutNode;/,
   "image() should return a layout Node in type declarations",
 );

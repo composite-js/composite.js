@@ -167,6 +167,7 @@ export interface RepeatOptions {
   height?: number;
   paddingInner?: number;
   paddingOuter?: number;
+  shareDomains?: boolean;
   margin?: Margin;
   [option: string]: unknown;
 }

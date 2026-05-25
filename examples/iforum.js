@@ -47,7 +47,7 @@ const bodyWidth = 640;
 const bodyHeight = 560;
 const barHeight = 78;
 const labelHeight = 70;
-const maxValue = 100;
+const maxValue = 150;
 
 function wave(index, phase, amplitude, floor) {
   return (

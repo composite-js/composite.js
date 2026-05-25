@@ -77,6 +77,26 @@ function baseOptions(overrides = {}) {
 
 {
   const svg = createFakeSvg();
+  const renderer = new GroupBarChartRenderer({
+    ...baseOptions({ direction: "horizontal" }),
+    encoding: {
+      x: "value",
+      y: "category",
+      group: "group",
+      yDomain: ["B", "A", "C"],
+    },
+  });
+
+  const axisConfig = renderer.render(svg, [
+    { category: "A", group: "g1", value: 10 },
+    { category: "B", group: "g1", value: 20 },
+  ]);
+
+  assert.deepEqual(axisConfig.scales.y.domain(), ["B", "A", "C"]);
+}
+
+{
+  const svg = createFakeSvg();
   const renderer = new BarChartRenderer({
     ...baseOptions(),
     encoding: { x: "category", y: "value", yDomain: [0, 50] },

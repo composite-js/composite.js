@@ -2,6 +2,7 @@ import * as d3 from "d3";
 import { BBox } from "../utils/bbox.js";
 import { LayoutEngine } from "./engine.js";
 import { Node, assertLayoutNode } from "./node.js";
+import { applySharedChartDomains } from "./shared-domain.js";
 
 function assertNodeArray(nodes, label) {
   if (!Array.isArray(nodes)) {
@@ -151,14 +152,31 @@ export class Repeat extends Composition {
       options.paddingOuter !== undefined ? options.paddingOuter : 0.1;
     this.width = options.width;
     this.height = options.height;
+    this.shareDomains =
+      options.shareDomains !== undefined ? options.shareDomains : true;
 
     this.options = {
       width: this.width,
       height: this.height,
       paddingInner: this.paddingInner,
       paddingOuter: this.paddingOuter,
+      shareDomains: this.shareDomains,
       margin: options.margin || { top: 0, right: 0, bottom: 0, left: 0 },
     };
+  }
+
+  instantiateChildren(label = "repeat") {
+    this.children = this.domain.map((value, index) => {
+      const node = this.func(value, index);
+      assertLayoutNode(node, `${label} child ${index}`);
+      return node;
+    });
+
+    if (this.shareDomains) {
+      applySharedChartDomains(this.children);
+    }
+
+    return this.children;
   }
 }
 
@@ -277,10 +295,10 @@ export class RepeatX extends Repeat {
 
     const bandwidth = xScale.bandwidth();
 
-    this.domain.forEach((value, index) => {
-      const node = this.func(value, index);
-      assertLayoutNode(node, `repeatX child ${index}`);
+    const children = this.instantiateChildren("repeatX");
 
+    this.domain.forEach((value, index) => {
+      const node = children[index];
       const g = gParent
         .append("g")
         .attr("transform", `translate(${xScale(value)}, 0)`);
@@ -319,10 +337,10 @@ export class RepeatY extends Repeat {
 
     const bandwidth = yScale.bandwidth();
 
-    this.domain.forEach((value, index) => {
-      const node = this.func(value, index);
-      assertLayoutNode(node, `repeatY child ${index}`);
+    const children = this.instantiateChildren("repeatY");
 
+    this.domain.forEach((value, index) => {
+      const node = children[index];
       const g = gParent
         .append("g")
         .attr("transform", `translate(0, ${yScale(value)})`);

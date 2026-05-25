@@ -47,7 +47,7 @@ export class GroupBarChartRenderer extends MarkRenderer {
 
     container.selectAll("*").remove();
 
-    const categories = [...new Set(data.map((d) => d[yField]))];
+    const categories = categoricalDomain(data, yField, this.encoding.yDomain);
     const groups = this.encoding.groupDomain || [
       ...new Set(data.map((d) => d[groupField])),
     ];
