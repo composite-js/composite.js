@@ -1,11 +1,8 @@
 # composite.js
 
-A visualization grammar for building composite visualizations. It provides composition operators such as `stack` and `repeat` so you can compose marks such as bar charts, stream graphs, and matrix views into a single coordinated layout (for example, an UpSet-style intersection visualization).
-
-## Requirements
-
-- Node.js (>= 18 recommended)
-- A browser DOM for rendering visualizations
+`composite.js` is a JavaScript visualization grammar for building composite
+browser visualizations. Create charts as layout nodes, then stack, repeat,
+align, and embed them into one coordinated view.
 
 ## Install
 
@@ -15,53 +12,69 @@ Install the package in your application:
 pnpm add composite-js
 ```
 
-With npm:
+## Quick Start
 
-```bash
-npm install composite-js
-```
-
-## Quick Usage
-
-Use factory helpers to create layout nodes, compose them, and render the final
-tree into a DOM element.
-
-- Use `chart({...})` to create a leaf layout node for an individual chart.
-- Use `text({...})` to create SVG text annotations that participate in layout.
-- Use `frame(node, {...})` to draw a border around an existing layout node.
-- Use `stackX([a, b])` or `stackY([a, b])` to compose layout nodes horizontally or vertically.
-- Use `repeatX(domain, fn)` or `repeatY(domain, fn)` for repeated small multiples.
-- Pass only layout nodes into compositions. Wrap chart configs with `chart({...})` instead of passing `new Chart(...)`.
-
-Typical flow:
-
-1. Prepare data (e.g. `data`, `genres`).
-2. Build `topBarChart`, `matrixChart`, and `leftBarChart` with `chart`.
-3. Combine them with `stackX` and `stackY`, optionally using `align` to align against a nested node.
-4. Render the final node to a DOM element.
+Import the layout helpers, wrap chart configurations with `chart()`, compose
+the resulting nodes, and render the final layout into a browser element.
 
 ```javascript
 import { chart, stackY } from "composite-js";
 
-const top = chart({
+const totals = [
+  { category: "A", value: 12 },
+  { category: "B", value: 18 },
+  { category: "C", value: 9 },
+];
+
+const trend = [
+  { year: 2023, value: 8 },
+  { year: 2024, value: 14 },
+  { year: 2025, value: 17 },
+];
+
+const bars = chart({
   mark: "bar",
-  data,
-  encoding: { x: "id", y: "size" },
+  data: totals,
+  encoding: { x: "category", y: "value" },
 });
 
-const matrix = chart({
-  mark: "matrix",
-  data: matrixCells,
-  encoding: { x: "id", group: "set", y: "active" },
+const line = chart({
+  mark: "line",
+  data: trend,
+  encoding: { x: "year", y: "value" },
 });
 
-const view = stackY([top, matrix], { align: [matrix, matrix] });
-view.render(document.getElementById("app"));
+const view = stackY([bars, line], { margin: 16 });
+
+view.render(document.querySelector("#app"));
 ```
 
-Supported chart marks include `bar`, `groupbar`, `stackbar`, `area`, `line`, `matrix`, `scatter`, `box`, `bubble`, `dumbbell`, `pac`, `pie`, `flow`, and `stream`.
+## Minimal Browser App
 
-## Repository Development
+Add a mount element to your page and load your application module through your
+bundler or development server:
+
+```html
+<div id="app"></div>
+<script type="module" src="/src/main.js"></script>
+```
+
+Put the quick-start JavaScript in `/src/main.js`. Rendering requires a browser
+DOM; run it through your app tooling instead of evaluating it in Node directly.
+
+## Documentation
+
+Read the [Documentation site](TODO_DOCS_SITE_URL) for concepts, API details,
+marks, examples, and composition patterns.
+
+`TODO_DOCS_SITE_URL` is a placeholder for the final docs site URL.
+
+## Requirements
+
+- Node.js (>= 22 recommended)
+- A browser DOM for rendering visualizations
+
+## Development
 
 Install dependencies in the repository root:
 
@@ -69,60 +82,29 @@ Install dependencies in the repository root:
 pnpm install
 ```
 
-Available scripts:
-
-- `pnpm run dev` — start the Vite example server.
-- `pnpm run dev --example dropoutseer` — open a specific example from
-  `examples/`.
-- `pnpm run build` — build the package outputs in `dist/`.
-- `pnpm run test` — run source, docs, and site unit tests.
-- `pnpm run test:dist` — test the built ESM/CJS package outputs after a build.
-- `pnpm run test:pack` — verify the npm package contents after a build.
-- `pnpm run lint` — run ESLint.
-- `pnpm run check` — run the full library pre-release check.
-
-The dev script loads `examples/upset.js` by default. To open a specific example,
-pass its filename without the `.js` extension:
+Available commands:
 
 ```bash
+pnpm run dev
 pnpm run dev --example dropoutseer
-```
-
-## Build
-
-Build the package:
-
-```bash
 pnpm run build
+pnpm run test
+pnpm run lint
 ```
 
-The build artifacts are output to `dist/` and are the files published by the
-package.
+- `pnpm run dev` starts the Vite example server and loads `examples/upset.js`.
+- `pnpm run dev --example dropoutseer` loads `examples/dropoutseer.js`.
+- `pnpm run build` creates the production bundle.
+- `pnpm run test` runs the Node-based test runner.
+- `pnpm run lint` runs ESLint.
 
-## Development Tips
-
-- Use `pnpm run dev` for a hot-reloading example server.
-- Run `pnpm run format:check` before committing to check formatting without
-  rewriting files.
-- Enable the repository hooks once per clone:
+Enable the repository hooks once per clone:
 
 ```bash
 git config core.hooksPath .githooks
 ```
 
-## Tests
-
-Run the provided test script:
-
-```bash
-pnpm run test
-```
-
-## Contributing
-
-- Issues and pull requests are welcome. Keep changes small and focused.
-- Run `pnpm run check` before submitting a PR.
-
 ## License
 
-This project is licensed under the MIT License. See the `LICENSE` file for details.
+This project is licensed under the MIT License. See the `LICENSE` file for
+details.
