@@ -49,6 +49,15 @@ export const examples = [
     tags: ["custom", "repeatX", "stackY"],
     featured: false,
   },
+  {
+    slug: "country",
+    title: "Country",
+    summary:
+      "A country comparison layout combining flags, bars, and pac marks.",
+    image: "/examples/country.svg",
+    tags: ["image", "bar", "pac"],
+    featured: false,
+  },
 ];
 
 export const featuredExamples = examples.filter(

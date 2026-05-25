@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { mkdtempSync, readFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import { chart } from "../../src/index.js";
+import { chart, image } from "../../src/index.js";
 
 const node = chart({
   mark: "bar",
@@ -25,6 +25,21 @@ const node = chart({
   assert.ok(
     svg.includes("Category"),
     "serialized SVG should include axis labels",
+  );
+}
+
+{
+  const flag = image({
+    url: "https://example.com/flag.svg",
+    width: 24,
+    height: 24,
+  });
+  const svg = await flag.export({ format: "svg" });
+
+  assert.match(
+    svg,
+    /\sxmlns:xlink="http:\/\/www\.w3\.org\/1999\/xlink"/,
+    "serialized SVG should declare the xlink namespace when image hrefs use xlink:href",
   );
 }
 

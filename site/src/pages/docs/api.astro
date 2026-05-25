@@ -44,6 +44,12 @@ const annotationCode = `const label = text({
   fontWeight: 700,
 });
 
+const flag = image({
+  url: "https://kapowaz.github.io/circle-flags/flags/us.svg",
+  width: 28,
+  height: 28,
+});
+
 const boxed = frame(stackY([label, matrix]), {
   padding: 8,
   stroke: "#94a3b8",
@@ -113,9 +119,14 @@ await view.export({ format: "png", path: "chart.png" });`;
     </section>
 
     <section class="docs-section">
-      <h2><code>text(config)</code> and <code>frame(node, options)</code></h2>
+      <h2>
+        <code>text(config)</code>, <code>image(config)</code>, and
+        <code>frame(node, options)</code>
+      </h2>
       <p>
         <code>text()</code> creates SVG text that participates in layout.
+        <code>image()</code> creates an SVG image leaf from a URL, with
+        sizing, fitting, clipping, opacity, and transform options.
         <code>frame()</code> wraps an existing layout node with padding and a
         border, which is useful for grouping or highlighting a composed region.
       </p>

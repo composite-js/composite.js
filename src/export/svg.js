@@ -9,6 +9,9 @@ function ensureSvgNamespace(svg) {
   if (!svg.getAttribute("xmlns")) {
     svg.setAttribute("xmlns", "http://www.w3.org/2000/svg");
   }
+  if (!svg.getAttribute("xmlns:xlink")) {
+    svg.setAttribute("xmlns:xlink", "http://www.w3.org/1999/xlink");
+  }
 }
 
 export async function renderNodeToSvgString(node, renderOptions = {}) {

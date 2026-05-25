@@ -27,3 +27,21 @@ assert.match(
   /\[channel: string\]:[^;]*(Primitive\[\]|Array<Primitive>|ReadonlyArray<Primitive>|unknown)/,
   "Encoding index signature should allow domain arrays and future non-string channel options",
 );
+
+assert.match(
+  declarations,
+  /export interface ImageOptions/,
+  "Declarations should include ImageOptions for image()",
+);
+
+assert.match(
+  declarations,
+  /export function image\(config: ImageOptions\): Node;/,
+  "image() should return a layout Node in type declarations",
+);
+
+assert.doesNotMatch(
+  declarations,
+  /export function image\(config\?: unknown\): never;/,
+  "image() should no longer be declared as an unimplemented API",
+);

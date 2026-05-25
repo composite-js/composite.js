@@ -1,3 +1,4 @@
+import country from "./example-snippets/country.txt?raw";
 import dropoutseer from "./example-snippets/dropoutseer.txt?raw";
 import iforum from "./example-snippets/iforum.txt?raw";
 import mirror from "./example-snippets/mirror.txt?raw";
@@ -7,6 +8,7 @@ import rainfall from "./example-snippets/rainfall.txt?raw";
 import upset from "./example-snippets/upset.txt?raw";
 
 const snippets = {
+  country,
   dropoutseer,
   iforum,
   mirror,

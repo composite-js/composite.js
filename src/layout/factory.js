@@ -1,5 +1,6 @@
 import { Chart } from "../chart.js";
 import { frame as createFrame } from "./frame.js";
+import { ImageElement } from "./image.js";
 import { TextElement } from "./text.js";
 import { Node } from "./node.js";
 import { RepeatX, RepeatY, Stack } from "./composition.js";
@@ -18,8 +19,11 @@ export function text(config = {}) {
   return node;
 }
 
-export function image(_config) {
-  throw new Error("Image not implemented yet.");
+export function image(config = {}) {
+  const node = new Node();
+  node.element = new ImageElement(config);
+  node.classTag = "image";
+  return node;
 }
 
 export function frame(node, options) {

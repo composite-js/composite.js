@@ -95,6 +95,35 @@ export interface TextOptions {
   [option: string]: unknown;
 }
 
+export interface ImageOptions {
+  url?: string;
+  src?: string;
+  href?: string;
+  width?: number;
+  height?: number;
+  x?: number;
+  y?: number;
+  fit?: "contain" | "cover" | "crop" | "fill" | "stretch" | "none" | string;
+  align?: string;
+  preserveAspectRatio?: string;
+  clip?: "circle" | "rounded" | "rect" | string;
+  shape?: "circle" | string;
+  clipPathId?: string;
+  cornerRadius?: number;
+  borderRadius?: number;
+  stroke?: string;
+  strokeWidth?: number;
+  fill?: string;
+  opacity?: number;
+  className?: string;
+  id?: string;
+  title?: string;
+  rotate?: number;
+  transform?: string;
+  crossOrigin?: string;
+  [option: string]: unknown;
+}
+
 export interface FrameOptions {
   padding?: number | Margin;
   stroke?: string;
@@ -276,7 +305,7 @@ export class SequenceContainer<T = unknown> {
 
 export function chart<T extends Datum = Datum>(config: ChartConfig<T>): Node;
 export function text(config?: TextOptions): Node;
-export function image(config?: unknown): never;
+export function image(config: ImageOptions): Node;
 export function frame(node: Node, options?: FrameOptions): Frame;
 export function stackX(
   nodes: Node[],

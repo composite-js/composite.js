@@ -7,6 +7,7 @@ const tests = [
   "./layout/render-output.test.mjs",
   "./layout/repeat-embed.test.mjs",
   "./layout/repeat-edge.test.mjs",
+  "./layout/image.test.mjs",
   "./container/sequence.test.mjs",
   "./mark/bar.test.mjs",
   "./mark/scatter.test.mjs",

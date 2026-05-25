@@ -86,16 +86,11 @@ const readPage = (name) => readFileSync(pagePath(name), "utf8");
     "embed(",
     "sequenceContainer(",
     "text(",
+    "image(",
     "frame(",
     ".render(",
     ".export(",
   ].forEach((apiName) => {
     assert.ok(api.includes(apiName), `API docs should mention ${apiName}`);
   });
-
-  assert.doesNotMatch(
-    api,
-    /image\(\)/,
-    "API docs should not present image() as implemented",
-  );
 }

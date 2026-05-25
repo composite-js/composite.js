@@ -23,3 +23,15 @@ import { examples, featuredExamples } from "../../site/src/data/examples.js";
     "Rainfall should not appear in homepage featured examples",
   );
 }
+
+{
+  const country = examples.find((example) => example.slug === "country");
+
+  assert.ok(country, "Country should be registered in site examples");
+  assert.equal(country.featured, false);
+  assert.equal(country.image, "/examples/country.svg");
+  assert.ok(
+    !featuredExamples.some((example) => example.slug === "country"),
+    "Country should not appear in homepage featured examples",
+  );
+}

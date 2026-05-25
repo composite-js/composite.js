@@ -38,6 +38,8 @@ pnpm run lint
 - When implementing examples from visual references, do not render the reference title, subtitle, or legend unless explicitly requested.
 - Do NOT use web environments to verify.
 - Do not offer or use a visual companion for design discussions in this project; keep design collaboration text-only unless the user explicitly changes this instruction.
+- Whenever a decision requires my action, tell me explicitly.
+- Whenever you are uncertain about something, ask me for clarification.
 
 ## Project Architecture
 
