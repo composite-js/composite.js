@@ -55,6 +55,24 @@ const boxed = frame(stackY([label, matrix]), {
   stroke: "#94a3b8",
 });`;
 
+const customCode = `const timeline = custom(
+  {
+    width: 320,
+    height: 80,
+    options: { width: 320, height: 80 },
+    render(svg, { width }) {
+      d3.select(svg)
+        .append("line")
+        .attr("x1", 0)
+        .attr("x2", width)
+        .attr("y1", 40)
+        .attr("y2", 40)
+        .attr("stroke", "#172033");
+    },
+  },
+  { classTag: "timeline" },
+);`;
+
 const renderCode = `const root = document.querySelector("#app");
 view.render(root, { width: 720, height: 420 });
 
@@ -120,17 +138,21 @@ await view.export({ format: "png", path: "chart.png" });`;
 
     <section class="docs-section">
       <h2>
-        <code>text(config)</code>, <code>image(config)</code>, and
-        <code>frame(node, options)</code>
+        <code>text(config)</code>, <code>image(config)</code>,
+        <code>custom(renderable, options)</code>, and <code>frame(node, options)</code>
       </h2>
       <p>
         <code>text()</code> creates SVG text that participates in layout.
         <code>image()</code> creates an SVG image leaf from a URL, with
         sizing, fitting, clipping, opacity, and transform options.
+        <code>custom()</code> wraps your own renderable object when an example
+        needs a specialized D3 or SVG drawing while still participating in
+        composition.
         <code>frame()</code> wraps an existing layout node with padding and a
         border, which is useful for grouping or highlighting a composed region.
       </p>
       <pre class="docs-code"><code>{annotationCode}</code></pre>
+      <pre class="docs-code"><code>{customCode}</code></pre>
     </section>
 
     <section class="docs-section">

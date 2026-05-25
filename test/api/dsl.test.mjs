@@ -1,9 +1,10 @@
 import assert from "node:assert/strict";
+import { Chart } from "../../src/chart.js";
 import {
-  Chart,
-  Node,
   chart,
+  custom,
   frame,
+  isLayoutNode,
   repeatX,
   repeatY,
   stackX,
@@ -18,8 +19,7 @@ import {
     encoding: { x: "category", y: "value" },
   });
 
-  assert.ok(node instanceof Node);
-  assert.ok(node.element instanceof Chart);
+  assert.ok(isLayoutNode(node));
   assert.equal(node.classTag, "chart");
 }
 
@@ -60,15 +60,30 @@ import {
 {
   const node = text({ text: "Label", width: 80, height: 20 });
 
-  assert.ok(node instanceof Node);
+  assert.ok(isLayoutNode(node));
   assert.equal(node.classTag, "text");
 }
 
 {
   const node = frame(text({ text: "Label", width: 80, height: 20 }));
 
-  assert.ok(node instanceof Node);
+  assert.ok(isLayoutNode(node));
   assert.equal(node.classTag, "frame");
+}
+
+{
+  const renderable = {
+    width: 80,
+    height: 40,
+    options: { width: 80, height: 40 },
+    render() {},
+  };
+  const node = custom(renderable, { classTag: "custom-test" });
+
+  assert.ok(isLayoutNode(node));
+  assert.equal(node.classTag, "custom-test");
+  assert.equal(node.element, renderable);
+  assert.throws(() => custom({}), /render method/i);
 }
 
 {

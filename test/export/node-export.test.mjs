@@ -80,6 +80,19 @@ const node = chart({
 }
 
 {
+  const packageEntrySource = readFileSync(
+    path.join(process.cwd(), "src", "export", "package-entry.js"),
+    "utf8",
+  );
+
+  assert.doesNotMatch(
+    packageEntrySource,
+    /runtime\.Layout(?:Engine|Renderer)/,
+    "Packaged export should not access layout internals through the public runtime entry",
+  );
+}
+
+{
   const nodeSource = readFileSync(
     path.join(process.cwd(), "src", "layout", "node.js"),
     "utf8",

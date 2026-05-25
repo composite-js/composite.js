@@ -3,6 +3,8 @@ import { mkdir, writeFile } from "node:fs/promises";
 import { Buffer } from "node:buffer";
 import * as esmRuntime from "composite-js-esm-entry";
 import cjsRuntime from "composite-js-cjs-entry";
+import { LayoutEngine } from "../layout/engine.js";
+import { LayoutRenderer } from "../layout/renderer.js";
 import { withExportSvgDocument } from "./svg-dom.js";
 
 function ensureSvgNamespace(svg) {
@@ -14,7 +16,7 @@ function ensureSvgNamespace(svg) {
   }
 }
 
-function selectRuntime(node) {
+function assertRuntimeLayoutNode(node) {
   let firstError;
 
   for (const runtime of [esmRuntime, cjsRuntime]) {
@@ -22,7 +24,7 @@ function selectRuntime(node) {
 
     try {
       runtime.assertLayoutNode(node);
-      return runtime;
+      return;
     } catch (error) {
       firstError ??= error;
     }
@@ -33,7 +35,7 @@ function selectRuntime(node) {
 }
 
 export async function renderNodeToSvgString(node, renderOptions = {}) {
-  const runtime = selectRuntime(node);
+  assertRuntimeLayoutNode(node);
 
   return withExportSvgDocument(async (document) => {
     const container = document.createElementNS(
@@ -41,8 +43,8 @@ export async function renderNodeToSvgString(node, renderOptions = {}) {
       "svg",
     );
 
-    runtime.LayoutEngine.computeLayout(node);
-    const svg = runtime.LayoutRenderer.render(node, container, renderOptions);
+    LayoutEngine.computeLayout(node);
+    const svg = LayoutRenderer.render(node, container, renderOptions);
     ensureSvgNamespace(svg);
     return svg.toString();
   });

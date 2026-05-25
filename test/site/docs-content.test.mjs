@@ -85,6 +85,7 @@ const readPage = (name) => readFileSync(pagePath(name), "utf8");
     "repeat(",
     "embed(",
     "sequenceContainer(",
+    "custom(",
     "text(",
     "image(",
     "frame(",

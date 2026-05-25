@@ -50,9 +50,13 @@ The project is designed for browser rendering. Tests run through a Node-based ru
 
 ## Core API
 
-The main public exports are available through `src/index.js`.
+The stable public exports are available through `src/index.js`. Implementation
+classes for charts, renderers, layout engines, and bounding boxes remain
+internal modules.
 
 - `chart(config)` creates a leaf layout node around a chart configuration.
+- `custom(renderable, options)` wraps an object with a `render(container,
+options)` method as a custom leaf layout node.
 - `text(config)` creates a leaf layout node for SVG text annotations, including
   rotated labels.
 - `frame(node, options)` wraps a layout node with a rectangular SVG border.
@@ -63,6 +67,10 @@ The main public exports are available through `src/index.js`.
 - `repeat(domain, fn, options)` creates a directionless repeated layout that can be embedded into a compatible container.
 - `embed(container, repeated, mapping)` places repeated children into slots produced by a container.
 - `sequenceContainer(options)` creates a container abstraction for sequence-style embedded layouts.
+- `isLayoutNode(value)` and `assertLayoutNode(value, label)` check values before
+  passing them into composition helpers.
+- `validateChartConfig(config)` validates chart mark, encoding, and data shape
+  without rendering.
 
 Composition helpers expect layout nodes. Use `chart({...})` to wrap chart configurations before composing them:
 
@@ -89,26 +97,33 @@ view.render(document.getElementById("app"));
 
 The library is organized around a layout tree.
 
-Leaf nodes are created by `chart(config)` in `src/layout/factory.js`. Internally, each leaf node wraps a `Chart` instance from `src/chart.js`. The chart resolves its mark type and delegates rendering to a mark renderer in `src/mark/`.
+Leaf nodes are created by factories in `src/layout/factory.js`. Internally,
+`chart(config)` wraps a `Chart` instance from `src/chart.js`, while
+`custom(renderable)` wraps a caller-provided renderable object. The chart
+resolves its mark type and delegates rendering to a mark renderer in
+`src/mark/`.
 
 Composition nodes live in `src/layout/composition.js`. `Stack` arranges children horizontally or vertically, `RepeatX` and `RepeatY` generate repeated children along one axis, and `Embedded` renders repeated children into slots produced by a container. All of these are layout nodes, so they can be nested.
 
-The layout pipeline has three main parts:
+The internal layout pipeline has three main parts:
 
 - `LayoutCalculator` estimates dimensions and margins for charts and compositions.
 - `LayoutEngine` computes bounding boxes, alignment, stack positions, repeat dimensions, and embedded child layouts.
 - `LayoutRenderer` renders the computed layout tree into SVG groups and delegates leaf rendering back to each node.
 
-Rendering is D3-backed. `src/chart.js` selects a mark renderer for the configured mark type, and mark renderers return axis configuration when axes should be drawn by `AxisRenderer`.
+Rendering is D3-backed. `src/chart.js` selects an internal mark renderer for
+the configured mark type, and mark renderers return axis configuration when
+axes should be drawn by the internal `AxisRenderer`.
 
 Supported chart marks include bars, grouped bars, stacked bars, area charts, lines, matrices, scatters, boxes, bubbles, dumbbells, proportional area charts, pies, flows, and stream graphs. Marks use `encoding.x` and `encoding.y` for primary channels and `encoding.group` for secondary categorical grouping. Flow diagrams use `encoding: { x, group, y }`, support horizontal and vertical directions, can render endpoint headings with `xLabelName` and `groupLabelName`, and can map an array of colors to either `xDomain` or `groupDomain` with `colorBy`.
 
 ## Directory Guide
 
-- `src/index.js` is the public entrypoint.
+- `src/index.js` is the stable public entrypoint.
 - `src/chart.js` contains the chart wrapper and mark renderer dispatch.
 - `src/axis.js` renders axes for mark renderers that request them.
-- `src/layout.js` re-exports the layout subsystem.
+- `src/layout.js` re-exports the layout subsystem for internal tests and
+  implementation modules.
 - `src/layout/` contains layout nodes, compositions, measurement, calculation, engine, and rendering logic.
 - `src/mark/` contains D3-backed renderers for supported chart marks.
 - `src/layout/text.js` contains the renderable element behind the `text()`

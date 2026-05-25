@@ -14,10 +14,10 @@ const previewTransform = {
 };
 const helpers = {
   chart: composite.chart,
+  custom: composite.custom,
   embed: composite.embed,
   frame: composite.frame,
   image: composite.image,
-  Node: composite.Node,
   repeat: composite.repeat,
   repeatX: composite.repeatX,
   repeatY: composite.repeatY,

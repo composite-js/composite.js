@@ -1,7 +1,7 @@
 // Link: https://insights.datylon.com/workspace/designs/new?publication=jVPwg1Q_CeguvLAxY4VJKw
 
 import * as d3 from "d3";
-import { chart, Node, repeatX, stackY } from "../src/index.js";
+import { chart, custom, repeatX, stackY } from "../src/index.js";
 
 const years = [
   "2008",
@@ -203,10 +203,9 @@ class RainfallBubbleGrid {
 }
 
 function rainfallBubbleGrid(options) {
-  const node = new Node();
-  node.element = new RainfallBubbleGrid(options);
-  node.classTag = "rainfall-bubble-grid";
-  return node;
+  return custom(new RainfallBubbleGrid(options), {
+    classTag: "rainfall-bubble-grid",
+  });
 }
 
 const bubbleGrid = rainfallBubbleGrid({

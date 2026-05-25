@@ -51,7 +51,17 @@ export class Node {
 }
 
 export function isLayoutNode(value) {
-  return value instanceof Node;
+  const bbox = value?.bbox;
+
+  return Boolean(
+    value &&
+    typeof value === "object" &&
+    typeof value.render === "function" &&
+    typeof value.export === "function" &&
+    bbox &&
+    typeof bbox.contentRect === "function" &&
+    typeof bbox.getMargin === "function",
+  );
 }
 
 export function assertLayoutNode(value, label = "node") {
@@ -59,6 +69,6 @@ export function assertLayoutNode(value, label = "node") {
 
   const actual = value?.constructor?.name || typeof value;
   throw new TypeError(
-    `${label} must be a layout node created by chart(), text(), image(), frame(), stackX(), stackY(), repeatX(), or repeatY(); received ${actual}.`,
+    `${label} must be a layout node created by chart(), custom(), text(), image(), frame(), stackX(), stackY(), repeatX(), repeatY(), or embed(); received ${actual}.`,
   );
 }

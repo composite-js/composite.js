@@ -1,6 +1,7 @@
 const tests = [
   "./api/dsl.test.mjs",
   "./api/public-contract.test.mjs",
+  "./chart-renderer-dispatch.test.mjs",
   "./axis.test.mjs",
   "./layout/stack-align.test.mjs",
   "./layout/measurement-adapter.test.mjs",

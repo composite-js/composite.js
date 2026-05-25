@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readdirSync } from "node:fs";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
-import { Node } from "../src/index.js";
+import { isLayoutNode } from "../src/index.js";
 
 const examplesDir = path.join(process.cwd(), "examples");
 const exampleFiles = readdirSync(examplesDir)
@@ -22,7 +22,7 @@ for (const file of exampleFiles) {
   );
 
   const node = module.createExample();
-  assert.ok(node instanceof Node, `${file} should create a layout node`);
+  assert.ok(isLayoutNode(node), `${file} should create a layout node`);
 
   const svg = await node.export({ format: "svg" });
   assert.ok(svg.startsWith("<svg"), `${file} should export an SVG string`);

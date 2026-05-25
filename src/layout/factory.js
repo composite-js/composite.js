@@ -26,6 +26,17 @@ export function image(config = {}) {
   return node;
 }
 
+export function custom(renderable, options = {}) {
+  if (!renderable || typeof renderable.render !== "function") {
+    throw new TypeError("custom() requires a renderable with a render method.");
+  }
+
+  const node = new Node();
+  node.element = renderable;
+  node.classTag = options.classTag || "custom";
+  return node;
+}
+
 export function frame(node, options) {
   return createFrame(node, options);
 }

@@ -10,10 +10,6 @@ importers:
       d3:
         specifier: ^7.9.0
         version: 7.9.0
-    optionalDependencies:
-      sharp:
-        specifier: ^0.34.5
-        version: 0.34.5
     devDependencies:
       "@codemirror/commands":
         specifier: ^6.10.3
@@ -45,12 +41,19 @@ importers:
       prettier:
         specifier: ^3.7.4
         version: 3.7.4
+      typescript:
+        specifier: ^6.0.3
+        version: 6.0.3
       vite:
         specifier: ^5.0.0
         version: 5.4.21
       vitest:
         specifier: ^1.0.0
         version: 1.6.1
+    optionalDependencies:
+      sharp:
+        specifier: ^0.34.5
+        version: 0.34.5
 
 packages:
   "@astrojs/compiler@4.0.0":
@@ -3590,6 +3593,14 @@ packages:
       }
     engines: { node: ">=4" }
 
+  typescript@6.0.3:
+    resolution:
+      {
+        integrity: sha512-y2TvuxSZPDyQakkFRPZHKFm+KKVqIisdg9/CZwm9ftvKXLP8NRWj38/ODjNbr43SsoXqNuAisEf1GdCxqWcdBw==,
+      }
+    engines: { node: ">=14.17" }
+    hasBin: true
+
   ufo@1.6.1:
     resolution:
       {
@@ -4318,7 +4329,8 @@ snapshots:
 
   "@humanwhocodes/retry@0.4.3": {}
 
-  "@img/colour@1.1.0": {}
+  "@img/colour@1.1.0":
+    optional: true
 
   "@img/sharp-darwin-arm64@0.34.5":
     optionalDependencies:
@@ -5036,7 +5048,8 @@ snapshots:
 
   destr@2.0.5: {}
 
-  detect-libc@2.1.2: {}
+  detect-libc@2.1.2:
+    optional: true
 
   devalue@5.8.1: {}
 
@@ -6154,6 +6167,7 @@ snapshots:
       "@img/sharp-win32-arm64": 0.34.5
       "@img/sharp-win32-ia32": 0.34.5
       "@img/sharp-win32-x64": 0.34.5
+    optional: true
 
   shebang-command@2.0.0:
     dependencies:
@@ -6246,6 +6260,8 @@ snapshots:
       prelude-ls: 1.2.1
 
   type-detect@4.1.0: {}
+
+  typescript@6.0.3: {}
 
   ufo@1.6.1: {}
 

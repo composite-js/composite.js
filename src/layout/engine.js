@@ -1,9 +1,23 @@
 import { BBox } from "../utils/bbox.js";
-import { Embedded, Repeat, RepeatX, RepeatY, Stack } from "./composition.js";
-import { Frame } from "./frame.js";
 import { LayoutCalculator } from "./calculator.js";
 import { renderComputedLayout } from "./renderer.js";
 import { Node, assertLayoutNode } from "./node.js";
+
+function isEmbeddedNode(node) {
+  return node?.type === "embed";
+}
+
+function isFrameNode(node) {
+  return node?.type === "frame";
+}
+
+function isRepeatXNode(node) {
+  return node?.classTag === "repeatX";
+}
+
+function isRepeatYNode(node) {
+  return node?.classTag === "repeatY";
+}
 
 /**
  * Layout engine for computing and rendering layout trees.
@@ -113,7 +127,7 @@ export class LayoutEngine {
   static computeLayout(node) {
     assertLayoutNode(node);
 
-    if (node instanceof Stack) {
+    if (Node.isStack(node)) {
       if (node.children.length === 0) {
         throw new Error("Invalid: composition node has no children.");
       }
@@ -132,17 +146,17 @@ export class LayoutEngine {
       return;
     }
 
-    if (node instanceof Repeat) {
+    if (Node.isRepeat(node)) {
       this.computeRepeat(node);
       return;
     }
 
-    if (node instanceof Embedded) {
+    if (isEmbeddedNode(node)) {
       this.computeEmbedded(node);
       return;
     }
 
-    if (node instanceof Frame) {
+    if (isFrameNode(node)) {
       this.computeFrame(node);
       return;
     }
@@ -216,18 +230,18 @@ export class LayoutEngine {
 
     if (
       node.domain.length > 0 &&
-      ((node instanceof RepeatX && !hasExplicitHeight) ||
-        (node instanceof RepeatY && !hasExplicitWidth))
+      ((isRepeatXNode(node) && !hasExplicitHeight) ||
+        (isRepeatYNode(node) && !hasExplicitWidth))
     ) {
       const sampleChild = node.func(node.domain[0], 0);
       assertLayoutNode(sampleChild, "repeat sample child");
       this.computeLayout(sampleChild);
 
-      if (node instanceof RepeatX && !hasExplicitHeight) {
+      if (isRepeatXNode(node) && !hasExplicitHeight) {
         height = sampleChild.bbox.totalHeight();
       }
 
-      if (node instanceof RepeatY && !hasExplicitWidth) {
+      if (isRepeatYNode(node) && !hasExplicitWidth) {
         width = sampleChild.bbox.totalWidth();
       }
     }

@@ -288,7 +288,7 @@ const snippetDir = path.resolve(root, "site/src/data/example-snippets");
       `Runner should support preview interaction: ${expectedSource}`,
     );
   });
-  ["Node: composite.Node", "d3"].forEach((expectedSource) => {
+  ["custom: composite.custom", "d3"].forEach((expectedSource) => {
     assert.ok(
       runnerScriptSource.includes(expectedSource),
       `Runner should expose custom chart helper: ${expectedSource}`,

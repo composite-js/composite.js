@@ -1,5 +1,6 @@
 export {
   chart,
+  custom,
   frame,
   image,
   repeatX,

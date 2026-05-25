@@ -4,10 +4,8 @@ import {
   LayoutEngine,
   LayoutRenderer,
   Node,
-  embed,
-  repeat,
-  sequenceContainer,
-} from "../../src/index.js";
+} from "../../src/layout.js";
+import { embed, repeat, sequenceContainer } from "../../src/index.js";
 import { createFakeSvg } from "../helpers/fake-svg.mjs";
 
 const zeroMargin = { top: 0, right: 0, bottom: 0, left: 0 };

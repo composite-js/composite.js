@@ -1,8 +1,6 @@
 import assert from "node:assert/strict";
-import {
-  Chart,
-  validateChartConfig as publicValidateChartConfig,
-} from "../../src/index.js";
+import { validateChartConfig as publicValidateChartConfig } from "../../src/index.js";
+import { Chart } from "../../src/chart.js";
 import { BarChartRenderer } from "../../src/mark/bar.js";
 import {
   MARK_DEFINITIONS,

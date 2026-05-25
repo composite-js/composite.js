@@ -199,10 +199,9 @@ class RainfallBubbleGrid {
 }
 
 function rainfallBubbleGrid(options) {
-  const node = new Node();
-  node.element = new RainfallBubbleGrid(options);
-  node.classTag = "rainfall-bubble-grid";
-  return node;
+  return custom(new RainfallBubbleGrid(options), {
+    classTag: "rainfall-bubble-grid",
+  });
 }
 
 const bubbleGrid = rainfallBubbleGrid({
