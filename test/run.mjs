@@ -1,36 +1,47 @@
-import "./api/dsl.test.mjs";
-import "./axis.test.mjs";
-import "./layout/stack-align.test.mjs";
-import "./layout/measurement-adapter.test.mjs";
-import "./layout/render-output.test.mjs";
-import "./layout/repeat-embed.test.mjs";
-import "./container/sequence.test.mjs";
-import "./mark/bar.test.mjs";
-import "./mark/scatter.test.mjs";
-import "./mark/bubble.test.mjs";
-import "./mark/area.test.mjs";
-import "./mark/line.test.mjs";
-import "./mark/matrix.test.mjs";
-import "./mark/box.test.mjs";
-import "./mark/stream.test.mjs";
-import "./mark/flow.test.mjs";
-import "./mark/dumbbell.test.mjs";
-import "./mark/pac.test.mjs";
-import "./mark/pie.test.mjs";
-import "./mark/validation.test.mjs";
-import "./layout/text.test.mjs";
-import "./dev-example.test.mjs";
-import "./package-metadata.test.mjs";
-import "./workflow.test.mjs";
-import "./site/homepage.test.mjs";
-import "./site/example-assets.test.mjs";
-import "./site/example-card-style.test.mjs";
-import "./site/code-block-style.test.mjs";
-import "./site/docs-nav.test.mjs";
-import "./site/docs-content.test.mjs";
-import "./site/marks-docs.test.mjs";
-import "./site/example-editor.test.mjs";
-import "./site/example-snippet-sync.test.mjs";
-import "./export/node-export.test.mjs";
+const tests = [
+  "./api/dsl.test.mjs",
+  "./api/public-contract.test.mjs",
+  "./axis.test.mjs",
+  "./layout/stack-align.test.mjs",
+  "./layout/measurement-adapter.test.mjs",
+  "./layout/render-output.test.mjs",
+  "./layout/repeat-embed.test.mjs",
+  "./layout/repeat-edge.test.mjs",
+  "./container/sequence.test.mjs",
+  "./mark/bar.test.mjs",
+  "./mark/scatter.test.mjs",
+  "./mark/bubble.test.mjs",
+  "./mark/area.test.mjs",
+  "./mark/line.test.mjs",
+  "./mark/matrix.test.mjs",
+  "./mark/box.test.mjs",
+  "./mark/stream.test.mjs",
+  "./mark/flow.test.mjs",
+  "./mark/dumbbell.test.mjs",
+  "./mark/pac.test.mjs",
+  "./mark/pie.test.mjs",
+  "./mark/validation.test.mjs",
+  "./layout/text.test.mjs",
+  "./dev-example.test.mjs",
+  "./examples-runtime.test.mjs",
+  "./package-metadata.test.mjs",
+  "./types-definition.test.mjs",
+  "./workflow.test.mjs",
+  "./site/homepage.test.mjs",
+  "./site/example-assets.test.mjs",
+  "./site/example-card-style.test.mjs",
+  "./site/code-block-style.test.mjs",
+  "./site/docs-nav.test.mjs",
+  "./site/docs-content.test.mjs",
+  "./site/marks-docs.test.mjs",
+  "./site/example-editor.test.mjs",
+  "./site/example-snippet-sync.test.mjs",
+  "./export/svg-dom-export.test.mjs",
+  "./export/node-export.test.mjs",
+];
+
+for (const test of tests) {
+  await import(test);
+}
 
 console.log("All tests passed");

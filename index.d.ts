@@ -23,10 +23,10 @@ export interface Encoding {
   y?: string;
   group?: string;
   size?: string;
-  xDomain?: string;
-  yDomain?: string;
-  groupDomain?: string;
-  [channel: string]: string | undefined;
+  xDomain?: Primitive[];
+  yDomain?: Primitive[];
+  groupDomain?: Primitive[];
+  [channel: string]: string | Primitive[] | undefined;
 }
 
 export interface ChartConfig<T extends Datum = Datum> {

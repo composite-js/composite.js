@@ -128,18 +128,18 @@ export class ExportSvgElement {
     this.listeners = new Map();
     this.__data__ = undefined;
     this._textContent = "";
+    this._styleProperties = new Map();
 
-    const styleProperties = new Map();
     this.style = {
-      setProperty(name, value) {
-        styleProperties.set(name, String(value));
+      setProperty: (name, value) => {
+        this._styleProperties.set(name, String(value));
       },
-      getPropertyValue(name) {
-        return styleProperties.get(name) ?? "";
+      getPropertyValue: (name) => {
+        return this._styleProperties.get(name) ?? "";
       },
-      removeProperty(name) {
-        const previous = styleProperties.get(name) ?? "";
-        styleProperties.delete(name);
+      removeProperty: (name) => {
+        const previous = this._styleProperties.get(name) ?? "";
+        this._styleProperties.delete(name);
         return previous;
       },
     };
@@ -271,7 +271,21 @@ export class ExportSvgElement {
   }
 
   toString() {
-    const attributes = [...this.attributes.entries()]
+    const serializedAttributes = new Map(this.attributes);
+
+    if (this._styleProperties.size > 0) {
+      const style = [...this._styleProperties.entries()]
+        .map(([name, value]) => `${name}: ${value};`)
+        .join(" ");
+      const existingStyle = serializedAttributes.get("style");
+
+      serializedAttributes.set(
+        "style",
+        existingStyle ? `${existingStyle} ${style}` : style,
+      );
+    }
+
+    const attributes = [...serializedAttributes.entries()]
       .map(([name, value]) => ` ${name}="${escapeAttribute(value)}"`)
       .join("");
     const children = this.children.map((child) => child.toString()).join("");

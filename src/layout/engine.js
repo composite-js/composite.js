@@ -219,7 +219,7 @@ export class LayoutEngine {
       ((node instanceof RepeatX && !hasExplicitHeight) ||
         (node instanceof RepeatY && !hasExplicitWidth))
     ) {
-      const sampleChild = node.func(node.domain[0]);
+      const sampleChild = node.func(node.domain[0], 0);
       assertLayoutNode(sampleChild, "repeat sample child");
       this.computeLayout(sampleChild);
 

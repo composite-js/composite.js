@@ -248,7 +248,7 @@ export class RepeatX extends Repeat {
     const bandwidth = xScale.bandwidth();
 
     this.domain.forEach((value, index) => {
-      const node = this.func(value);
+      const node = this.func(value, index);
       assertLayoutNode(node, `repeatX child ${index}`);
 
       const g = gParent
@@ -290,7 +290,7 @@ export class RepeatY extends Repeat {
     const bandwidth = yScale.bandwidth();
 
     this.domain.forEach((value, index) => {
-      const node = this.func(value);
+      const node = this.func(value, index);
       assertLayoutNode(node, `repeatY child ${index}`);
 
       const g = gParent
