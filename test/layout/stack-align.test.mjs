@@ -137,6 +137,110 @@ try {
   }
 
   {
+    const first = fakeChart("first", {
+      width: 100,
+      height: 50,
+      margin: { top: 0, right: 0, bottom: 0, left: 0 },
+    });
+    const second = fakeChart("second", {
+      width: 100,
+      height: 50,
+      margin: { top: 0, right: 0, bottom: 0, left: 0 },
+    });
+    const third = fakeChart("third", {
+      width: 100,
+      height: 50,
+      margin: { top: 0, right: 0, bottom: 0, left: 0 },
+    });
+
+    const root = stackY([first, second, third], { margin: [8, 20] });
+
+    LayoutEngine.computeLayout(root);
+
+    const firstRect = requireGlobalContentRect(root, first);
+    const secondRect = requireGlobalContentRect(root, second);
+    const thirdRect = requireGlobalContentRect(root, third);
+
+    assert.equal(secondRect.y - (firstRect.y + firstRect.height), 8);
+    assert.equal(thirdRect.y - (secondRect.y + secondRect.height), 20);
+  }
+
+  {
+    const first = fakeChart("first", {
+      width: 40,
+      height: 50,
+      margin: { top: 0, right: 0, bottom: 0, left: 0 },
+    });
+    const second = fakeChart("second", {
+      width: 40,
+      height: 50,
+      margin: { top: 0, right: 0, bottom: 0, left: 0 },
+    });
+    const third = fakeChart("third", {
+      width: 40,
+      height: 50,
+      margin: { top: 0, right: 0, bottom: 0, left: 0 },
+    });
+    const fourth = fakeChart("fourth", {
+      width: 40,
+      height: 50,
+      margin: { top: 0, right: 0, bottom: 0, left: 0 },
+    });
+    const margins = [4, 12, 0];
+    const root = stackX([first, second, third, fourth], { margin: margins });
+    margins[0] = 99;
+
+    LayoutEngine.computeLayout(root);
+
+    const firstRect = requireGlobalContentRect(root, first);
+    const secondRect = requireGlobalContentRect(root, second);
+    const thirdRect = requireGlobalContentRect(root, third);
+    const fourthRect = requireGlobalContentRect(root, fourth);
+
+    assert.equal(secondRect.x - (firstRect.x + firstRect.width), 4);
+    assert.equal(thirdRect.x - (secondRect.x + secondRect.width), 12);
+    assert.equal(fourthRect.x - (thirdRect.x + thirdRect.width), 0);
+  }
+
+  {
+    const only = fakeChart("only", {
+      width: 100,
+      height: 50,
+      margin: { top: 0, right: 0, bottom: 0, left: 0 },
+    });
+
+    const root = stackX([only], { margin: [] });
+
+    LayoutEngine.computeLayout(root);
+
+    const onlyRect = requireGlobalContentRect(root, only);
+    assert.equal(onlyRect.width, 100);
+    assert.equal(onlyRect.height, 50);
+  }
+
+  {
+    const first = fakeChart("first");
+    const second = fakeChart("second");
+    const third = fakeChart("third");
+
+    assert.throws(
+      () => stackX([first, second, third], { margin: [8] }),
+      RangeError,
+    );
+    assert.throws(
+      () => stackY([first, second], { margin: [8, 12] }),
+      RangeError,
+    );
+    assert.throws(() => stackX([first, second], { margin: ["8"] }), TypeError);
+    assert.throws(
+      () => stackY([first, second], { margin: [Infinity] }),
+      TypeError,
+    );
+    assert.throws(() => stackX([first, second], { margin: NaN }), TypeError);
+    assert.throws(() => stackY([first, second], { margin: "8" }), TypeError);
+  }
+
+  {
     const topBar = fakeChart("topBar", {
       width: 500,
       height: 120,

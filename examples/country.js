@@ -68,11 +68,10 @@ const pac = chart({
   opacity: 0.68,
   showXAxis: false,
   showYAxis: false,
-  padding: rowPadding,
 });
 
 const composite = stackX([flags, bars, pac], {
-  margin: 12,
+  margin: [15, 5],
   align: [flags, bars, pac],
 });
 

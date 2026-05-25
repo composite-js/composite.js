@@ -19,6 +19,12 @@ function isRepeatYNode(node) {
   return node?.classTag === "repeatY";
 }
 
+function stackGapBefore(node, childIndex) {
+  if (childIndex <= 0) return 0;
+  if (Array.isArray(node.margin)) return node.margin[childIndex - 1];
+  return typeof node.margin === "number" ? node.margin : 0;
+}
+
 /**
  * Layout engine for computing and rendering layout trees.
  */
@@ -168,7 +174,6 @@ export class LayoutEngine {
     const referenceRect = this.findReferenceAlignment(node);
     const sharedY = referenceRect.y;
     const sharedHeight = referenceRect.height;
-    const stackMargin = typeof node.margin === "number" ? node.margin : 0;
 
     let currentX = 0;
     for (let i = 0; i < node.children.length; i++) {
@@ -178,7 +183,7 @@ export class LayoutEngine {
       const target = this.alignmentTargetForChild(child, node.alignedNodes[i]);
       const targetRect = this.findTargetRectWithin(child, target);
 
-      if (i > 0) currentX += stackMargin;
+      currentX += stackGapBefore(node, i);
       currentX += margin.left;
       bbox.translateTo(currentX, sharedY - targetRect.y);
       if (target === child) {
@@ -194,7 +199,6 @@ export class LayoutEngine {
     const referenceRect = this.findReferenceAlignment(node);
     const sharedX = referenceRect.x;
     const sharedWidth = referenceRect.width;
-    const stackMargin = typeof node.margin === "number" ? node.margin : 0;
 
     let currentY = 0;
     for (let i = 0; i < node.children.length; i++) {
@@ -204,7 +208,7 @@ export class LayoutEngine {
       const target = this.alignmentTargetForChild(child, node.alignedNodes[i]);
       const targetRect = this.findTargetRectWithin(child, target);
 
-      if (i > 0) currentY += stackMargin;
+      currentY += stackGapBefore(node, i);
       currentY += margin.top;
       bbox.translateTo(sharedX - targetRect.x, currentY);
       if (target === child) {

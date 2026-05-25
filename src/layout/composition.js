@@ -17,6 +17,36 @@ function isSvgContainer(container) {
   return container?.namespaceURI === "http://www.w3.org/2000/svg";
 }
 
+function isFiniteNumber(value) {
+  return typeof value === "number" && Number.isFinite(value);
+}
+
+function normalizeStackMargin(margin, childCount) {
+  if (margin === undefined) return 0;
+  if (isFiniteNumber(margin)) return margin;
+
+  if (Array.isArray(margin)) {
+    const expectedLength = Math.max(childCount - 1, 0);
+    if (margin.length !== expectedLength) {
+      throw new RangeError(
+        `stack margin array must contain ${expectedLength} values; received ${margin.length}.`,
+      );
+    }
+
+    margin.forEach((value, index) => {
+      if (!isFiniteNumber(value)) {
+        throw new TypeError(`stack margin[${index}] must be a finite number.`);
+      }
+    });
+
+    return [...margin];
+  }
+
+  throw new TypeError(
+    "stack margin must be a finite number or an array of finite numbers.",
+  );
+}
+
 /**
  * Base class for all compositions.
  */
@@ -62,7 +92,7 @@ export class Stack extends Composition {
     this.isStack = true;
     this.type = "stack";
     this.classTag = direction === "horizontal" ? "stackX" : "stackY";
-    this.margin = options.margin || 0;
+    this.margin = normalizeStackMargin(options.margin, nodes.length);
     this.align = options.align || [];
     this.alignedNodes = [];
 

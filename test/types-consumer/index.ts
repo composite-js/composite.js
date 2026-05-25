@@ -74,7 +74,7 @@ const renderable: CustomRenderable = {
 };
 
 const customNode = custom(renderable, { classTag: "sparkline" });
-const row = stackX([label, bars, flag, customNode], { margin: 8 });
+const row = stackX([label, bars, flag, customNode], { margin: [4, 12, 0] });
 const framed = frame(row, { padding: 8, stroke: "#94a3b8" });
 const repeatedX = repeatX(["A", "B"], (category) =>
   chart<Row>({

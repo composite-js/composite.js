@@ -157,7 +157,7 @@ export interface FrameOptions {
 }
 
 export interface StackOptions {
-  margin?: number;
+  margin?: number | ReadonlyArray<number>;
   align?: Array<LayoutNode | null | undefined>;
   [option: string]: unknown;
 }

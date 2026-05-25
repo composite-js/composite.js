@@ -9,7 +9,7 @@ const chartCode = `const bars = chart({
   height: 240,
 });`;
 
-const stackCode = `const row = stackX([leftBars, matrix, details], { margin: 12 });
+const stackCode = `const row = stackX([leftBars, matrix, details], { margin: [8, 20] });
 const view = stackY([topBars, row], {
   align: [matrix, matrix],
 });`;
@@ -105,7 +105,9 @@ await view.export({ format: "png", path: "chart.png" });`;
       <h2><code>stackX(nodes, options)</code> and <code>stackY(nodes, options)</code></h2>
       <p>
         Arrange layout nodes horizontally or vertically. Pass only layout nodes,
-        not raw chart instances. Use <code>margin</code> for spacing and
+        not raw chart instances. Use <code>margin</code> for spacing; pass one
+        number for uniform gaps or a per-gap list with
+        <code>nodes.length - 1</code> values. Use
         <code>align</code> when a stack child should align to a nested node.
       </p>
       <pre class="docs-code"><code>{stackCode}</code></pre>
