@@ -57,7 +57,8 @@ export async function loadCsvText(url) {
       return fetchText(url);
     }
 
-    const { readFile } = await import("node:fs/promises");
+    const fsPromisesModulePath = "node:fs/promises";
+    const { readFile } = await import(/* @vite-ignore */ fsPromisesModulePath);
     const fileUrl =
       typeof url === "string" && url.startsWith("file:") ? new URL(url) : url;
     return readFile(fileUrl, "utf8");

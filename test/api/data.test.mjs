@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
@@ -95,6 +95,19 @@ import {
       { id: "1-0", left: "y", right: 1 },
       { id: "1-1", left: "y", right: 2 },
     ],
+  );
+}
+
+{
+  const dataSource = readFileSync(
+    path.join(process.cwd(), "src", "data.js"),
+    "utf8",
+  );
+
+  assert.match(
+    dataSource,
+    /const\s+fsPromisesModulePath\s*=\s*"node:fs\/promises";[\s\S]*import\(\s*\/\*\s*@vite-ignore\s*\*\/\s*fsPromisesModulePath\s*\)/,
+    "Node-only file loader import should use a Vite-ignored dynamic module path",
   );
 }
 
