@@ -1,8 +1,21 @@
 export type Primitive = string | number | boolean | null | undefined;
 export type Datum = object;
+export type Table<T extends Datum = Datum> = T[] & {
+  columns?: string[];
+};
 export type Accessor<T = unknown> =
   | string
   | ((datum: T, index: number) => unknown);
+
+export interface ParseCsvOptions {
+  columns?: string[];
+  autoType?: boolean;
+}
+
+export interface NumericColumnsOptions {
+  columns?: string[];
+  exclude?: string[];
+}
 
 export interface Margin {
   top?: number;
@@ -175,9 +188,56 @@ export interface RepeatOptions {
 export interface EmbedMapping<T = unknown> {
   x?: Accessor<T>;
   y?: Accessor<T>;
+  row?: Accessor<T>;
+  column?: Accessor<T>;
   key?: Accessor<T>;
   width?: number;
   height?: number;
+  [option: string]: unknown;
+}
+
+export interface ContainerSize {
+  width?: number;
+  height?: number;
+}
+
+export interface ContainerRenderOptions extends ContainerSize {
+  margin?: Margin;
+  [option: string]: unknown;
+}
+
+export interface ContainerSlot<T = unknown> {
+  datum: T;
+  key: unknown;
+  x: number;
+  y: number;
+  width?: number;
+  height?: number;
+  [option: string]: unknown;
+}
+
+export interface Container<T = unknown> {
+  width: number;
+  height: number;
+  margin: Margin;
+  slots(
+    data: T[],
+    mapping?: EmbedMapping<T>,
+    size?: ContainerSize,
+  ): ContainerSlot<T>[];
+  render?(svg: SVGElement, options?: ContainerRenderOptions): void;
+}
+
+export interface CustomContainerOptions<T = unknown> {
+  width?: number;
+  height?: number;
+  margin?: Margin;
+  slots(
+    data: T[],
+    mapping: EmbedMapping<T>,
+    size: ContainerSize,
+  ): ContainerSlot<T>[];
+  render?(svg: SVGElement, options: ContainerRenderOptions): void;
   [option: string]: unknown;
 }
 
@@ -198,20 +258,36 @@ export interface SequenceContainerOptions<T = unknown> {
   [option: string]: unknown;
 }
 
-export interface SequenceContainer<T = unknown> {
-  slots(
-    data: T[],
-    mapping?: EmbedMapping<T>,
-    size?: { width?: number; height?: number },
-  ): Array<{
-    datum: T;
-    key: unknown;
-    x: number;
-    y: number;
-    width?: number;
-    height?: number;
-  }>;
+export interface SequenceContainer<T = unknown> extends Container<T> {}
+
+export const SequenceContainer: {
+  new <T = unknown>(
+    options?: SequenceContainerOptions<T>,
+  ): SequenceContainer<T>;
+};
+
+export interface GridContainerOptions<T = unknown> {
+  width?: number;
+  height?: number;
+  margin?: Margin;
+  rowDomain: Primitive[];
+  columnDomain: Primitive[];
+  row?: string;
+  column?: string;
+  paddingInner?: number;
+  paddingOuter?: number;
+  cellSizing?: "fill" | "intrinsic";
+  showGrid?: boolean;
+  stroke?: string;
+  fill?: string;
+  [option: string]: unknown;
 }
+
+export interface GridContainer<T = unknown> extends Container<T> {}
+
+export const GridContainer: {
+  new <T = unknown>(options: GridContainerOptions<T>): GridContainer<T>;
+};
 
 interface DirectionlessRepeat<T = unknown> {
   readonly type: "repeat";
@@ -251,12 +327,40 @@ export function repeat<T = unknown>(
   options?: RepeatOptions,
 ): DirectionlessRepeat<T>;
 export function embed<T = unknown>(
-  container: SequenceContainer<T>,
+  container: Container<T>,
   repeated: DirectionlessRepeat<T>,
   mapping?: EmbedMapping<T>,
 ): LayoutNode;
+export function customContainer<T = unknown>(
+  options: CustomContainerOptions<T>,
+): Container<T>;
 export function sequenceContainer<T = unknown>(
   options?: SequenceContainerOptions<T>,
 ): SequenceContainer<T>;
+export function gridContainer<T = unknown>(
+  options: GridContainerOptions<T>,
+): GridContainer<T>;
+
+export function parseCsv<T extends Datum = Datum>(
+  csvText: string,
+  options?: ParseCsvOptions,
+): Table<T>;
+export function loadCsvText(url: string | URL): Promise<string>;
+export function tableColumns<T extends Datum = Datum>(
+  rows: ReadonlyArray<T> & { columns?: string[] },
+): string[];
+export function numericColumns<T extends Datum = Datum>(
+  rows: ReadonlyArray<T> & { columns?: string[] },
+  options?: NumericColumnsOptions,
+): string[];
+export function crossJoin<L, R>(
+  left: ReadonlyArray<L>,
+  right: ReadonlyArray<R>,
+): Array<[L, R]>;
+export function crossJoin<L, R, O>(
+  left: ReadonlyArray<L>,
+  right: ReadonlyArray<R>,
+  mapper: (left: L, right: R, leftIndex: number, rightIndex: number) => O,
+): O[];
 
 export function validateChartConfig(config?: ChartConfig): void;

@@ -2,19 +2,28 @@ import assert from "node:assert/strict";
 import * as api from "../../src/index.js";
 
 const stableExports = [
+  "GridContainer",
+  "SequenceContainer",
   "assertLayoutNode",
   "chart",
+  "crossJoin",
   "custom",
+  "customContainer",
   "embed",
   "frame",
+  "gridContainer",
   "image",
   "isLayoutNode",
+  "loadCsvText",
+  "numericColumns",
+  "parseCsv",
   "repeat",
   "repeatX",
   "repeatY",
   "sequenceContainer",
   "stackX",
   "stackY",
+  "tableColumns",
   "text",
   "validateChartConfig",
 ].sort();

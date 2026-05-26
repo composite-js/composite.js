@@ -1,0 +1,133 @@
+import {
+  chart,
+  crossJoin,
+  embed,
+  gridContainer,
+  loadCsvText,
+  numericColumns,
+  parseCsv,
+  repeat,
+  repeatX,
+  repeatY,
+  stackX,
+  stackY,
+  text,
+} from "../src/index.js";
+
+const irisCsvUrl = new URL("./dataset/iris.csv", import.meta.url);
+
+const variableLabels = {
+  SepalLengthCm: "Sepal length",
+  SepalWidthCm: "Sepal width",
+  PetalLengthCm: "Petal length",
+  PetalWidthCm: "Petal width",
+};
+
+const cellSize = 136;
+const labelWidth = 112;
+const labelHeight = 34;
+
+function buildView(samples) {
+  const variables = numericColumns(samples, { exclude: ["Id", "Species"] }).map(
+    (key) => ({
+      key,
+      label: variableLabels[key] || key,
+    }),
+  );
+  const matrixCells = crossJoin(variables, variables, (row, column) => ({
+    id: `${row.key}-${column.key}`,
+    row: row.key,
+    column: column.key,
+    label: row.key === column.key ? row.label : "",
+  }));
+  const matrixSize = cellSize * variables.length;
+
+  const matrix = embed(
+    gridContainer({
+      width: matrixSize,
+      height: matrixSize,
+      rowDomain: variables.map((variable) => variable.key),
+      columnDomain: variables.map((variable) => variable.key),
+      stroke: "#94a3b8",
+      fill: "#ffffff",
+    }),
+    repeat(matrixCells, (cell) => {
+      if (cell.row === cell.column) {
+        return text({
+          text: cell.label,
+          fill: "#334155",
+          fontSize: 13,
+          fontWeight: 600,
+        });
+      }
+
+      return chart({
+        mark: "scatter",
+        margin: { top: 10, right: 10, bottom: 10, left: 10 },
+        data: samples,
+        encoding: {
+          x: cell.column,
+          y: cell.row,
+        },
+        radius: 2.5,
+        color: "#2563eb",
+        showXAxis: false,
+        showYAxis: false,
+      });
+    }),
+    { row: "row", column: "column", key: "id" },
+  );
+
+  const columnLabels = repeatX(
+    variables,
+    (variable) =>
+      text({
+        text: variable.label,
+        fill: "#334155",
+        fontSize: 12,
+        fontWeight: 600,
+      }),
+    {
+      width: matrixSize,
+      height: labelHeight,
+      paddingInner: 0,
+      paddingOuter: 0,
+    },
+  );
+
+  const rowLabels = repeatY(
+    variables,
+    (variable) =>
+      text({
+        text: variable.label,
+        x: labelWidth - 8,
+        fill: "#334155",
+        fontSize: 12,
+        fontWeight: 600,
+        textAnchor: "end",
+      }),
+    {
+      width: labelWidth,
+      height: matrixSize,
+      paddingInner: 0,
+      paddingOuter: 0,
+    },
+  );
+
+  return stackX([rowLabels, stackY([columnLabels, matrix])], {
+    align: [null, matrix],
+  });
+}
+
+export async function createExample() {
+  const csvText = await loadCsvText(irisCsvUrl);
+  const samples = parseCsv(csvText);
+
+  return buildView(samples);
+}
+
+if (typeof document !== "undefined") {
+  createExample().then((view) => {
+    view.render(document.getElementById("app"));
+  });
+}

@@ -22,7 +22,13 @@ export {
   embed,
   repeat,
 } from "./layout/composition.js";
-export { SequenceContainer, sequenceContainer } from "./container/sequence.js";
+export {
+  customContainer,
+  GridContainer,
+  gridContainer,
+  SequenceContainer,
+  sequenceContainer,
+} from "./container/index.js";
 export { LayoutEngine } from "./layout/engine.js";
 export { DomMeasurementAdapter } from "./layout/measurement.js";
 export { Node, assertLayoutNode, isLayoutNode } from "./layout/node.js";

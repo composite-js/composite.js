@@ -67,6 +67,8 @@ options)` method as a custom leaf layout node.
 - `repeat(domain, fn, options)` creates a directionless repeated layout that can be embedded into a compatible container.
 - `embed(container, repeated, mapping)` places repeated children into slots produced by a container.
 - `sequenceContainer(options)` creates a container abstraction for sequence-style embedded layouts.
+- `gridContainer(options)` creates a two-dimensional discrete grid container for embedded layouts.
+- `customContainer(options)` creates a user-defined container with normalized sizing, margin defaults, and contract validation.
 - `isLayoutNode(value)` and `assertLayoutNode(value, label)` check values before
   passing them into composition helpers.
 - `validateChartConfig(config)` validates chart mark, encoding, and data shape
@@ -104,6 +106,8 @@ resolves its mark type and delegates rendering to a mark renderer in
 `src/mark/`.
 
 Composition nodes live in `src/layout/composition.js`. `Stack` arranges children horizontally or vertically, `RepeatX` and `RepeatY` generate repeated children along one axis, and `Embedded` renders repeated children into slots produced by a container. All of these are layout nodes, so they can be nested.
+
+Containers are data-driven spatial organizers for embedded layout nodes. A container provides `width`, `height`, `margin`, and `slots(data, mapping, size)`, and may render a structural background layer with `render(svg, options)`. Containers should organize repeated children rather than encode quantitative values as primary marks; use embedded `chart(...)` or `custom(...)` nodes for the visual encoding itself. Built-in containers include `sequenceContainer()` and `gridContainer()`, while `customContainer()` is the recommended extension point for user-defined slot logic.
 
 The internal layout pipeline has three main parts:
 

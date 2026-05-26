@@ -1,16 +1,14 @@
 import * as d3 from "d3";
-
-function valueOf(accessor, datum, index) {
-  if (typeof accessor === "function") return accessor(datum, index);
-  return datum?.[accessor];
-}
+import { normalizeContainerOptions, valueOf } from "./base.js";
 
 export class SequenceContainer {
   constructor(options = {}) {
-    this.options = options;
-    this.width = options.width || 400;
-    this.height = options.height || 300;
-    this.margin = options.margin || { top: 0, right: 0, bottom: 0, left: 0 };
+    const normalized = normalizeContainerOptions(options);
+
+    this.options = normalized;
+    this.width = normalized.width;
+    this.height = normalized.height;
+    this.margin = normalized.margin;
     this.xDomain = options.xDomain || [];
     this.yDomain = options.yDomain || [];
     this.tracks = options.tracks || this.yDomain;
@@ -32,8 +30,8 @@ export class SequenceContainer {
   }
 
   slots(data, mapping = {}, size = {}) {
-    const width = size.width || this.width;
-    const height = size.height || this.height;
+    const width = size.width ?? this.width;
+    const height = size.height ?? this.height;
     const x = this.xScale(width);
     const y = this.yScale(height);
     const xAccessor = mapping.x || this.xField;
@@ -58,9 +56,9 @@ export class SequenceContainer {
   }
 
   render(svg, renderOptions = {}) {
-    const width = renderOptions.width || this.width;
-    const height = renderOptions.height || this.height;
-    const margin = renderOptions.margin || this.margin;
+    const width = renderOptions.width ?? this.width;
+    const height = renderOptions.height ?? this.height;
+    const margin = renderOptions.margin ?? this.margin;
     const container = d3.select(svg);
     const x = this.xScale(width);
     const y = this.yScale(height);

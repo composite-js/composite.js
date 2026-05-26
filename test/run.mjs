@@ -1,5 +1,6 @@
 const tests = [
   "./api/dsl.test.mjs",
+  "./api/data.test.mjs",
   "./api/public-contract.test.mjs",
   "./chart-renderer-dispatch.test.mjs",
   "./axis.test.mjs",
@@ -11,6 +12,8 @@ const tests = [
   "./layout/repeat-shared-domain.test.mjs",
   "./layout/image.test.mjs",
   "./container/sequence.test.mjs",
+  "./container/grid.test.mjs",
+  "./container/custom.test.mjs",
   "./mark/bar.test.mjs",
   "./mark/scatter.test.mjs",
   "./mark/bubble.test.mjs",
@@ -33,6 +36,7 @@ const tests = [
   "./site/homepage.test.mjs",
   "./site/example-assets.test.mjs",
   "./site/example-card-style.test.mjs",
+  "./site/example-preview-runner.test.mjs",
   "./site/code-block-style.test.mjs",
   "./site/docs-nav.test.mjs",
   "./site/docs-content.test.mjs",

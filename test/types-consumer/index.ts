@@ -1,20 +1,28 @@
 import {
   assertLayoutNode,
   chart,
+  crossJoin,
+  customContainer,
   custom,
   embed,
   frame,
+  gridContainer,
   image,
   isLayoutNode,
+  loadCsvText,
+  numericColumns,
+  parseCsv,
   repeat,
   repeatX,
   repeatY,
   sequenceContainer,
   stackX,
   stackY,
+  tableColumns,
   text,
   validateChartConfig,
   type ChartConfig,
+  type Container,
   type CustomRenderable,
   type LayoutNode,
 } from "composite-js";
@@ -40,6 +48,25 @@ const rows: Row[] = [
   { category: "A", value: 12, group: "control" },
   { category: "B", value: 18, group: "variant" },
 ];
+
+const parsedRows = parseCsv<Row>("category,value,group\nA,12,control\n", {
+  autoType: true,
+});
+const loadedCsvText: Promise<string> = loadCsvText(
+  new URL("file:///tmp/composite-js-types.csv"),
+);
+const headerlessRows = parseCsv<Row>("B,18,variant\n", {
+  columns: ["category", "value", "group"],
+});
+const parsedColumns: string[] = tableColumns(parsedRows);
+const parsedNumericColumns: string[] = numericColumns(parsedRows, {
+  exclude: ["category"],
+});
+const pairs: Array<{ category: string; metric: string }> = crossJoin(
+  rows,
+  parsedNumericColumns,
+  (rowDatum, metric) => ({ category: rowDatum.category, metric }),
+);
 
 const config: ChartConfig<Row> = {
   mark: "bar",
@@ -101,7 +128,41 @@ const embedded = embed(
   { x: "category", y: "group", key: "category", width: 48, height: 48 },
 );
 
-const view = stackY([framed, repeatedX, repeatedY, embedded], { margin: 12 });
+const grid = gridContainer<Row>({
+  rowDomain: ["control", "variant"],
+  columnDomain: ["A", "B"],
+  row: "group",
+  column: "category",
+  cellSizing: "fill",
+});
+
+const customGrid: Container<Row> = customContainer<Row>({
+  width: 120,
+  height: 80,
+  slots(data, mapping) {
+    return data.map((datum, index) => ({
+      datum,
+      key:
+        mapping.key !== undefined && typeof mapping.key === "function"
+          ? mapping.key(datum, index)
+          : index,
+      x: index * 20,
+      y: 20,
+    }));
+  },
+});
+
+const embeddedGrid = embed(grid, repeated, {
+  row: "group",
+  column: "category",
+  key: "category",
+});
+const embeddedCustom = embed(customGrid, repeated, { key: "category" });
+
+const view = stackY(
+  [framed, repeatedX, repeatedY, embedded, embeddedGrid, embeddedCustom],
+  { margin: 12 },
+);
 
 const mount = document.createElement("div");
 view.render(mount, { width: 720, height: 420 });
@@ -118,6 +179,10 @@ const asserted: LayoutNode = unknownValue;
 asserted.render(mount);
 
 void exported;
+void loadedCsvText;
+void headerlessRows;
+void parsedColumns;
+void pairs;
 void BarChartRenderer;
 void Chart;
 void LayoutEngine;

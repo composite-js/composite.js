@@ -10,6 +10,10 @@ const exampleFiles = readdirSync(examplesDir)
   .sort();
 
 assert.ok(exampleFiles.includes("country.js"), "country example should exist");
+assert.ok(
+  exampleFiles.includes("scatterplotmatrix.js"),
+  "scatterplotmatrix example should exist",
+);
 
 for (const file of exampleFiles) {
   const moduleUrl = pathToFileURL(path.join(examplesDir, file)).href;
@@ -21,7 +25,7 @@ for (const file of exampleFiles) {
     `${file} should export createExample()`,
   );
 
-  const node = module.createExample();
+  const node = await Promise.resolve(module.createExample());
   assert.ok(isLayoutNode(node), `${file} should create a layout node`);
 
   const svg = await node.export({ format: "svg" });
@@ -41,5 +45,23 @@ for (const file of exampleFiles) {
       "country should not use rectangular FlagCDN artwork",
     );
     assert.match(svg, /<circle\b/, "country should render PAC circles");
+  }
+
+  if (file === "scatterplotmatrix.js") {
+    assert.match(
+      svg,
+      /<circle\b/,
+      "scatterplot-matrix should render scatter plot points",
+    );
+    assert.match(
+      svg,
+      /class="embed"/,
+      "scatterplot-matrix should use an embedded grid layout",
+    );
+    assert.match(
+      svg,
+      /Sepal length/,
+      "scatterplot-matrix should render variable labels",
+    );
   }
 }

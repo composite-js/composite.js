@@ -1,4 +1,5 @@
 import * as d3 from "d3";
+import { validateContainer } from "../container/base.js";
 import { BBox } from "../utils/bbox.js";
 import { LayoutEngine } from "./engine.js";
 import { Node, assertLayoutNode } from "./node.js";
@@ -192,6 +193,7 @@ export class DirectionlessRepeat {
 export class Embedded extends Node {
   constructor(container, repeated, mapping = {}) {
     super();
+    validateContainer(container);
     this.container = container;
     this.repeated = repeated;
     this.mapping = mapping;
@@ -226,7 +228,9 @@ export class Embedded extends Node {
       height,
     });
 
-    this.container.render(svg, { width, height, margin });
+    if (typeof this.container.render === "function") {
+      this.container.render(svg, { width, height, margin });
+    }
 
     const parent = d3.select(svg);
     children.forEach((child, index) => {
@@ -259,9 +263,7 @@ export function embed(container, repeated, mapping = {}) {
     throw new TypeError("embed() expects a repeat() result.");
   }
 
-  if (!container || typeof container.slots !== "function") {
-    throw new TypeError("embed() expects a container with slots().");
-  }
+  validateContainer(container, "embed() container");
 
   return new Embedded(container, repeated, mapping);
 }

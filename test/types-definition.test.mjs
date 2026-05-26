@@ -54,6 +54,24 @@ assert.match(
 
 assert.match(
   declarations,
+  /export type Table<[^>]+>\s*=\s*[^;]+columns\?: string\[\]/,
+  "Declarations should include a Table type with optional columns metadata",
+);
+
+assert.match(
+  declarations,
+  /export interface ParseCsvOptions/,
+  "Declarations should include ParseCsvOptions",
+);
+
+assert.match(
+  declarations,
+  /export interface NumericColumnsOptions/,
+  "Declarations should include NumericColumnsOptions",
+);
+
+assert.match(
+  declarations,
   /shareDomains\?: boolean;/,
   "RepeatOptions should expose shareDomains",
 );
@@ -80,6 +98,36 @@ assert.match(
   declarations,
   /export function assertLayoutNode\(\s*value: unknown,\s*label\?: string,\s*\): asserts value is LayoutNode;/,
   "assertLayoutNode() should assert unknown values are LayoutNode",
+);
+
+assert.match(
+  declarations,
+  /export function parseCsv<[^>]+>\(\s*csvText: string,\s*options\?: ParseCsvOptions,\s*\): Table<[^>]+>;/,
+  "parseCsv() should parse CSV text into a typed table",
+);
+
+assert.match(
+  declarations,
+  /export function loadCsvText\(\s*url: string \| URL,?\s*\): Promise<string>;/,
+  "loadCsvText() should load CSV text from a string or URL",
+);
+
+assert.match(
+  declarations,
+  /export function tableColumns<[^>]+>\(\s*rows: ReadonlyArray<[^>]+>[^)]*\): string\[\];/,
+  "tableColumns() should return column names",
+);
+
+assert.match(
+  declarations,
+  /export function numericColumns<[^>]+>\(\s*rows: ReadonlyArray<[^>]+>[^)]*options\?: NumericColumnsOptions,\s*\): string\[\];/,
+  "numericColumns() should infer numeric columns",
+);
+
+assert.match(
+  declarations,
+  /export function crossJoin<[^>]+>\(\s*left: ReadonlyArray<[^>]+>[^)]*right: ReadonlyArray<[^>]+>/,
+  "crossJoin() should expose a typed cartesian product helper",
 );
 
 assert.doesNotMatch(
