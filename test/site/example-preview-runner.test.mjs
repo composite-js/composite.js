@@ -43,6 +43,14 @@ const runnerScriptSource = readFileSync(runnerScriptPath, "utf8");
   "getExampleSnippet",
   "node.render",
   "fitRenderedPreview",
+  "AsyncFunction",
+  "await runSnippet",
+  "crossJoin: composite.crossJoin",
+  "gridContainer: composite.gridContainer",
+  "loadCsvText: composite.loadCsvText",
+  "numericColumns: composite.numericColumns",
+  "parseCsv: composite.parseCsv",
+  "exampleAssetUrl",
 ].forEach((expectedSource) => {
   assert.ok(
     runnerScriptSource.includes(expectedSource),

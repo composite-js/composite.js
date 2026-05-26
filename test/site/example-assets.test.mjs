@@ -35,3 +35,20 @@ import { examples, featuredExamples } from "../../site/src/data/examples.js";
     "Country should not appear in homepage featured examples",
   );
 }
+
+{
+  const scatterplotmatrix = examples.find(
+    (example) => example.slug === "scatterplotmatrix",
+  );
+
+  assert.ok(
+    scatterplotmatrix,
+    "Scatterplot Matrix should be registered in site examples",
+  );
+  assert.equal(scatterplotmatrix.featured, false);
+  assert.equal(scatterplotmatrix.image, "/examples/scatterplotmatrix.svg");
+  assert.ok(
+    !featuredExamples.some((example) => example.slug === "scatterplotmatrix"),
+    "Scatterplot Matrix should not appear in homepage featured examples",
+  );
+}

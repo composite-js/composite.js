@@ -64,6 +64,11 @@ const snippetDir = path.resolve(root, "site/src/data/example-snippets");
       /^\s*export\s/m,
       `${example.slug} snippet should not contain exports`,
     );
+    assert.doesNotMatch(
+      snippet,
+      /\bimport\.meta\b/,
+      `${example.slug} snippet should not contain module-only import.meta`,
+    );
   });
 }
 
@@ -269,8 +274,8 @@ const snippetDir = path.resolve(root, "site/src/data/example-snippets");
     "Runner script should import the local composite library before bundling",
   );
   assert.ok(
-    runnerScriptSource.includes("new Function"),
-    "Runner should execute snippets through a function wrapper",
+    runnerScriptSource.includes("AsyncFunction"),
+    "Runner should execute snippets through an async function wrapper",
   );
   assert.ok(
     runnerScriptSource.includes("composite-example-runner"),
@@ -288,10 +293,21 @@ const snippetDir = path.resolve(root, "site/src/data/example-snippets");
       `Runner should support preview interaction: ${expectedSource}`,
     );
   });
-  ["custom: composite.custom", "d3"].forEach((expectedSource) => {
+  [
+    "AsyncFunction",
+    "await runSnippet",
+    "crossJoin: composite.crossJoin",
+    "gridContainer: composite.gridContainer",
+    "loadCsvText: composite.loadCsvText",
+    "numericColumns: composite.numericColumns",
+    "parseCsv: composite.parseCsv",
+    "exampleAssetUrl",
+    "custom: composite.custom",
+    "d3",
+  ].forEach((expectedSource) => {
     assert.ok(
       runnerScriptSource.includes(expectedSource),
-      `Runner should expose custom chart helper: ${expectedSource}`,
+      `Runner should expose example helper: ${expectedSource}`,
     );
   });
 }

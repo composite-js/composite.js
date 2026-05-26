@@ -5,6 +5,7 @@ const editorMessageSource = "composite-example-editor";
 const runnerMessageSource = "composite-example-runner";
 const viewport = document.getElementById("viewport");
 const root = document.getElementById("app");
+const AsyncFunction = async function () {}.constructor;
 const minPreviewScale = 0.2;
 const maxPreviewScale = 4;
 const previewTransform = {
@@ -12,12 +13,22 @@ const previewTransform = {
   y: 0,
   scale: 1,
 };
+const exampleAssetBase = new URL(
+  `${import.meta.env.BASE_URL || "/"}examples/`,
+  window.location.origin,
+);
 const helpers = {
   chart: composite.chart,
+  crossJoin: composite.crossJoin,
   custom: composite.custom,
+  customContainer: composite.customContainer,
   embed: composite.embed,
   frame: composite.frame,
+  gridContainer: composite.gridContainer,
   image: composite.image,
+  loadCsvText: composite.loadCsvText,
+  numericColumns: composite.numericColumns,
+  parseCsv: composite.parseCsv,
   repeat: composite.repeat,
   repeatX: composite.repeatX,
   repeatY: composite.repeatY,
@@ -27,6 +38,12 @@ const helpers = {
   text: composite.text,
   d3,
 };
+
+function exampleAssetUrl(relativePath) {
+  return new URL(String(relativePath).replace(/^\.\//u, ""), exampleAssetBase);
+}
+
+helpers.exampleAssetUrl = exampleAssetUrl;
 
 function postStatus(type, payload = {}) {
   window.parent.postMessage(
@@ -136,14 +153,14 @@ function initializePreviewInteraction() {
   });
 }
 
-function renderSnippet(snippet) {
+async function renderSnippet(snippet) {
   try {
     root.replaceChildren();
     resetPreviewTransform();
 
     const helperNames = Object.keys(helpers);
-    const runSnippet = new Function(...helperNames, snippet);
-    const node = runSnippet(...helperNames.map((name) => helpers[name]));
+    const runSnippet = new AsyncFunction(...helperNames, snippet);
+    const node = await runSnippet(...helperNames.map((name) => helpers[name]));
 
     if (!node || typeof node.render !== "function") {
       throw new Error("Snippet must return a composite layout node.");
@@ -164,7 +181,7 @@ window.addEventListener("message", (event) => {
   if (!message || message.source !== editorMessageSource) return;
   if (message.type !== "run") return;
 
-  renderSnippet(String(message.snippet || ""));
+  void renderSnippet(String(message.snippet || ""));
 });
 
 initializePreviewInteraction();

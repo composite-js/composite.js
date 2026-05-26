@@ -6,15 +6,26 @@ import { getExampleSnippet } from "../data/example-snippets.js";
 const viewport = document.getElementById("viewport");
 const root = document.getElementById("app");
 const status = document.getElementById("status");
+const AsyncFunction = async function () {}.constructor;
 const minPreviewScale = 0.08;
 const maxPreviewScale = 1;
 const previewPadding = 12;
+const exampleAssetBase = new URL(
+  `${import.meta.env.BASE_URL || "/"}examples/`,
+  window.location.origin,
+);
 const helpers = {
   chart: composite.chart,
+  crossJoin: composite.crossJoin,
   custom: composite.custom,
+  customContainer: composite.customContainer,
   embed: composite.embed,
   frame: composite.frame,
+  gridContainer: composite.gridContainer,
   image: composite.image,
+  loadCsvText: composite.loadCsvText,
+  numericColumns: composite.numericColumns,
+  parseCsv: composite.parseCsv,
   repeat: composite.repeat,
   repeatX: composite.repeatX,
   repeatY: composite.repeatY,
@@ -24,6 +35,12 @@ const helpers = {
   text: composite.text,
   d3,
 };
+
+function exampleAssetUrl(relativePath) {
+  return new URL(String(relativePath).replace(/^\.\//u, ""), exampleAssetBase);
+}
+
+helpers.exampleAssetUrl = exampleAssetUrl;
 
 function showStatus(message) {
   root.replaceChildren();
@@ -93,14 +110,14 @@ function fitRenderedPreview() {
   root.style.transform = `translate(${x}px, ${y}px) scale(${scale})`;
 }
 
-function renderSnippet(snippet) {
+async function renderSnippet(snippet) {
   root.replaceChildren();
   root.style.transform = "";
   hideStatus();
 
   const helperNames = Object.keys(helpers);
-  const runSnippet = new Function(...helperNames, snippet);
-  const node = runSnippet(...helperNames.map((name) => helpers[name]));
+  const runSnippet = new AsyncFunction(...helperNames, snippet);
+  const node = await runSnippet(...helperNames.map((name) => helpers[name]));
 
   if (!node || typeof node.render !== "function") {
     throw new Error("Snippet must return a composite layout node.");
@@ -110,7 +127,7 @@ function renderSnippet(snippet) {
   window.requestAnimationFrame(fitRenderedPreview);
 }
 
-function renderSelectedExample() {
+async function renderSelectedExample() {
   try {
     const searchParams = new URLSearchParams(window.location.search);
     const exampleSlug = searchParams.get("example");
@@ -120,11 +137,11 @@ function renderSelectedExample() {
       throw new Error("Unknown example");
     }
 
-    renderSnippet(getExampleSnippet(example));
+    await renderSnippet(getExampleSnippet(example));
   } catch (error) {
     showStatus(error instanceof Error ? error.message : "Preview unavailable");
   }
 }
 
 window.addEventListener("resize", fitRenderedPreview);
-renderSelectedExample();
+void renderSelectedExample();

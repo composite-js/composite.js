@@ -1,6 +1,6 @@
 import path from "node:path";
 import { pathToFileURL } from "node:url";
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { cp, mkdir, readFile, writeFile } from "node:fs/promises";
 import { examples } from "../site/src/data/examples.js";
 
 const defaultOutputDir = path.resolve(
@@ -100,10 +100,18 @@ function dedentBlock(source) {
     .trim();
 }
 
+function rewriteExampleAssetUrls(source) {
+  return source.replace(
+    /new URL\(\s*(['"])\.\/([^'"]+)\1\s*,\s*import\.meta\.url\s*\)/gu,
+    (_match, _quote, relativePath) =>
+      `exampleAssetUrl(${JSON.stringify(relativePath)})`,
+  );
+}
+
 export function createExampleSnippet(source) {
   const normalizedSource = source.replace(/\r\n/g, "\n");
   const createExampleMatch =
-    /export\s+function\s+createExample\s*\([^)]*\)\s*\{/u.exec(
+    /export\s+(?:async\s+)?function\s+createExample\s*\([^)]*\)\s*\{/u.exec(
       normalizedSource,
     );
 
@@ -134,7 +142,21 @@ export function createExampleSnippet(source) {
     throw new Error("createExample() must return a layout node.");
   }
 
-  return snippet;
+  return rewriteExampleAssetUrls(snippet);
+}
+
+async function syncExampleAssets(options = {}) {
+  const examplesDir = options.examplesDir || defaultExamplesDir;
+  const exampleAssetsDir =
+    options.exampleAssetsDir || path.join(examplesDir, "dataset");
+  const outputDir = options.outputDir || defaultOutputDir;
+
+  await cp(exampleAssetsDir, path.join(outputDir, "dataset"), {
+    recursive: true,
+    force: true,
+  }).catch((error) => {
+    if (error?.code !== "ENOENT") throw error;
+  });
 }
 
 export async function syncExampleSnippet(example, options = {}) {
@@ -169,6 +191,8 @@ export async function exportSiteExamples(options = {}) {
   const exampleList = options.examples || examples;
   const outputDir = options.outputDir || defaultOutputDir;
   const logger = options.logger || console.log;
+
+  await syncExampleAssets(options);
 
   for (const example of exampleList) {
     const snippet = await syncExampleSnippet(example, options);

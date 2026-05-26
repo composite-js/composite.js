@@ -5,6 +5,7 @@ import mirror from "./example-snippets/mirror.txt?raw";
 import nobel from "./example-snippets/nobel.txt?raw";
 import olympic from "./example-snippets/olympic.txt?raw";
 import rainfall from "./example-snippets/rainfall.txt?raw";
+import scatterplotmatrix from "./example-snippets/scatterplotmatrix.txt?raw";
 import upset from "./example-snippets/upset.txt?raw";
 
 const snippets = {
@@ -15,6 +16,7 @@ const snippets = {
   nobel,
   olympic,
   rainfall,
+  scatterplotmatrix,
   upset,
 };
 

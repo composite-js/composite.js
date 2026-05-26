@@ -34,6 +34,7 @@ const tests = [
   "./types-definition.test.mjs",
   "./workflow.test.mjs",
   "./site/homepage.test.mjs",
+  "./site/example-registry.test.mjs",
   "./site/example-assets.test.mjs",
   "./site/example-card-style.test.mjs",
   "./site/example-preview-runner.test.mjs",

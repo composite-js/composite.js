@@ -58,6 +58,14 @@ export const examples = [
     tags: ["image", "bar", "pac"],
     featured: false,
   },
+  {
+    slug: "scatterplotmatrix",
+    title: "Scatterplot Matrix",
+    summary: "An Iris pairwise scatterplot matrix with embedded grid cells.",
+    image: "/examples/scatterplotmatrix.svg",
+    tags: ["scatter", "embed", "repeat"],
+    featured: false,
+  },
 ];
 
 export const featuredExamples = examples.filter(

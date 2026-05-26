@@ -66,6 +66,39 @@ const final = stackY([bars]);
 
 return final;`;
 
+const asyncExampleSource = `import { chart, loadCsvText, parseCsv } from "../src/index.js";
+
+const rowsUrl = new URL("./dataset/rows.csv", import.meta.url);
+
+export async function createExample() {
+  const csvText = await loadCsvText(rowsUrl);
+  const rows = parseCsv(csvText);
+
+  return chart({
+    data: rows,
+    mark: "scatter",
+    encoding: {
+      x: "x",
+      y: "y",
+    },
+  });
+}
+`;
+
+const expectedAsyncSnippet = `const rowsUrl = exampleAssetUrl("dataset/rows.csv");
+
+const csvText = await loadCsvText(rowsUrl);
+const rows = parseCsv(csvText);
+
+return chart({
+  data: rows,
+  mark: "scatter",
+  encoding: {
+    x: "x",
+    y: "y",
+  },
+});`;
+
 {
   const snippet = createExampleSnippet(exampleSource);
 
@@ -73,6 +106,15 @@ return final;`;
   assert.doesNotMatch(snippet, /^\s*import\s/m);
   assert.doesNotMatch(snippet, /^\s*export\s/m);
   assert.doesNotMatch(snippet, /\bcreateExample\b/);
+}
+
+{
+  const snippet = createExampleSnippet(asyncExampleSource);
+
+  assert.equal(snippet, expectedAsyncSnippet);
+  assert.doesNotMatch(snippet, /^\s*import\s/m);
+  assert.doesNotMatch(snippet, /^\s*export\s/m);
+  assert.doesNotMatch(snippet, /\bimport\.meta\b/);
 }
 
 {
@@ -133,6 +175,7 @@ return final;`;
     path.join(os.tmpdir(), "composite-example-export-"),
   );
   const examplesDir = path.join(tempRoot, "examples");
+  const datasetDir = path.join(examplesDir, "dataset");
   const snippetDir = path.join(tempRoot, "example-snippets");
   const outputDir = path.join(tempRoot, "public-examples");
   const exportSource = `const final = {
@@ -147,7 +190,9 @@ export function createExample() {
 
   try {
     mkdirSync(examplesDir, { recursive: true });
+    mkdirSync(datasetDir, { recursive: true });
     writeFileSync(path.join(examplesDir, "foo.js"), exportSource);
+    writeFileSync(path.join(datasetDir, "rows.csv"), "x,y\n1,2\n");
 
     await exportSiteExamples({
       examples: [{ slug: "foo" }],
@@ -164,6 +209,10 @@ export function createExample() {
 };
 
 return final;\n`,
+    );
+    assert.equal(
+      readFileSync(path.join(outputDir, "dataset", "rows.csv"), "utf8"),
+      "x,y\n1,2\n",
     );
     assert.deepEqual(messages, [
       `Exported ${path.relative(process.cwd(), path.join(snippetDir, "foo.txt"))}`,
