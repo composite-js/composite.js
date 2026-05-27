@@ -9,7 +9,7 @@ function baseOptions(overrides = {}) {
     width: 120,
     height: 60,
     margin: { top: 0, right: 0, bottom: 0, left: 0 },
-    encoding: { x: "year", y: "count" },
+    encoding: { x: "count", y: "year" },
     ...overrides,
   };
 }
@@ -37,7 +37,10 @@ function baseOptions(overrides = {}) {
 {
   const svg = createFakeSvg();
   const renderer = new ProportionalAreaChartRenderer({
-    ...baseOptions({ shape: "square", direction: "horizontal" }),
+    ...baseOptions({
+      shape: "square",
+      encoding: { x: "year", y: "count" },
+    }),
   });
 
   const axisConfig = renderer.render(svg, [
@@ -61,7 +64,7 @@ function baseOptions(overrides = {}) {
   const chart = new Chart({
     mark: "pac",
     data: [{ year: "2000", count: 100 }],
-    encoding: { x: "year", y: "count" },
+    encoding: { x: "count", y: "year" },
   });
 
   assert.equal(chart.mark, "pac");
@@ -73,7 +76,7 @@ function baseOptions(overrides = {}) {
     width: 80,
     height: 100,
     margin: { top: 0, right: 0, bottom: 0, left: 0 },
-    encoding: { x: "year", y: "count" },
+    encoding: { x: "count", y: "year" },
   });
 
   renderer.render(svg, [
@@ -109,7 +112,7 @@ function baseOptions(overrides = {}) {
     width: 50,
     height: 90,
     margin: { top: 0, right: 0, bottom: 0, left: 0 },
-    encoding: { x: "year", y: "count", xDomain: years },
+    encoding: { x: "count", y: "year", yDomain: years },
     padding,
   });
   const dumbbellRenderer = new DumbbellChartRenderer({

@@ -45,7 +45,7 @@ function baseOptions(overrides = {}) {
 {
   const svg = createFakeSvg();
   const renderer = new DumbbellChartRenderer({
-    ...baseOptions({ direction: "horizontal" }),
+    ...baseOptions(),
     encoding: { x: "group", y: "score" },
   });
 
@@ -124,7 +124,6 @@ function baseOptions(overrides = {}) {
   const svg = createFakeSvg();
   const renderer = new DumbbellChartRenderer({
     ...baseOptions({
-      direction: "horizontal",
       xAxisPos: "top",
       yAxisPos: "right",
     }),

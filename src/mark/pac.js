@@ -1,11 +1,11 @@
 import * as d3 from "d3";
 import { MarkRenderer } from "./mark.js";
 import { bandScale, categoricalDomain } from "./scale.js";
+import { inferXYOrientation } from "./orientation.js";
 
 export class ProportionalAreaChartRenderer extends MarkRenderer {
   constructor(options = {}) {
     super(options);
-    this.direction = options.direction || "vertical";
     this.shape = options.shape || "circle";
     this.color = options.color || "steelblue";
     this.colors = options.colors;
@@ -24,25 +24,31 @@ export class ProportionalAreaChartRenderer extends MarkRenderer {
   }
 
   render(svg, data) {
-    return this.direction === "horizontal"
+    const orientation = inferXYOrientation("pac", data, this.encoding);
+
+    return orientation.valueChannel === "y"
       ? this._renderHorizontal(svg, data)
       : this._renderVertical(svg, data);
   }
 
-  _domains(data) {
-    const categoryField = this.encoding.x;
-    return categoricalDomain(data, categoryField, this.encoding.xDomain);
+  _categoryDomain(data, categoryField, categoryChannel) {
+    return categoricalDomain(
+      data,
+      categoryField,
+      this.encoding[`${categoryChannel}Domain`],
+    );
   }
 
   _maxShapeSize(bandwidth, crossSize) {
     return Math.max(0, Math.min(bandwidth, crossSize));
   }
 
-  _sizeScale(data, maxShapeSize) {
-    const valueField = this.encoding.y;
-    const maxValue = d3.max(data, (d) =>
-      Math.max(0, Number(d[valueField]) || 0),
-    );
+  _sizeScale(data, maxShapeSize, valueField, valueChannel) {
+    const configuredDomain = this.encoding[`${valueChannel}Domain`];
+    const maxValue =
+      configuredDomain !== undefined
+        ? d3.max(configuredDomain, (value) => Math.max(0, Number(value) || 0))
+        : d3.max(data, (d) => Math.max(0, Number(d[valueField]) || 0));
 
     if (!maxValue) {
       return () => 0;
@@ -91,13 +97,18 @@ export class ProportionalAreaChartRenderer extends MarkRenderer {
   }
 
   _renderVertical(svg, data) {
+    const orientation = inferXYOrientation("pac", data, this.encoding);
     const container = d3.select(svg);
-    const categoryField = this.encoding.x;
-    const valueField = this.encoding.y;
+    const categoryField = orientation.categoryField;
+    const valueField = orientation.valueField;
     const margin = this.margin;
     const chartWidth = this.width;
     const chartHeight = this.height;
-    const categories = this._domains(data);
+    const categories = this._categoryDomain(
+      data,
+      categoryField,
+      orientation.categoryChannel,
+    );
 
     container.selectAll("*").remove();
 
@@ -106,7 +117,12 @@ export class ProportionalAreaChartRenderer extends MarkRenderer {
       outer: this.padding.yOuter,
     });
     const maxShapeSize = this._maxShapeSize(yScale.bandwidth(), chartWidth);
-    const sizeScale = this._sizeScale(data, maxShapeSize);
+    const sizeScale = this._sizeScale(
+      data,
+      maxShapeSize,
+      valueField,
+      orientation.valueChannel,
+    );
     const colorScale = this._colorScale(categories);
 
     data.forEach((d) => {
@@ -133,13 +149,18 @@ export class ProportionalAreaChartRenderer extends MarkRenderer {
   }
 
   _renderHorizontal(svg, data) {
+    const orientation = inferXYOrientation("pac", data, this.encoding);
     const container = d3.select(svg);
-    const categoryField = this.encoding.x;
-    const valueField = this.encoding.y;
+    const categoryField = orientation.categoryField;
+    const valueField = orientation.valueField;
     const margin = this.margin;
     const chartWidth = this.width;
     const chartHeight = this.height;
-    const categories = this._domains(data);
+    const categories = this._categoryDomain(
+      data,
+      categoryField,
+      orientation.categoryChannel,
+    );
 
     container.selectAll("*").remove();
 
@@ -148,7 +169,12 @@ export class ProportionalAreaChartRenderer extends MarkRenderer {
       outer: this.padding.xOuter,
     });
     const maxShapeSize = this._maxShapeSize(xScale.bandwidth(), chartHeight);
-    const sizeScale = this._sizeScale(data, maxShapeSize);
+    const sizeScale = this._sizeScale(
+      data,
+      maxShapeSize,
+      valueField,
+      orientation.valueChannel,
+    );
     const colorScale = this._colorScale(categories);
 
     data.forEach((d) => {

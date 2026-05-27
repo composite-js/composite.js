@@ -85,6 +85,30 @@ await withExportSvgDocument(async (document) => {
 
   repeatX(
     values,
+    (count) =>
+      chart({
+        mark: "pac",
+        data: [{ category: "A", count }],
+        encoding: { x: "count", y: "category" },
+        margin: { top: 0, right: 0, bottom: 0, left: 0 },
+      }),
+    { width: 200, height: 100, paddingInner: 0, paddingOuter: 0 },
+  ).render(svg, { width: 200, height: 100 });
+
+  const radii = svg
+    .querySelectorAll("circle")
+    .map((circle) => numericAttribute(circle, "r"));
+
+  assert.equal(radii.length, 2);
+  assert.ok(radii[0] < radii[1]);
+});
+
+await withExportSvgDocument(async (document) => {
+  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  const values = [10, 100];
+
+  repeatX(
+    values,
     (value, index) =>
       chart({
         mark: "bar",

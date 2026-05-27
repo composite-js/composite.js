@@ -53,6 +53,10 @@ export interface ChartConfig<T extends Datum = Datum> {
         yOuter?: number;
         [key: string]: unknown;
       };
+  /**
+   * Layout direction for marks that explicitly support rotation, such as flow
+   * and stream. Axis-oriented marks infer orientation from encoding.x/y.
+   */
   direction?: "vertical" | "horizontal" | string;
   color?: string;
   colors?: string[];

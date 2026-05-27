@@ -152,7 +152,6 @@ function nobelRow(fieldName) {
       xDomain: [0, 25],
       yDomain: educationDomain,
     },
-    direction: "horizontal",
     width: 210,
     height: 72,
     margin: { top: 14, right: 48, bottom: 28, left: 72 },

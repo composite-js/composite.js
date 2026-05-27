@@ -8,11 +8,11 @@ import {
   xRange,
   yRange,
 } from "./scale.js";
+import { inferXYOrientation } from "./orientation.js";
 
 export class DumbbellChartRenderer extends MarkRenderer {
   constructor(options = {}) {
     super(options);
-    this.direction = options.direction || "vertical";
     this.colors = options.colors ||
       options.colorScheme || ["#1f77b4", "#ff5a5f"];
     this.lineColor = options.lineColor || "#b8c0ff";
@@ -27,7 +27,9 @@ export class DumbbellChartRenderer extends MarkRenderer {
   }
 
   render(svg, data) {
-    return this.direction === "horizontal"
+    const orientation = inferXYOrientation("dumbbell", data, this.encoding);
+
+    return orientation.valueChannel === "y"
       ? this._renderHorizontal(svg, data)
       : this._renderVertical(svg, data);
   }

@@ -39,7 +39,7 @@ function baseOptions(overrides = {}) {
 {
   const svg = createFakeSvg();
   const renderer = new BarChartRenderer({
-    ...baseOptions({ direction: "horizontal", showLabels: true }),
+    ...baseOptions({ showLabels: true }),
     color: "tomato",
     encoding: { x: "value", y: "category" },
   });
@@ -59,7 +59,7 @@ function baseOptions(overrides = {}) {
 {
   const svg = createFakeSvg();
   const renderer = new BarChartRenderer({
-    ...baseOptions({ direction: "horizontal" }),
+    ...baseOptions(),
     encoding: {
       x: "value",
       y: "category",
@@ -78,7 +78,7 @@ function baseOptions(overrides = {}) {
 {
   const svg = createFakeSvg();
   const renderer = new GroupBarChartRenderer({
-    ...baseOptions({ direction: "horizontal" }),
+    ...baseOptions(),
     encoding: {
       x: "value",
       y: "category",
@@ -131,7 +131,7 @@ function baseOptions(overrides = {}) {
 {
   const svg = createFakeSvg();
   const renderer = new BarChartRenderer({
-    ...baseOptions({ direction: "horizontal", xAxisPos: "top" }),
+    ...baseOptions({ xAxisPos: "top" }),
     encoding: {
       x: "value",
       y: "category",
@@ -186,7 +186,7 @@ function baseOptions(overrides = {}) {
 {
   const svg = createFakeSvg();
   const renderer = new StackBarChartRenderer({
-    ...baseOptions({ direction: "horizontal", showLabels: true }),
+    ...baseOptions({ showLabels: true }),
     colorScheme: ["red", "blue"],
     encoding: { x: "value", y: "category", group: "group" },
   });
@@ -232,7 +232,7 @@ function baseOptions(overrides = {}) {
 {
   const svg = createFakeSvg();
   const renderer = new StackBarChartRenderer({
-    ...baseOptions({ direction: "horizontal", xAxisPos: "top" }),
+    ...baseOptions({ xAxisPos: "top" }),
     colorScheme: ["red", "blue"],
     encoding: {
       x: "value",

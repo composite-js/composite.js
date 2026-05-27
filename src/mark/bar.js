@@ -10,6 +10,7 @@ import {
   xRange,
   yRange,
 } from "./scale.js";
+import { inferXYOrientation } from "./orientation.js";
 
 /**
  * Renderer for grouped bar charts.
@@ -17,7 +18,6 @@ import {
 export class GroupBarChartRenderer extends MarkRenderer {
   constructor(options = {}) {
     super(options);
-    this.direction = options.direction || "vertical";
     this.colorScheme = options.colorScheme || d3.schemeCategory10;
     this.showLabels = options.showLabels || false;
     const padding = options.padding || {};
@@ -31,7 +31,9 @@ export class GroupBarChartRenderer extends MarkRenderer {
   }
 
   render(svg, data) {
-    return this.direction === "horizontal"
+    const orientation = inferXYOrientation("groupbar", data, this.encoding);
+
+    return orientation.valueChannel === "x"
       ? this._renderHorizontal(svg, data)
       : this._renderVertical(svg, data);
   }
@@ -186,7 +188,6 @@ export class StackBarChartRenderer extends MarkRenderer {
    */
   constructor(options = {}) {
     super(options);
-    this.direction = options.direction || "vertical";
     this.colorScheme = options.colorScheme || d3.schemeCategory10;
     this.showLabels = options.showLabels || false;
     this.showXAxis = options.showXAxis !== undefined ? options.showXAxis : true;
@@ -210,7 +211,9 @@ export class StackBarChartRenderer extends MarkRenderer {
    * @returns {Object} Axis configuration object.
    */
   render(svg, data) {
-    return this.direction === "horizontal"
+    const orientation = inferXYOrientation("stackbar", data, this.encoding);
+
+    return orientation.valueChannel === "x"
       ? this._renderHorizontal(svg, data)
       : this._renderVertical(svg, data);
   }
@@ -422,7 +425,6 @@ export class BarChartRenderer extends MarkRenderer {
    */
   constructor(options = {}) {
     super(options);
-    this.direction = options.direction || "vertical";
     this.color = options.color || "steelblue";
     this.showLabels = options.showLabels || false;
     this.showXAxis = options.showXAxis !== undefined ? options.showXAxis : true;
@@ -446,7 +448,9 @@ export class BarChartRenderer extends MarkRenderer {
    * @returns {Object} Axis configuration object.
    */
   render(svg, data) {
-    return this.direction === "horizontal"
+    const orientation = inferXYOrientation("bar", data, this.encoding);
+
+    return orientation.valueChannel === "x"
       ? this._renderHorizontal(svg, data)
       : this._renderVertical(svg, data);
   }

@@ -159,7 +159,6 @@ const bars = chart({
   height: 640,
   margin: { top: 26, right: 20, bottom: 20, left: 58 },
   data: barData,
-  direction: "horizontal",
   encoding: { x: "count", y: "date", group: "segment" },
   colorScheme: ["#2d6fa8", "#2fb5c4", "#cdebdc"],
   xAxisPos: "top",

@@ -1,3 +1,8 @@
+import {
+  inferXYOrientation,
+  isOrientationInferredMark,
+} from "./orientation.js";
+
 export const MARK_DEFINITIONS = {
   bar: {
     requiredEncoding: ["x", "y"],
@@ -41,7 +46,7 @@ export const MARK_DEFINITIONS = {
   },
   pac: {
     requiredEncoding: ["x", "y"],
-    optionalEncoding: ["xDomain"],
+    optionalEncoding: ["xDomain", "yDomain"],
   },
   pie: {
     requiredEncoding: ["x", "y"],
@@ -135,24 +140,7 @@ function assertFiniteNumbers(mark, data, field, options = {}) {
   });
 }
 
-function valueChannelsForDirection(mark, direction) {
-  if (mark === "bar" || mark === "groupbar" || mark === "stackbar") {
-    return direction === "horizontal" ? ["x"] : ["y"];
-  }
-
-  if (mark === "box") {
-    return direction === "horizontal" ? ["x"] : ["y"];
-  }
-
-  if (mark === "dumbbell") {
-    return direction === "horizontal" ? ["y"] : ["x"];
-  }
-
-  return NUMERIC_FIELD_BY_MARK[mark] || [];
-}
-
-function assertDumbbellPairs(data, encoding, direction) {
-  const categoryChannel = direction === "horizontal" ? "x" : "y";
+function assertDumbbellPairs(data, encoding, categoryChannel) {
   const categoryField = encoding[categoryChannel];
   const counts = new Map();
 
@@ -286,6 +274,12 @@ export function validateChartConfig(config = {}) {
     ...(encoding.size !== undefined ? ["size"] : []),
   ]);
 
+  if (isOrientationInferredMark(mark) && config.direction !== undefined) {
+    throw new Error(
+      `direction is not supported for ${chartLabel(mark)}; infer orientation from encoding.x and encoding.y.`,
+    );
+  }
+
   if (data.length === 0) return;
 
   const dataBackedChannels = [
@@ -299,21 +293,28 @@ export function validateChartConfig(config = {}) {
     return;
   }
 
-  valueChannelsForDirection(mark, config.direction || "vertical").forEach(
-    (channel) => {
-      assertFiniteNumbers(mark, data, encoding[channel]);
-    },
-  );
+  if (isOrientationInferredMark(mark)) {
+    const orientation = inferXYOrientation(mark, data, encoding);
+    assertFiniteNumbers(mark, data, orientation.valueField, {
+      nonNegative: mark === "pac",
+    });
 
-  if (mark === "pie" || mark === "pac" || mark === "flow") {
+    if (mark === "dumbbell") {
+      assertDumbbellPairs(data, encoding, orientation.categoryChannel);
+    }
+
+    return;
+  }
+
+  (NUMERIC_FIELD_BY_MARK[mark] || []).forEach((channel) => {
+    assertFiniteNumbers(mark, data, encoding[channel]);
+  });
+
+  if (mark === "pie" || mark === "flow") {
     assertFiniteNumbers(mark, data, encoding.y, { nonNegative: true });
   }
 
   if (mark === "bubble" && encoding.size !== undefined) {
     assertFiniteNumbers(mark, data, encoding.size, { nonNegative: true });
-  }
-
-  if (mark === "dumbbell") {
-    assertDumbbellPairs(data, encoding, config.direction || "vertical");
   }
 }

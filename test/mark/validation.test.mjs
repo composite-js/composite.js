@@ -24,6 +24,10 @@ function assertInvalid(config, pattern) {
     "group",
   ]);
   assert.deepEqual(MARK_DEFINITIONS.flow.requiredEncoding, ["x", "group", "y"]);
+  assert.deepEqual(MARK_DEFINITIONS.pac.optionalEncoding, [
+    "xDomain",
+    "yDomain",
+  ]);
 }
 
 {
@@ -61,6 +65,12 @@ function assertInvalid(config, pattern) {
   });
 
   assertValid({
+    mark: "pac",
+    data: [{ category: "A", value: 4 }],
+    encoding: { x: "value", y: "category", yDomain: ["A", "B"] },
+  });
+
+  assertValid({
     mark: "matrix",
     data: [
       { column: "C1", row: "R1", active: true },
@@ -87,6 +97,16 @@ function assertInvalid(config, pattern) {
       encoding: { x: "category", y: "value", extra: "ignored" },
     },
     /Unsupported encoding field "extra" for mark "bar"/,
+  );
+
+  assertInvalid(
+    {
+      mark: "bar",
+      direction: "horizontal",
+      data: [{ category: "A", value: 4 }],
+      encoding: { x: "value", y: "category" },
+    },
+    /direction is not supported for mark "bar"/,
   );
 }
 
@@ -197,6 +217,33 @@ function assertInvalid(config, pattern) {
       encoding: { x: "category", y: "value", size: "size" },
     },
     /Field "size" for mark "bubble" must contain non-negative numbers/,
+  );
+
+  assertInvalid(
+    {
+      mark: "bar",
+      data: [{ year: 2020, value: 4 }],
+      encoding: { x: "year", y: "value" },
+    },
+    /Cannot infer orientation for mark "bar".*convert categorical values to strings/,
+  );
+
+  assertInvalid(
+    {
+      mark: "bar",
+      data: [{ start: "A", end: "B" }],
+      encoding: { x: "start", y: "end" },
+    },
+    /Cannot infer orientation for mark "bar".*exactly one of encoding\.x and encoding\.y must contain numbers/,
+  );
+
+  assertInvalid(
+    {
+      mark: "pac",
+      data: [{ category: "A", value: -1 }],
+      encoding: { x: "value", y: "category" },
+    },
+    /Field "value" for mark "pac" must contain non-negative numbers/,
   );
 }
 

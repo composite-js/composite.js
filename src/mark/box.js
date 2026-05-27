@@ -9,6 +9,7 @@ import {
   xRange,
   yRange,
 } from "./scale.js";
+import { inferXYOrientation } from "./orientation.js";
 
 /**
  * Renderer for box plots.
@@ -20,7 +21,6 @@ export class BoxPlotRenderer extends MarkRenderer {
    */
   constructor(options = {}) {
     super(options);
-    this.direction = options.direction || "vertical";
     this.color = options.color || "steelblue";
     this.showXAxis = options.showXAxis !== undefined ? options.showXAxis : true;
     this.showYAxis = options.showYAxis !== undefined ? options.showYAxis : true;
@@ -50,7 +50,9 @@ export class BoxPlotRenderer extends MarkRenderer {
    * @returns {Object} Axis configuration object.
    */
   render(svg, data) {
-    return this.direction === "horizontal"
+    const orientation = inferXYOrientation("box", data, this.encoding);
+
+    return orientation.valueChannel === "x"
       ? this._renderHorizontal(svg, data)
       : this._renderVertical(svg, data);
   }

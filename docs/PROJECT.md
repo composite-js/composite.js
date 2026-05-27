@@ -119,7 +119,7 @@ Rendering is D3-backed. `src/chart.js` selects an internal mark renderer for
 the configured mark type, and mark renderers return axis configuration when
 axes should be drawn by the internal `AxisRenderer`.
 
-Supported chart marks include bars, grouped bars, stacked bars, area charts, lines, matrices, scatters, boxes, bubbles, dumbbells, proportional area charts, pies, flows, and stream graphs. Marks use `encoding.x` and `encoding.y` for primary channels and `encoding.group` for secondary categorical grouping. Flow diagrams use `encoding: { x, group, y }`, support horizontal and vertical directions, can render endpoint headings with `xLabelName` and `groupLabelName`, and can map an array of colors to either `xDomain` or `groupDomain` with `colorBy`.
+Supported chart marks include bars, grouped bars, stacked bars, area charts, lines, matrices, scatters, boxes, bubbles, dumbbells, proportional area charts, pies, flows, and stream graphs. Marks use `encoding.x` and `encoding.y` for primary channels and `encoding.group` for secondary categorical grouping. Axis-oriented marks infer orientation from `encoding.x` and `encoding.y`: exactly one of those channels must contain numbers, and numeric categorical values should be stored as strings. Flow diagrams use `encoding: { x, group, y }`, support horizontal and vertical layout directions, can render endpoint headings with `xLabelName` and `groupLabelName`, and can map an array of colors to either `xDomain` or `groupDomain` with `colorBy`.
 
 ## Directory Guide
 
@@ -145,6 +145,7 @@ Supported chart marks include bars, grouped bars, stacked bars, area charts, lin
 
 - Keep source comments and project documentation in English.
 - Preserve ESM style across source and examples.
+- For new axis-oriented marks, keep `encoding.x` tied to the rendered x channel and `encoding.y` tied to the rendered y channel. Do not add a mark-level `direction` option unless the mark needs a layout rotation like `flow` or `stream`.
 - Keep composition inputs as layout nodes. If a user-facing API accepts charts for composition, it should accept nodes created by factory helpers.
 - Prefer focused tests near the behavior being changed. Layout changes usually need coverage in `test/layout/`; mark renderer changes usually need coverage in `test/mark/`.
 - Do not update generated build output unless the task explicitly asks for release artifacts.

@@ -1,4 +1,5 @@
 import { DomMeasurementAdapter } from "./measurement.js";
+import { inferXYOrientation } from "../mark/orientation.js";
 
 function getOptions(node) {
   return node?.options || {};
@@ -37,7 +38,6 @@ export class LayoutCalculator {
     const data = options.data || node.data || [];
     const encoding = options.encoding || node.encoding || {};
     const mark = options.mark || node.mark;
-    const direction = options.direction || node.direction;
     const defaultWidth = 400;
     const defaultHeight = 300;
 
@@ -46,20 +46,25 @@ export class LayoutCalculator {
     }
 
     if (mark === "bar") {
-      if (direction === "horizontal" && encoding.y) {
-        const uniqueY = new Set(data.map((d) => d[encoding.y])).size;
-        return {
-          width: defaultWidth,
-          height: Math.max(defaultHeight, uniqueY * 20),
-        };
-      }
+      try {
+        const orientation = inferXYOrientation(mark, data, encoding);
+        const categoryField = encoding[orientation.categoryChannel];
+        const uniqueCategories = new Set(data.map((d) => d[categoryField]))
+          .size;
 
-      if (encoding.x) {
-        const uniqueX = new Set(data.map((d) => d[encoding.x])).size;
+        if (orientation.valueChannel === "x") {
+          return {
+            width: defaultWidth,
+            height: Math.max(defaultHeight, uniqueCategories * 20),
+          };
+        }
+
         return {
-          width: Math.max(defaultWidth, uniqueX * 20),
+          width: Math.max(defaultWidth, uniqueCategories * 20),
           height: defaultHeight,
         };
+      } catch {
+        return { width: defaultWidth, height: defaultHeight };
       }
     }
 

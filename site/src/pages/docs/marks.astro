@@ -18,7 +18,6 @@ const markSections = [
     required: ["x", "y"],
     optional: ["xDomain", "yDomain"],
     options: [
-      "direction: vertical or horizontal",
       "color",
       "showLabels",
       "padding",
@@ -37,7 +36,6 @@ const markSections = [
     required: ["x", "y", "group"],
     optional: ["xDomain", "yDomain", "groupDomain"],
     options: [
-      "direction: vertical or horizontal",
       "colorScheme",
       "showLabels",
       "padding, including groupInner",
@@ -56,7 +54,6 @@ const markSections = [
     required: ["x", "y", "group"],
     optional: ["xDomain", "yDomain", "groupDomain"],
     options: [
-      "direction: vertical or horizontal",
       "colorScheme",
       "showLabels",
       "padding",
@@ -126,7 +123,6 @@ const markSections = [
     required: ["x", "y"],
     optional: ["xDomain", "yDomain"],
     options: [
-      "direction: vertical or horizontal",
       "color",
       "boxWidth",
       "whiskerStrokeDasharray",
@@ -147,7 +143,6 @@ const markSections = [
     required: ["x", "y"],
     optional: ["xDomain", "yDomain"],
     options: [
-      "direction: vertical or horizontal",
       "colors or colorScheme",
       "lineColor",
       "lineWidth",
@@ -201,9 +196,8 @@ const markSections = [
     id: "pac",
     summary: "Proportional area chart using circles or squares.",
     required: ["x", "y"],
-    optional: ["xDomain"],
+    optional: ["xDomain", "yDomain"],
     options: [
-      "direction: vertical or horizontal",
       "shape: circle or square",
       "color, colors, or colorScheme",
       "opacity",
@@ -213,7 +207,7 @@ const markSections = [
     example: `chart({
   mark: "pac",
   data: totals,
-  encoding: { x: "category", y: "count" },
+  encoding: { x: "count", y: "category" },
   shape: "square",
 });`,
   },
@@ -291,6 +285,15 @@ const formatFields = (fields) => fields.join(", ");
         <code>{'encoding: { x: "category", y: "value" }'}</code> maps the data fields
         named <code>category</code> and <code>value</code> onto the <code>x</code>
         and <code>y</code> channels.
+      </p>
+      <p>
+        Bars, grouped bars, stacked bars, box plots, dumbbells, and proportional
+        area charts infer their orientation from <code>x</code> and <code>y</code>.
+        Exactly one of those channels must contain numbers. Put the numeric field
+        on <code>x</code> for a horizontal value channel, or on <code>y</code> for
+        a vertical value channel. If a categorical value is numeric, store it as a
+        string. <code>flow</code> and <code>stream</code> still use
+        <code>direction</code> for layout orientation.
       </p>
     </section>
 

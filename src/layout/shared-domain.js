@@ -4,15 +4,12 @@ import {
   continuousDomain,
   valueDomain,
 } from "../mark/scale.js";
+import { inferXYOrientation } from "../mark/orientation.js";
 
 const CHANNELS = ["x", "y"];
 
 function domainKey(channel) {
   return `${channel}Domain`;
-}
-
-function directionOf(chart) {
-  return chart.options?.direction || chart.direction || "vertical";
 }
 
 function uniqueValues(data, field) {
@@ -161,52 +158,39 @@ function domainDescriptor(chart, channel) {
 
   if (explicit && !Array.isArray(explicitDomain)) return null;
 
-  const direction = directionOf(chart);
   const data = chart.data || [];
   const field = encoding[channel];
   if (!field) return null;
 
   switch (mark) {
     case "bar":
-    case "groupbar":
-      if (direction === "horizontal") {
-        return channel === "x"
-          ? valueDescriptor(
-              chart,
-              channel,
-              explicitDomain,
-              maxValueDomain(data, field),
-            )
-          : categoryDescriptor(chart, channel, explicitDomain);
-      }
-      return channel === "x"
-        ? categoryDescriptor(chart, channel, explicitDomain)
-        : valueDescriptor(
+    case "groupbar": {
+      const orientation = inferXYOrientation(mark, data, encoding);
+      return channel === orientation.valueChannel
+        ? valueDescriptor(
             chart,
             channel,
             explicitDomain,
             maxValueDomain(data, field),
-          );
+          )
+        : categoryDescriptor(chart, channel, explicitDomain);
+    }
 
-    case "stackbar":
-      if (direction === "horizontal") {
-        return channel === "x"
-          ? valueDescriptor(
-              chart,
-              channel,
-              explicitDomain,
-              stackedValueDomain(chart, "y", "x"),
-            )
-          : categoryDescriptor(chart, channel, explicitDomain);
-      }
-      return channel === "x"
-        ? categoryDescriptor(chart, channel, explicitDomain)
-        : valueDescriptor(
+    case "stackbar": {
+      const orientation = inferXYOrientation(mark, data, encoding);
+      return channel === orientation.valueChannel
+        ? valueDescriptor(
             chart,
             channel,
             explicitDomain,
-            stackedValueDomain(chart, "x", "y"),
-          );
+            stackedValueDomain(
+              chart,
+              orientation.categoryChannel,
+              orientation.valueChannel,
+            ),
+          )
+        : categoryDescriptor(chart, channel, explicitDomain);
+    }
 
     case "area":
       return channel === "x"
@@ -249,36 +233,28 @@ function domainDescriptor(chart, channel) {
     case "bubble":
       return bubbleDescriptor(chart, channel, explicitDomain);
 
-    case "box":
-      if (direction === "horizontal") {
-        return channel === "x"
-          ? valueDescriptor(chart, channel, explicitDomain, [
-              0,
-              d3.max(finiteValues(data, field)) ?? 0,
-            ])
-          : categoryDescriptor(chart, channel, explicitDomain);
+    case "box": {
+      const orientation = inferXYOrientation(mark, data, encoding);
+      if (channel === orientation.categoryChannel) {
+        return categoryDescriptor(chart, channel, explicitDomain);
       }
-      return channel === "x"
-        ? categoryDescriptor(chart, channel, explicitDomain)
+
+      return orientation.valueChannel === "x"
+        ? valueDescriptor(chart, channel, explicitDomain, [
+            0,
+            d3.max(finiteValues(data, field)) ?? 0,
+          ])
         : valueDescriptor(
             chart,
             channel,
             explicitDomain,
             rawExtentDomain(data, field),
           );
+    }
 
-    case "dumbbell":
-      if (direction === "horizontal") {
-        return channel === "x"
-          ? categoryDescriptor(chart, channel, explicitDomain)
-          : valueDescriptor(
-              chart,
-              channel,
-              explicitDomain,
-              paddedExtentDomain(data, field),
-            );
-      }
-      return channel === "x"
+    case "dumbbell": {
+      const orientation = inferXYOrientation(mark, data, encoding);
+      return channel === orientation.valueChannel
         ? valueDescriptor(
             chart,
             channel,
@@ -286,9 +262,23 @@ function domainDescriptor(chart, channel) {
             paddedExtentDomain(data, field),
           )
         : categoryDescriptor(chart, channel, explicitDomain);
+    }
+
+    case "pac": {
+      const orientation = inferXYOrientation(mark, data, encoding);
+      if (channel === orientation.categoryChannel) {
+        return categoryDescriptor(chart, channel, explicitDomain);
+      }
+
+      return valueDescriptor(
+        chart,
+        channel,
+        explicitDomain,
+        maxValueDomain(data, field),
+      );
+    }
 
     case "matrix":
-    case "pac":
     case "pie":
       return channel === "x"
         ? categoryDescriptor(chart, channel, explicitDomain)

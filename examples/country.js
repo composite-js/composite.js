@@ -37,7 +37,6 @@ const flags = repeatY(
 const bars = chart({
   mark: "bar",
   data: countries,
-  direction: "horizontal",
   width: 200,
   height: bodyHeight,
   encoding: {
@@ -56,13 +55,12 @@ const bars = chart({
 const pac = chart({
   mark: "pac",
   data: countries,
-  direction: "vertical",
   width: 40,
   height: bodyHeight,
   encoding: {
-    x: "country",
-    y: "pac",
-    xDomain: countryDomain,
+    x: "pac",
+    y: "country",
+    yDomain: countryDomain,
   },
   color: "#e76f51",
   opacity: 0.68,

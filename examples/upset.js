@@ -124,7 +124,6 @@ const leftBarChart = chart({
     y: "genre", // Category
   },
   width: 100,
-  direction: "horizontal",
   yAxisPos: "right",
   color: "black",
   showLabels: true,
@@ -143,7 +142,6 @@ const boxChart = chart({
     yDomain: genres,
   },
   width: 200,
-  direction: "horizontal",
   color: "black",
   xAxisName: "Value",
   showYAxis: false,
@@ -159,7 +157,6 @@ const stackBarChart = chart({
     group: "type",
   },
   width: 150,
-  direction: "horizontal",
   showLabels: false,
   xAxisName: "Count",
   showYAxis: false,

@@ -48,7 +48,6 @@ const data = [
     width: 120,
     height: 80,
     margin: { top: 0, right: 0, bottom: 0, left: 0 },
-    direction: "horizontal",
     color: "teal",
     encoding: { x: "value", y: "category" },
   });
@@ -69,7 +68,6 @@ const data = [
     width: 120,
     height: 80,
     margin: { top: 0, right: 0, bottom: 0, left: 0 },
-    direction: "horizontal",
     color: "teal",
     whiskerStrokeDasharray: "3 3",
     outlierFill: "teal",
@@ -96,7 +94,6 @@ const data = [
     width: 120,
     height: 80,
     margin: { top: 0, right: 0, bottom: 0, left: 0 },
-    direction: "horizontal",
     encoding: { x: "value", y: "category", xDomain: [0, 120] },
   });
 
@@ -111,7 +108,6 @@ const data = [
     width: 120,
     height: 80,
     margin: { top: 0, right: 0, bottom: 0, left: 0 },
-    direction: "horizontal",
     valueRangePadding: 5,
     encoding: { x: "value", y: "category", xDomain: [0, 100] },
   });
@@ -155,7 +151,6 @@ const data = [
     width: 120,
     height: 80,
     margin: { top: 0, right: 0, bottom: 0, left: 0 },
-    direction: "horizontal",
     xAxisPos: "top",
     yAxisPos: "right",
     encoding: {

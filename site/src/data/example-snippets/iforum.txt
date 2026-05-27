@@ -36,7 +36,7 @@ const bodyWidth = 640;
 const bodyHeight = 560;
 const barHeight = 78;
 const labelHeight = 70;
-const maxValue = 100;
+const maxValue = 150;
 
 function wave(index, phase, amplitude, floor) {
   return (
@@ -175,7 +175,6 @@ const boxplotGroups = repeatY(
             data: boxDataByRow.get(`${date}-${key}`),
             mark: "box",
             encoding: { x: "value", y: "row", xDomain: [0, maxValue] },
-            direction: "horizontal",
             width: bodyWidth,
             height: 16,
             margin: { top: 0, right: 0, bottom: 0, left: 0 },
