@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { Node, repeatX, repeatY } from "../../src/layout.js";
-import { withExportSvgDocument } from "../../src/export/svg-dom.js";
+import { withFakeSvgDocument } from "../helpers/fake-svg.mjs";
 
 function leaf(id) {
   const node = new Node();
@@ -20,14 +20,14 @@ function leaf(id) {
   return node;
 }
 
-await withExportSvgDocument(async (document) => {
+await withFakeSvgDocument(async (document) => {
   const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
 
   repeatX([], () => leaf("unused")).render(svg, { width: 40, height: 20 });
   assert.equal(svg.querySelectorAll("*").length, 0);
 });
 
-await withExportSvgDocument(async (document) => {
+await withFakeSvgDocument(async (document) => {
   const xSvg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
   const ySvg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
   const xCalls = [];
@@ -53,7 +53,7 @@ await withExportSvgDocument(async (document) => {
   ]);
 });
 
-await withExportSvgDocument(async (document) => {
+await withFakeSvgDocument(async (document) => {
   const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
 
   assert.throws(

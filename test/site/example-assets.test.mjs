@@ -4,11 +4,13 @@ import { examples, featuredExamples } from "../../site/src/data/examples.js";
 {
   assert.equal(examples[0]?.slug, "upset");
   assert.equal(examples[0]?.source, undefined);
-  assert.equal(examples[0]?.image, "/examples/upset.svg");
 
   examples.forEach((example) => {
-    assert.ok(example.image, `${example.slug} should define an image asset`);
-    assert.match(example.image, /^\/examples\/[a-z0-9-]+\.svg$/);
+    assert.equal(
+      example.image,
+      undefined,
+      `${example.slug} should rely on live browser previews, not static image assets`,
+    );
   });
 }
 
@@ -17,7 +19,6 @@ import { examples, featuredExamples } from "../../site/src/data/examples.js";
 
   assert.ok(rainfall, "Rainfall should be registered in site examples");
   assert.equal(rainfall.featured, false);
-  assert.equal(rainfall.image, "/examples/rainfall.svg");
   assert.ok(
     !featuredExamples.some((example) => example.slug === "rainfall"),
     "Rainfall should not appear in homepage featured examples",
@@ -29,7 +30,6 @@ import { examples, featuredExamples } from "../../site/src/data/examples.js";
 
   assert.ok(country, "Country should be registered in site examples");
   assert.equal(country.featured, false);
-  assert.equal(country.image, "/examples/country.svg");
   assert.ok(
     !featuredExamples.some((example) => example.slug === "country"),
     "Country should not appear in homepage featured examples",
@@ -46,7 +46,6 @@ import { examples, featuredExamples } from "../../site/src/data/examples.js";
     "Scatterplot Matrix should be registered in site examples",
   );
   assert.equal(scatterplotmatrix.featured, false);
-  assert.equal(scatterplotmatrix.image, "/examples/scatterplotmatrix.svg");
   assert.ok(
     !featuredExamples.some((example) => example.slug === "scatterplotmatrix"),
     "Scatterplot Matrix should not appear in homepage featured examples",

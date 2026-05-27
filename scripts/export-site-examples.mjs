@@ -17,7 +17,6 @@ const defaultSnippetDir = path.resolve(
   "data",
   "example-snippets",
 );
-const formats = ["svg", "png"];
 
 function stripImports(source) {
   return source.replace(/^\s*import[\s\S]*?;\s*/gm, "");
@@ -151,6 +150,7 @@ async function syncExampleAssets(options = {}) {
     options.exampleAssetsDir || path.join(examplesDir, "dataset");
   const outputDir = options.outputDir || defaultOutputDir;
 
+  await mkdir(outputDir, { recursive: true });
   await cp(exampleAssetsDir, path.join(outputDir, "dataset"), {
     recursive: true,
     force: true,
@@ -174,36 +174,15 @@ export async function syncExampleSnippet(example, options = {}) {
   return { source, outputPath, snippet };
 }
 
-async function loadExample(example, options = {}) {
-  const source = example.source || example.slug;
-  const examplesDir = options.examplesDir || defaultExamplesDir;
-  const moduleUrl = pathToFileURL(path.join(examplesDir, `${source}.js`)).href;
-  const module = await import(moduleUrl);
-
-  if (typeof module.createExample !== "function") {
-    throw new Error(`examples/${source}.js must export createExample().`);
-  }
-
-  return module.createExample();
-}
-
 export async function exportSiteExamples(options = {}) {
   const exampleList = options.examples || examples;
-  const outputDir = options.outputDir || defaultOutputDir;
   const logger = options.logger || console.log;
 
   await syncExampleAssets(options);
 
   for (const example of exampleList) {
     const snippet = await syncExampleSnippet(example, options);
-    logger(`Exported ${path.relative(process.cwd(), snippet.outputPath)}`);
-    const node = await loadExample(example, options);
-
-    for (const format of formats) {
-      const outputPath = path.join(outputDir, `${example.slug}.${format}`);
-      await node.export({ format, path: outputPath });
-      logger(`Exported ${path.relative(process.cwd(), outputPath)}`);
-    }
+    logger(`Synced ${path.relative(process.cwd(), snippet.outputPath)}`);
   }
 }
 

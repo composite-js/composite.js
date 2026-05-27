@@ -40,4 +40,4 @@ assert.deepEqual(packageJson.exports, {
 assert.equal(packageJson.types, "./index.d.ts");
 assert.deepEqual(packageJson.files, ["dist", "index.d.ts"]);
 assert.equal(packageJson.devDependencies?.sharp, undefined);
-assert.equal(packageJson.optionalDependencies?.sharp, "^0.34.5");
+assert.equal(packageJson.optionalDependencies?.sharp, undefined);

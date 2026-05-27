@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { chart, Node, repeatX, repeatY } from "../../src/layout.js";
-import { withExportSvgDocument } from "../../src/export/svg-dom.js";
+import { withFakeSvgDocument } from "../helpers/fake-svg.mjs";
 
 function numericAttribute(element, name) {
   return Number(element.getAttribute(name));
@@ -24,7 +24,7 @@ function leaf(id) {
   return node;
 }
 
-await withExportSvgDocument(async (document) => {
+await withFakeSvgDocument(async (document) => {
   const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
   const values = [10, 100];
 
@@ -47,7 +47,7 @@ await withExportSvgDocument(async (document) => {
   assert.deepEqual(heights, [10, 100]);
 });
 
-await withExportSvgDocument(async (document) => {
+await withFakeSvgDocument(async (document) => {
   const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
   const slices = [
     [
@@ -79,7 +79,7 @@ await withExportSvgDocument(async (document) => {
   assert.deepEqual(fills, ["red", "blue", "blue", "green"]);
 });
 
-await withExportSvgDocument(async (document) => {
+await withFakeSvgDocument(async (document) => {
   const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
   const values = [10, 100];
 
@@ -103,7 +103,7 @@ await withExportSvgDocument(async (document) => {
   assert.ok(radii[0] < radii[1]);
 });
 
-await withExportSvgDocument(async (document) => {
+await withFakeSvgDocument(async (document) => {
   const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
   const values = [10, 100];
 
@@ -130,7 +130,7 @@ await withExportSvgDocument(async (document) => {
   assert.deepEqual(heights, [50, 100]);
 });
 
-await withExportSvgDocument(async (document) => {
+await withFakeSvgDocument(async (document) => {
   const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
   const values = [10, 100];
 
@@ -159,7 +159,7 @@ await withExportSvgDocument(async (document) => {
   assert.deepEqual(heights, [100, 100]);
 });
 
-await withExportSvgDocument(async (document) => {
+await withFakeSvgDocument(async (document) => {
   const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
 
   repeatY(["A", "B"], (value) => leaf(value), {

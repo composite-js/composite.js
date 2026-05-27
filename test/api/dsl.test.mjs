@@ -20,6 +20,7 @@ import {
   });
 
   assert.ok(isLayoutNode(node));
+  assert.equal(node.export, undefined);
   assert.equal(node.classTag, "chart");
 }
 

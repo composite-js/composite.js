@@ -50,10 +50,6 @@ importers:
       vitest:
         specifier: ^1.0.0
         version: 1.6.1
-    optionalDependencies:
-      sharp:
-        specifier: ^0.34.5
-        version: 0.34.5
 
 packages:
   "@astrojs/compiler@4.0.0":

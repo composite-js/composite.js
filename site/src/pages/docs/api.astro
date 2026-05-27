@@ -74,10 +74,7 @@ const customCode = `const timeline = custom(
 );`;
 
 const renderCode = `const root = document.querySelector("#app");
-view.render(root, { width: 720, height: 420 });
-
-const svg = await view.export({ format: "svg" });
-await view.export({ format: "png", path: "chart.png" });`;
+view.render(root, { width: 720, height: 420 });`;
 ---
 
 <DocsLayout title="Composition API | composite.js">
@@ -87,7 +84,8 @@ await view.export({ format: "png", path: "chart.png" });`;
       <h1>Factory functions for layout trees</h1>
       <p>
         The primary API is a small set of factory helpers. They create layout
-        nodes, compose those nodes, and render or export the resulting tree.
+        nodes, compose those nodes, and render the resulting tree in the
+        browser.
       </p>
     </header>
 
@@ -158,12 +156,11 @@ await view.export({ format: "png", path: "chart.png" });`;
     </section>
 
     <section class="docs-section">
-      <h2><code>.render(container, options)</code> and <code>.export(options)</code></h2>
+      <h2><code>.render(container, options)</code></h2>
       <p>
         Render any layout node into a browser DOM element with
-        <code>.render()</code>. In Node-based workflows, <code>.export()</code>
-        can serialize SVG or write SVG/PNG output depending on the requested
-        format and path.
+        <code>.render()</code>. The library creates an SVG subtree inside the
+        container and computes layout from the composed node tree.
       </p>
       <pre class="docs-code"><code>{renderCode}</code></pre>
     </section>

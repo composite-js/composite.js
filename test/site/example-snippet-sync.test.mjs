@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import {
+  existsSync,
   mkdtempSync,
   mkdirSync,
   readFileSync,
@@ -179,7 +180,7 @@ return chart({
   const snippetDir = path.join(tempRoot, "example-snippets");
   const outputDir = path.join(tempRoot, "public-examples");
   const exportSource = `const final = {
-  async export() {}
+  render() {}
 };
 
 export function createExample() {
@@ -205,7 +206,7 @@ export function createExample() {
     assert.equal(
       readFileSync(path.join(snippetDir, "foo.txt"), "utf8"),
       `const final = {
-  async export() {}
+  render() {}
 };
 
 return final;\n`,
@@ -215,10 +216,10 @@ return final;\n`,
       "x,y\n1,2\n",
     );
     assert.deepEqual(messages, [
-      `Exported ${path.relative(process.cwd(), path.join(snippetDir, "foo.txt"))}`,
-      `Exported ${path.relative(process.cwd(), path.join(outputDir, "foo.svg"))}`,
-      `Exported ${path.relative(process.cwd(), path.join(outputDir, "foo.png"))}`,
+      `Synced ${path.relative(process.cwd(), path.join(snippetDir, "foo.txt"))}`,
     ]);
+    assert.equal(existsSync(path.join(outputDir, "foo.svg")), false);
+    assert.equal(existsSync(path.join(outputDir, "foo.png")), false);
   } finally {
     rmSync(tempRoot, { recursive: true, force: true });
   }

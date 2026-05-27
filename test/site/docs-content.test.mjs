@@ -90,8 +90,12 @@ const readPage = (name) => readFileSync(pagePath(name), "utf8");
     "image(",
     "frame(",
     ".render(",
-    ".export(",
   ].forEach((apiName) => {
     assert.ok(api.includes(apiName), `API docs should mention ${apiName}`);
   });
+
+  assert.ok(
+    !api.includes(".export("),
+    "API docs should not mention the removed export() API",
+  );
 }

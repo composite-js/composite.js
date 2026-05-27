@@ -166,7 +166,6 @@ const view = stackY(
 
 const mount = document.createElement("div");
 view.render(mount, { width: 720, height: 420 });
-const exported: Promise<string | Uint8Array> = view.export({ format: "svg" });
 
 let unknownValue: unknown = view;
 if (isLayoutNode(unknownValue)) {
@@ -178,7 +177,6 @@ assertLayoutNode(unknownValue);
 const asserted: LayoutNode = unknownValue;
 asserted.render(mount);
 
-void exported;
 void loadedCsvText;
 void headerlessRows;
 void parsedColumns;

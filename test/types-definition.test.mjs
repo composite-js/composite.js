@@ -40,6 +40,18 @@ assert.match(
   "Declarations should include a public LayoutNode interface",
 );
 
+assert.doesNotMatch(
+  declarations,
+  /export interface ExportOptions/,
+  "Declarations should not expose removed export options",
+);
+
+assert.doesNotMatch(
+  declarations,
+  /\bexport\(options\?:/,
+  "LayoutNode declarations should not expose the removed export() API",
+);
+
 assert.match(
   declarations,
   /export interface CustomRenderable/,

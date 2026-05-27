@@ -24,7 +24,7 @@ http://localhost:4321/
 
 ## Build
 
-Generate example preview assets:
+Sync example snippets and datasets used by live browser previews:
 
 ```bash
 pnpm run site:export-examples

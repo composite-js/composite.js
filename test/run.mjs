@@ -44,8 +44,6 @@ const tests = [
   "./site/marks-docs.test.mjs",
   "./site/example-editor.test.mjs",
   "./site/example-snippet-sync.test.mjs",
-  "./export/svg-dom-export.test.mjs",
-  "./export/node-export.test.mjs",
 ];
 
 for (const test of tests) {

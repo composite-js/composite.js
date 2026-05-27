@@ -79,18 +79,12 @@ export interface RenderOptions {
   [option: string]: unknown;
 }
 
-export interface ExportOptions extends RenderOptions {
-  format?: "svg" | "png" | string;
-  path?: string;
-}
-
 export interface LayoutNode {
   readonly classTag?: string;
   render(
     container: HTMLElement | SVGElement,
     renderOptions?: RenderOptions,
   ): void;
-  export(options?: ExportOptions): Promise<string | Uint8Array>;
 }
 
 export interface CustomRenderable {

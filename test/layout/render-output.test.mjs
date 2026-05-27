@@ -2,8 +2,7 @@ import assert from "node:assert/strict";
 import { LayoutRenderer } from "../../src/layout/renderer.js";
 import { Node, repeatY } from "../../src/layout.js";
 import { BBox } from "../../src/utils/bbox.js";
-import { withExportSvgDocument } from "../../src/export/svg-dom.js";
-import { createFakeSvg } from "../helpers/fake-svg.mjs";
+import { createFakeSvg, withFakeSvgDocument } from "../helpers/fake-svg.mjs";
 
 function createMeasuredLeaf() {
   const node = new Node();
@@ -30,7 +29,7 @@ function createMeasuredLeaf() {
   assert.equal(container.querySelectorAll("rect").length, 2);
 }
 
-await withExportSvgDocument(async (document) => {
+await withFakeSvgDocument(async (document) => {
   const container = document.createElement("div");
   const repeated = repeatY(
     ["A", "B"],
