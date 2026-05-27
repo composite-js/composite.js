@@ -1,5 +1,6 @@
 import * as d3 from "d3";
 import { validateContainer } from "../container/base.js";
+import { inferXYOrientation } from "../mark/orientation.js";
 import { BBox } from "../utils/bbox.js";
 import { LayoutEngine } from "./engine.js";
 import { Node, assertLayoutNode } from "./node.js";
@@ -50,9 +51,142 @@ function normalizeStackMargin(margin, childCount) {
 }
 
 const LINK_SUPPORTED_MARKS = new Set(["bar", "pac", "scatter"]);
+const BAND_PADDING_MARKS = new Set([
+  "bar",
+  "groupbar",
+  "stackbar",
+  "box",
+  "dumbbell",
+  "pac",
+  "matrix",
+]);
+const ORIENTATION_INFERRED_BAND_MARKS = new Set([
+  "bar",
+  "groupbar",
+  "stackbar",
+  "box",
+  "dumbbell",
+  "pac",
+]);
 
 function isChartNode(node) {
   return node?.classTag === "chart" && node.element?.mark;
+}
+
+function stackSharedAxis(direction) {
+  return direction === "horizontal" ? "y" : "x";
+}
+
+function stackPaddingKeys(direction) {
+  return direction === "horizontal"
+    ? ["yInner", "yOuter"]
+    : ["xInner", "xOuter"];
+}
+
+function paddingFallbackKey(key) {
+  return key.endsWith("Inner") ? "inner" : "outer";
+}
+
+function objectPaddingOption(chart) {
+  const padding = chart?.options?.padding;
+  if (!padding || typeof padding !== "object" || Array.isArray(padding)) {
+    return null;
+  }
+  return padding;
+}
+
+function explicitPaddingValue(chart, key) {
+  const padding = objectPaddingOption(chart);
+  if (!padding) return undefined;
+
+  if (padding[key] !== undefined) return padding[key];
+
+  const fallback = paddingFallbackKey(key);
+  return padding[fallback];
+}
+
+function hasExplicitPaddingValue(chart, key) {
+  return explicitPaddingValue(chart, key) !== undefined;
+}
+
+function sharedAxisField(chart, axis) {
+  const mark = chart?.mark;
+  const encoding = chart?.encoding || {};
+
+  if (!BAND_PADDING_MARKS.has(mark)) return null;
+
+  if (mark === "matrix") {
+    return axis === "x" ? encoding.x : encoding.group;
+  }
+
+  if (!ORIENTATION_INFERRED_BAND_MARKS.has(mark)) return null;
+
+  try {
+    const orientation = inferXYOrientation(mark, chart.data, encoding);
+    if (orientation.categoryChannel !== axis) return null;
+    return orientation.categoryField;
+  } catch {
+    return null;
+  }
+}
+
+function uniqueExplicitPaddingValue(entries, key) {
+  const values = entries
+    .map(({ chart }) => explicitPaddingValue(chart, key))
+    .filter((value) => value !== undefined);
+
+  if (values.length === 0) return undefined;
+  if (
+    !values.every(
+      (value) => typeof value === "number" && Number.isFinite(value),
+    )
+  ) {
+    return undefined;
+  }
+
+  const [first] = values;
+  return values.every((value) => Object.is(value, first)) ? first : undefined;
+}
+
+function applyInferredPadding(chart, key, value) {
+  if (value === undefined || hasExplicitPaddingValue(chart, key)) return;
+
+  if (chart.padding && typeof chart.padding === "object") {
+    chart.padding[key] = value;
+  }
+
+  if (chart.renderer?.padding && typeof chart.renderer.padding === "object") {
+    chart.renderer.padding[key] = value;
+  }
+}
+
+function inferStackPadding(nodes, direction) {
+  const axis = stackSharedAxis(direction);
+  const paddingKeys = stackPaddingKeys(direction);
+  const entriesByField = new Map();
+
+  nodes.forEach((node) => {
+    if (!isChartNode(node)) return;
+
+    const chart = node.element;
+    const field = sharedAxisField(chart, axis);
+    if (!field) return;
+
+    const entries = entriesByField.get(field) || [];
+    entries.push({ chart });
+    entriesByField.set(field, entries);
+  });
+
+  entriesByField.forEach((entries) => {
+    if (entries.length < 2) return;
+
+    paddingKeys.forEach((key) => {
+      const value = uniqueExplicitPaddingValue(entries, key);
+      entries.forEach(({ chart }) => {
+        applyInferredPadding(chart, key, value);
+      });
+    });
+  });
 }
 
 function validateStackLink(nodes, direction) {
@@ -142,6 +276,8 @@ export class Stack extends Composition {
     if (this.link) {
       validateStackLink(nodes, direction);
     }
+
+    inferStackPadding(nodes, direction);
 
     for (let i = 0; i < nodes.length; i++) {
       const alignedNode =

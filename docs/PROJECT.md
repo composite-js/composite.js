@@ -116,6 +116,12 @@ const column = stackY([verticalBars, horizontalPac], {
 first supported marks are `bar`, `pac`, and `scatter`; unsupported marks or
 orientations throw clear runtime errors.
 
+Direct chart children in `stackX` and `stackY` also infer shared categorical
+axis padding for marks that use band padding objects, such as `bar`, `pac`,
+`box`, `dumbbell`, and `matrix`. Explicit child padding is preserved; missing
+axis-specific padding is copied only when matching direct chart children use
+the same categorical field.
+
 ## Architecture
 
 The library is organized around a layout tree.

@@ -66,7 +66,6 @@ const pac = chart({
   opacity: 0.68,
   showXAxis: false,
   showYAxis: false,
-  padding: rowPadding,
 });
 
 const linkedMeasures = stackX([bars, pac], {
