@@ -124,6 +124,7 @@ export class ProportionalAreaChartRenderer extends MarkRenderer {
       orientation.valueChannel,
     );
     const colorScale = this._colorScale(categories);
+    const anchors = [];
 
     data.forEach((d) => {
       const size = sizeScale(d[valueField]);
@@ -140,11 +141,23 @@ export class ProportionalAreaChartRenderer extends MarkRenderer {
         categoryField,
         valueField,
       );
+      anchors.push(
+        this.rectLinkAnchor(
+          d,
+          this.encoding.x,
+          this.encoding.y,
+          x - size / 2,
+          y - size / 2,
+          size,
+          size,
+        ),
+      );
     });
 
     return this.axisConfig(
       { y: yScale },
       { margin, width: chartWidth, height: chartHeight },
+      { linkAnchors: { channels: ["y"], anchors } },
     );
   }
 
@@ -176,6 +189,7 @@ export class ProportionalAreaChartRenderer extends MarkRenderer {
       orientation.valueChannel,
     );
     const colorScale = this._colorScale(categories);
+    const anchors = [];
 
     data.forEach((d) => {
       const size = sizeScale(d[valueField]);
@@ -192,11 +206,23 @@ export class ProportionalAreaChartRenderer extends MarkRenderer {
         categoryField,
         valueField,
       );
+      anchors.push(
+        this.rectLinkAnchor(
+          d,
+          this.encoding.x,
+          this.encoding.y,
+          x - size / 2,
+          y - size / 2,
+          size,
+          size,
+        ),
+      );
     });
 
     return this.axisConfig(
       { x: xScale },
       { margin, width: chartWidth, height: chartHeight },
+      { linkAnchors: { channels: ["x"], anchors } },
     );
   }
 }

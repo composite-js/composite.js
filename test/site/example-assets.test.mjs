@@ -37,6 +37,18 @@ import { examples, featuredExamples } from "../../site/src/data/examples.js";
 }
 
 {
+  const houseprices = examples.find(
+    (example) => example.slug === "houseprices",
+  );
+
+  assert.equal(houseprices, undefined, "Houseprices should be removed");
+  assert.ok(
+    !featuredExamples.some((example) => example.slug === "houseprices"),
+    "Houseprices should not appear in homepage featured examples",
+  );
+}
+
+{
   const scatterplotmatrix = examples.find(
     (example) => example.slug === "scatterplotmatrix",
   );

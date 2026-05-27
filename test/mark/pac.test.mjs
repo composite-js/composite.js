@@ -146,3 +146,52 @@ function baseOptions(overrides = {}) {
   assert.equal(pacCenter, dumbbellCenter);
   assert.equal(pacSvg.querySelectorAll("circle")[1].getAttribute("cy"), "45");
 }
+
+{
+  const svg = createFakeSvg();
+  const renderer = new ProportionalAreaChartRenderer({
+    ...baseOptions({
+      padding: { yInner: 0, yOuter: 0 },
+    }),
+  });
+
+  const axisConfig = renderer.render(svg, [
+    { year: "2000", count: 25 },
+    { year: "2004", count: 100 },
+  ]);
+
+  assert.deepEqual(axisConfig.linkAnchors.channels, ["y"]);
+  assert.deepEqual(axisConfig.linkAnchors.anchors[0], {
+    x: 25,
+    y: "2000",
+    left: { x: 52.5, y: 15 },
+    right: { x: 67.5, y: 15 },
+    top: { x: 60, y: 7.5 },
+    bottom: { x: 60, y: 22.5 },
+  });
+}
+
+{
+  const svg = createFakeSvg();
+  const renderer = new ProportionalAreaChartRenderer({
+    ...baseOptions({
+      encoding: { x: "year", y: "count" },
+      padding: { xInner: 0, xOuter: 0 },
+    }),
+  });
+
+  const axisConfig = renderer.render(svg, [
+    { year: "2000", count: 0 },
+    { year: "2004", count: 100 },
+  ]);
+
+  assert.deepEqual(axisConfig.linkAnchors.channels, ["x"]);
+  assert.deepEqual(axisConfig.linkAnchors.anchors[1], {
+    x: "2004",
+    y: 100,
+    left: { x: 60, y: 30 },
+    right: { x: 120, y: 30 },
+    top: { x: 90, y: 0 },
+    bottom: { x: 90, y: 60 },
+  });
+}

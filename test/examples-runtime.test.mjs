@@ -12,6 +12,10 @@ const exampleFiles = readdirSync(examplesDir)
 
 assert.ok(exampleFiles.includes("country.js"), "country example should exist");
 assert.ok(
+  !exampleFiles.includes("houseprices.js"),
+  "houseprices example should be removed",
+);
+assert.ok(
   exampleFiles.includes("scatterplotmatrix.js"),
   "scatterplotmatrix example should exist",
 );
@@ -55,6 +59,11 @@ for (const file of exampleFiles) {
       assert.ok(
         svg.querySelectorAll("circle").length > 0,
         "country should render PAC circles",
+      );
+      assert.equal(
+        svg.querySelectorAll(".stack-link").length,
+        6,
+        "country should link bars to PAC circles",
       );
     }
 

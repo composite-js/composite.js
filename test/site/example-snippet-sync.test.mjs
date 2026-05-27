@@ -146,6 +146,23 @@ return chart({
 }
 
 {
+  const registrySource = readFileSync(
+    path.join(process.cwd(), "site", "src", "data", "example-snippets.js"),
+    "utf8",
+  );
+
+  examples.forEach((example) => {
+    const source = example.source || example.slug;
+
+    assert.ok(
+      registrySource.includes(`${source}:`) ||
+        new RegExp(`\\b${source}\\b`).test(registrySource),
+      `${source} should have an editable snippet registered`,
+    );
+  });
+}
+
+{
   examples.forEach((example) => {
     const source = example.source || example.slug;
     const examplePath = path.join(process.cwd(), "examples", `${source}.js`);

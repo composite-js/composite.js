@@ -49,6 +49,42 @@ function normalizeStackMargin(margin, childCount) {
   );
 }
 
+const LINK_SUPPORTED_MARKS = new Set(["bar", "pac", "scatter"]);
+
+function isChartNode(node) {
+  return node?.classTag === "chart" && node.element?.mark;
+}
+
+function validateStackLink(nodes, direction) {
+  if (nodes.length !== 2) {
+    throw new RangeError("stack link requires exactly two direct chart nodes.");
+  }
+
+  nodes.forEach((node, index) => {
+    if (!isChartNode(node)) {
+      throw new TypeError(
+        `stack link child ${index} must be a direct chart node created by chart().`,
+      );
+    }
+
+    if (!LINK_SUPPORTED_MARKS.has(node.element.mark)) {
+      throw new Error(
+        `mark "${node.element.mark}" does not support stack links.`,
+      );
+    }
+  });
+
+  const channel = direction === "horizontal" ? "y" : "x";
+  const [first, second] = nodes;
+  if (
+    first.element.encoding?.[channel] !== second.element.encoding?.[channel]
+  ) {
+    throw new Error(
+      `stack link requires both charts to use the same encoding.${channel} field.`,
+    );
+  }
+}
+
 /**
  * Base class for all compositions.
  */
@@ -97,6 +133,15 @@ export class Stack extends Composition {
     this.margin = normalizeStackMargin(options.margin, nodes.length);
     this.align = options.align || [];
     this.alignedNodes = [];
+    this.link = options.link === true;
+
+    if (options.link !== undefined && typeof options.link !== "boolean") {
+      throw new TypeError("stack link option must be a boolean.");
+    }
+
+    if (this.link) {
+      validateStackLink(nodes, direction);
+    }
 
     for (let i = 0; i < nodes.length; i++) {
       const alignedNode =

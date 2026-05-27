@@ -12,6 +12,16 @@ const chartCode = `const bars = chart({
 const stackCode = `const row = stackX([leftBars, matrix, details], { margin: [8, 20] });
 const view = stackY([topBars, row], {
   align: [matrix, matrix],
+});
+
+const linkedRow = stackX([horizontalBars, pac], {
+  margin: 12,
+  link: true,
+});
+
+const linkedColumn = stackY([verticalBars, horizontalPac], {
+  margin: 12,
+  link: true,
 });`;
 
 const repeatCode = `const pies = repeatX(ids, (id) =>
@@ -107,6 +117,11 @@ view.render(root, { width: 720, height: 420 });`;
         number for uniform gaps or a per-gap list with
         <code>nodes.length - 1</code> values. Use
         <code>align</code> when a stack child should align to a nested node.
+        Use <code>link: true</code> on a two-chart stack to draw connector
+        lines between matching values: <code>stackX</code> matches
+        <code>encoding.y</code>, and <code>stackY</code> matches
+        <code>encoding.x</code>. Supported link marks are <code>bar</code>,
+        <code>pac</code>, and <code>scatter</code>.
       </p>
       <pre class="docs-code"><code>{stackCode}</code></pre>
     </section>

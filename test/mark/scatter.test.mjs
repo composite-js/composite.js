@@ -27,6 +27,15 @@ assert.equal(
 );
 assert.deepEqual(axisConfig.scales.x.domain(), [1, 2]);
 assert.deepEqual(axisConfig.scales.y.domain(), [10, 20]);
+assert.deepEqual(axisConfig.linkAnchors.channels, ["x", "y"]);
+assert.deepEqual(axisConfig.linkAnchors.anchors[0], {
+  x: 1,
+  y: 10,
+  left: { x: -5, y: 80 },
+  right: { x: 5, y: 80 },
+  top: { x: 0, y: 75 },
+  bottom: { x: 0, y: 85 },
+});
 
 circles[0].listeners.get("mouseenter").call(circles[0], {});
 assert.equal(circles[0].getAttribute("fill"), "orange");

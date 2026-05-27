@@ -230,5 +230,7 @@ export class Chart {
       const axisRenderer = new AxisRenderer(axisConfig.axisOptions);
       axisRenderer.render(svg, axisConfig.scales, axisConfig.dimensions);
     }
+
+    return axisConfig;
   }
 }

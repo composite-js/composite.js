@@ -60,8 +60,12 @@ options)` method as a custom leaf layout node.
 - `text(config)` creates a leaf layout node for SVG text annotations, including
   rotated labels.
 - `frame(node, options)` wraps a layout node with a rectangular SVG border.
-- `stackX(nodes, options)` arranges layout nodes horizontally.
-- `stackY(nodes, options)` arranges layout nodes vertically.
+- `stackX(nodes, options)` arranges layout nodes horizontally. For two direct
+  chart nodes, `link: true` draws connector lines between matching
+  `encoding.y` values when both marks support link anchors.
+- `stackY(nodes, options)` arranges layout nodes vertically. For two direct
+  chart nodes, `link: true` draws connector lines between matching
+  `encoding.x` values when both marks support link anchors.
 - `repeatX(domain, fn, options)` creates a horizontal repeated layout from a domain and node factory.
 - `repeatY(domain, fn, options)` creates a vertical repeated layout from a domain and node factory.
 - `repeat(domain, fn, options)` creates a directionless repeated layout that can be embedded into a compatible container.
@@ -94,6 +98,23 @@ const matrix = chart({
 const view = stackY([top, matrix], { align: [matrix, matrix] });
 view.render(document.getElementById("app"));
 ```
+
+Linked stacks are intended for adjacent chart pairs such as horizontal bars
+beside proportional area circles, or vertical bars above a horizontal
+proportional area chart:
+
+```javascript
+const row = stackX([horizontalBars, pac], { margin: 12, link: true });
+const column = stackY([verticalBars, horizontalPac], {
+  margin: 12,
+  link: true,
+});
+```
+
+`stackX` requires both charts to share the same `encoding.y` field name.
+`stackY` requires both charts to share the same `encoding.x` field name. The
+first supported marks are `bar`, `pac`, and `scatter`; unsupported marks or
+orientations throw clear runtime errors.
 
 ## Architecture
 

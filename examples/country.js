@@ -66,11 +66,18 @@ const pac = chart({
   opacity: 0.68,
   showXAxis: false,
   showYAxis: false,
+  padding: rowPadding,
 });
 
-const composite = stackX([flags, bars, pac], {
-  margin: [15, 5],
-  align: [flags, bars, pac],
+const linkedMeasures = stackX([bars, pac], {
+  margin: 5,
+  align: [bars, pac],
+  link: true,
+});
+
+const composite = stackX([flags, linkedMeasures], {
+  margin: 15,
+  align: [flags, linkedMeasures],
 });
 
 export function createExample() {

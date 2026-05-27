@@ -29,7 +29,7 @@ export class Node {
     if (!this.element) return;
 
     const content = this.bbox.contentRect();
-    this.element.render(container, {
+    return this.element.render(container, {
       width:
         renderOptions.width !== undefined ? renderOptions.width : content.width,
       height:

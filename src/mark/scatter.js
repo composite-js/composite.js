@@ -49,6 +49,7 @@ export class ScatterChartRenderer extends MarkRenderer {
       yRange(chartHeight, reverseY),
       { nice: this.encoding.yDomain === undefined },
     );
+    const anchors = [];
 
     // Draw Points
     data.forEach((d) => {
@@ -74,6 +75,17 @@ export class ScatterChartRenderer extends MarkRenderer {
         .on("mouseleave", function () {
           d3.select(this).attr("fill", color).attr("r", radius);
         });
+      anchors.push(
+        this.rectLinkAnchor(
+          d,
+          xField,
+          yField,
+          cx - radius,
+          cy - radius,
+          radius * 2,
+          radius * 2,
+        ),
+      );
 
       // Tooltip
       circle
@@ -84,6 +96,7 @@ export class ScatterChartRenderer extends MarkRenderer {
     return this.axisConfig(
       { x: xScale, y: yScale },
       { margin, width: chartWidth, height: chartHeight },
+      { linkAnchors: { channels: ["x", "y"], anchors } },
     );
   }
 }

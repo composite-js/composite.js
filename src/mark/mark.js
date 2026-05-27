@@ -49,11 +49,26 @@ export class MarkRenderer {
     };
   }
 
-  axisConfig(scales, dimensions) {
+  axisConfig(scales, dimensions, extras = {}) {
     return {
       scales,
       dimensions,
       axisOptions: this.getAxisOptions(),
+      ...extras,
+    };
+  }
+
+  rectLinkAnchor(datum, xField, yField, x, y, width, height) {
+    const centerX = x + width / 2;
+    const centerY = y + height / 2;
+
+    return {
+      x: datum[xField],
+      y: datum[yField],
+      left: { x, y: centerY },
+      right: { x: x + width, y: centerY },
+      top: { x: centerX, y },
+      bottom: { x: centerX, y: y + height },
     };
   }
 

@@ -5,6 +5,7 @@ const tests = [
   "./chart-renderer-dispatch.test.mjs",
   "./axis.test.mjs",
   "./layout/stack-align.test.mjs",
+  "./layout/stack-link.test.mjs",
   "./layout/measurement-adapter.test.mjs",
   "./layout/render-output.test.mjs",
   "./layout/repeat-embed.test.mjs",

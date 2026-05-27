@@ -42,6 +42,7 @@ function baseOptions(overrides = {}) {
     ...baseOptions({ showLabels: true }),
     color: "tomato",
     encoding: { x: "value", y: "category" },
+    padding: { yInner: 0, yOuter: 0 },
   });
 
   const axisConfig = renderer.render(svg, [
@@ -54,6 +55,15 @@ function baseOptions(overrides = {}) {
   assert.equal(axisConfig.scales.x.domain()[1], 20);
   assert.deepEqual(axisConfig.scales.y.domain(), ["A", "B"]);
   assert.equal(axisConfig.dimensions.width, 120);
+  assert.deepEqual(axisConfig.linkAnchors.channels, ["y"]);
+  assert.deepEqual(axisConfig.linkAnchors.anchors[0], {
+    x: 10,
+    y: "A",
+    left: { x: 0, y: 20 },
+    right: { x: 60, y: 20 },
+    top: { x: 30, y: 0 },
+    bottom: { x: 30, y: 40 },
+  });
 }
 
 {
@@ -100,11 +110,21 @@ function baseOptions(overrides = {}) {
   const renderer = new BarChartRenderer({
     ...baseOptions(),
     encoding: { x: "category", y: "value", yDomain: [0, 50] },
+    padding: { xInner: 0, xOuter: 0 },
   });
 
   const axisConfig = renderer.render(svg, [{ category: "A", value: 10 }]);
 
   assert.deepEqual(axisConfig.scales.y.domain(), [0, 50]);
+  assert.deepEqual(axisConfig.linkAnchors.channels, ["x"]);
+  assert.deepEqual(axisConfig.linkAnchors.anchors[0], {
+    x: "A",
+    y: 10,
+    left: { x: 0, y: 72 },
+    right: { x: 120, y: 72 },
+    top: { x: 60, y: 64 },
+    bottom: { x: 60, y: 80 },
+  });
 }
 
 {

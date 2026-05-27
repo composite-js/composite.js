@@ -1,6 +1,56 @@
 import * as d3 from "d3";
 import { Node } from "./node.js";
 
+function offsetPoint(point, x, y) {
+  return { x: point.x + x, y: point.y + y };
+}
+
+function offsetLinkAnchors(linkAnchors, x, y) {
+  if (!linkAnchors?.anchors) return undefined;
+
+  return {
+    channels: [...(linkAnchors.channels || [])],
+    anchors: linkAnchors.anchors.map((anchor) => ({
+      ...anchor,
+      left: offsetPoint(anchor.left, x, y),
+      right: offsetPoint(anchor.right, x, y),
+      top: offsetPoint(anchor.top, x, y),
+      bottom: offsetPoint(anchor.bottom, x, y),
+    })),
+  };
+}
+
+function linkChannelForStack(stack) {
+  return stack.direction === "horizontal" ? "y" : "x";
+}
+
+function linkSidesForStack(stack) {
+  return stack.direction === "horizontal"
+    ? { from: "right", to: "left" }
+    : { from: "bottom", to: "top" };
+}
+
+function linkAnchorMap(chartNode, linkAnchors, channel) {
+  if (!linkAnchors?.channels?.includes(channel)) {
+    throw new Error(
+      `mark "${chartNode.element.mark}" cannot provide anchors for encoding.${channel} in ${chartNode.classTag}.`,
+    );
+  }
+
+  const anchorsByKey = new Map();
+  linkAnchors.anchors.forEach((anchor) => {
+    const key = anchor[channel];
+    if (anchorsByKey.has(key)) {
+      throw new Error(
+        `duplicate link key "${String(key)}" for encoding.${channel}.`,
+      );
+    }
+    anchorsByKey.set(key, anchor);
+  });
+
+  return anchorsByKey;
+}
+
 export class LayoutRenderer {
   static renderTree(node, container, x = 0, y = 0) {
     if (!Node.isStack(node)) {
@@ -10,12 +60,19 @@ export class LayoutRenderer {
         .attr("class", node.classTag)
         .attr("transform", `translate(${x - margin.left}, ${y - margin.top})`);
 
-      node.render(g.node(), {
+      const renderResult = node.render(g.node(), {
         width: node.bbox.contentRect().width,
         height: node.bbox.contentRect().height,
         margin,
       });
-      return;
+      return {
+        node,
+        linkAnchors: offsetLinkAnchors(
+          renderResult?.linkAnchors,
+          x - margin.left,
+          y - margin.top,
+        ),
+      };
     }
 
     const group = container
@@ -23,13 +80,63 @@ export class LayoutRenderer {
       .attr("class", node.classTag)
       .attr("transform", `translate(${x}, ${y})`);
 
-    node.children.forEach((child) => {
+    const childMetadata = node.children.map((child) =>
       this.renderTree(
         child,
         group,
         child.bbox.contentRect().x,
         child.bbox.contentRect().y,
-      );
+      ),
+    );
+
+    if (node.link) {
+      this.renderStackLinks(node, group, childMetadata);
+    }
+
+    return { node };
+  }
+
+  static renderStackLinks(stack, group, childMetadata) {
+    const channel = linkChannelForStack(stack);
+    const sides = linkSidesForStack(stack);
+    const [firstMetadata, secondMetadata] = childMetadata;
+    const firstAnchors = linkAnchorMap(
+      stack.children[0],
+      firstMetadata?.linkAnchors,
+      channel,
+    );
+    const secondAnchors = linkAnchorMap(
+      stack.children[1],
+      secondMetadata?.linkAnchors,
+      channel,
+    );
+    const groupNode = group.node();
+    const layerNode = groupNode.ownerDocument.createElementNS(
+      groupNode.namespaceURI,
+      "g",
+    );
+    layerNode.setAttribute("class", "stack-link-layer");
+    groupNode.insertBefore(layerNode, groupNode.children[0] || null);
+    const layer = d3.select(layerNode);
+
+    firstAnchors.forEach((fromAnchor, key) => {
+      const toAnchor = secondAnchors.get(key);
+      if (!toAnchor) return;
+
+      const from = fromAnchor[sides.from];
+      const to = toAnchor[sides.to];
+      layer
+        .append("line")
+        .attr("class", "stack-link")
+        .attr("x1", from.x)
+        .attr("y1", from.y)
+        .attr("x2", to.x)
+        .attr("y2", to.y)
+        .attr("stroke", "#8a8a8a")
+        .attr("stroke-width", 1)
+        .attr("stroke-opacity", 0.55)
+        .attr("fill", "none")
+        .attr("pointer-events", "none");
     });
   }
 

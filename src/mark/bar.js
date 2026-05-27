@@ -489,6 +489,7 @@ export class BarChartRenderer extends MarkRenderer {
       valueDomain(maxValue, this.encoding.xDomain),
       xRange(chartWidth, reverseX),
     );
+    const anchors = [];
 
     data.forEach((d) => {
       const value = d[xField];
@@ -505,6 +506,9 @@ export class BarChartRenderer extends MarkRenderer {
         .attr("y", y)
         .attr("width", barWidth)
         .attr("height", barHeight);
+      anchors.push(
+        this.rectLinkAnchor(d, xField, yField, x, y, barWidth, barHeight),
+      );
 
       this.applyFillHover(rect, this.color);
 
@@ -528,6 +532,7 @@ export class BarChartRenderer extends MarkRenderer {
     return this.axisConfig(
       { x: xScale, y: yScale },
       { margin, width: chartWidth, height: chartHeight },
+      { linkAnchors: { channels: ["y"], anchors } },
     );
   }
 
@@ -565,6 +570,7 @@ export class BarChartRenderer extends MarkRenderer {
       valueDomain(maxValue, this.encoding.yDomain),
       yRange(chartHeight, reverseY),
     );
+    const anchors = [];
 
     data.forEach((d) => {
       const value = d[yField];
@@ -581,6 +587,9 @@ export class BarChartRenderer extends MarkRenderer {
         .attr("y", y)
         .attr("width", barWidth)
         .attr("height", barHeight);
+      anchors.push(
+        this.rectLinkAnchor(d, xField, yField, x, y, barWidth, barHeight),
+      );
 
       this.applyFillHover(rect, this.color);
 
@@ -600,6 +609,7 @@ export class BarChartRenderer extends MarkRenderer {
     return this.axisConfig(
       { x: xScale, y: yScale },
       { margin, width: chartWidth, height: chartHeight },
+      { linkAnchors: { channels: ["x"], anchors } },
     );
   }
 }
