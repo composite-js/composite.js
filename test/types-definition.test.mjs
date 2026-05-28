@@ -66,6 +66,36 @@ assert.match(
 
 assert.match(
   declarations,
+  /export interface RectStyleContext/,
+  "Declarations should include RectStyleContext for markStyle rect renderers",
+);
+
+assert.match(
+  declarations,
+  /export interface CircleStyleContext/,
+  "Declarations should include CircleStyleContext for markStyle circle renderers",
+);
+
+assert.match(
+  declarations,
+  /export interface SectorStyleContext/,
+  "Declarations should include SectorStyleContext for markStyle sector renderers",
+);
+
+assert.match(
+  declarations,
+  /export type MarkStyle/,
+  "Declarations should include MarkStyle for chart configs",
+);
+
+assert.match(
+  declarations,
+  /markStyle\?: MarkStyle/,
+  "ChartConfig should expose markStyle",
+);
+
+assert.match(
+  declarations,
   /export type Table<[^>]+>\s*=\s*[^;]+columns\?: string\[\]/,
   "Declarations should include a Table type with optional columns metadata",
 );

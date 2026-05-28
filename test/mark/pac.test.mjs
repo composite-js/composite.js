@@ -195,3 +195,72 @@ function baseOptions(overrides = {}) {
     bottom: { x: 90, y: 60 },
   });
 }
+
+{
+  const svg = createFakeSvg();
+  const renderer = new ProportionalAreaChartRenderer({
+    ...baseOptions({
+      mark: "pac",
+      shape: "square",
+      markStyle: "rounded",
+      encoding: { x: "year", y: "count" },
+      padding: { xInner: 0, xOuter: 0 },
+    }),
+  });
+
+  renderer.render(svg, [
+    { year: "2000", count: 25 },
+    { year: "2004", count: 100 },
+  ]);
+
+  const rects = svg.querySelectorAll("rect");
+  assert.equal(rects.length, 2);
+  rects.forEach((rect) => {
+    assert.ok(Number(rect.getAttribute("rx")) > 0);
+    assert.equal(rect.getAttribute("rx"), rect.getAttribute("ry"));
+  });
+}
+
+{
+  const svg = createFakeSvg();
+  const styleOptions = {};
+  const contexts = [];
+  const renderer = new ProportionalAreaChartRenderer({
+    ...baseOptions({
+      mark: "pac",
+      markStyle: {
+        options: styleOptions,
+        circle(context) {
+          contexts.push(context);
+          return context.container
+            .append("circle")
+            .attr("cx", context.centerX)
+            .attr("cy", context.centerY)
+            .attr("r", context.radius)
+            .attr("data-role", context.role);
+        },
+      },
+    }),
+  });
+  const datum = { year: "2000", count: 100 };
+
+  renderer.render(svg, [datum]);
+
+  assert.equal(contexts.length, 1);
+  assert.equal(contexts[0].container.node(), svg);
+  assert.equal(contexts[0].datum, datum);
+  assert.equal(contexts[0].value, 100);
+  assert.equal(contexts[0].orientation, "horizontal");
+  assert.equal(contexts[0].role, "pac-circle");
+  assert.equal(contexts[0].mark, "pac");
+  assert.equal(contexts[0].encoding, renderer.encoding);
+  assert.equal(contexts[0].styleOptions, styleOptions);
+  assert.equal(contexts[0].left, contexts[0].centerX - contexts[0].radius);
+  assert.equal(contexts[0].top, contexts[0].centerY - contexts[0].radius);
+  assert.equal(contexts[0].width, contexts[0].radius * 2);
+  assert.equal(contexts[0].height, contexts[0].radius * 2);
+  assert.equal(
+    svg.querySelectorAll("circle")[0].getAttribute("data-role"),
+    "pac-circle",
+  );
+}

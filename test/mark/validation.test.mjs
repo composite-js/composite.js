@@ -78,6 +78,19 @@ function assertInvalid(config, pattern) {
     ],
     encoding: { x: "column", group: "row", y: "active" },
   });
+
+  assertValid({
+    mark: "bar",
+    markStyle: {
+      type: "rounded",
+      options: {},
+      rect(context) {
+        return context.container.append("rect");
+      },
+    },
+    data: [{ category: "A", value: 4 }],
+    encoding: { x: "category", y: "value" },
+  });
 }
 
 {
@@ -107,6 +120,26 @@ function assertInvalid(config, pattern) {
       encoding: { x: "value", y: "category" },
     },
     /direction is not supported for mark "bar"/,
+  );
+
+  assertInvalid(
+    {
+      mark: "bar",
+      markStyle: "glossy",
+      data: [{ category: "A", value: 4 }],
+      encoding: { x: "category", y: "value" },
+    },
+    /Unsupported markStyle "glossy"/,
+  );
+
+  assertInvalid(
+    {
+      mark: "bar",
+      markStyle: { rect: "rounded" },
+      data: [{ category: "A", value: 4 }],
+      encoding: { x: "category", y: "value" },
+    },
+    /markStyle\.rect must be a function/,
   );
 }
 

@@ -2,6 +2,7 @@ import {
   inferXYOrientation,
   isOrientationInferredMark,
 } from "./orientation.js";
+import { validateMarkStyle } from "./style.js";
 
 export const MARK_DEFINITIONS = {
   bar: {
@@ -266,6 +267,7 @@ export function validateChartConfig(config = {}) {
 
   assertNoLegacyOptions(config);
   assertValidFlowOptions({ ...config, mark });
+  validateMarkStyle(config.markStyle);
   assertNoLegacyEncoding(encoding);
   assertSupportedEncoding(mark, definition, encoding);
   assertRequiredEncoding(mark, definition, encoding);

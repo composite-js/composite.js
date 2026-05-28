@@ -66,31 +66,61 @@ export class ProportionalAreaChartRenderer extends MarkRenderer {
     return () => this.color;
   }
 
-  _drawShape(container, d, x, y, size, color, categoryField, valueField) {
+  _drawShape(
+    container,
+    d,
+    x,
+    y,
+    size,
+    color,
+    categoryField,
+    valueField,
+    index,
+    orientation,
+  ) {
     if (this.shape === "square") {
-      const rect = container
-        .append("rect")
-        .attr("x", x - size / 2)
-        .attr("y", y - size / 2)
-        .attr("width", size)
-        .attr("height", size)
-        .attr("opacity", this.opacity)
-        .attr("stroke", "white")
-        .attr("stroke-width", 1);
+      const rect = this.renderStyledRect({
+        container,
+        left: x - size / 2,
+        top: y - size / 2,
+        width: size,
+        height: size,
+        value: d[valueField],
+        datum: d,
+        index,
+        orientation,
+        role: "pac-square",
+        fill: color,
+        opacity: this.opacity,
+        stroke: "white",
+        strokeWidth: 1,
+      });
 
       this.applyFillHover(rect, color);
       rect.append("title").text(`${d[categoryField]}: ${d[valueField]}`);
       return;
     }
 
-    const circle = container
-      .append("circle")
-      .attr("cx", x)
-      .attr("cy", y)
-      .attr("r", size / 2)
-      .attr("opacity", this.opacity)
-      .attr("stroke", "white")
-      .attr("stroke-width", 1);
+    const radius = size / 2;
+    const circle = this.renderStyledCircle({
+      container,
+      centerX: x,
+      centerY: y,
+      radius,
+      left: x - radius,
+      top: y - radius,
+      width: size,
+      height: size,
+      value: d[valueField],
+      datum: d,
+      index,
+      orientation,
+      role: "pac-circle",
+      fill: color,
+      opacity: this.opacity,
+      stroke: "white",
+      strokeWidth: 1,
+    });
 
     this.applyFillHover(circle, color);
     circle.append("title").text(`${d[categoryField]}: ${d[valueField]}`);
@@ -126,7 +156,7 @@ export class ProportionalAreaChartRenderer extends MarkRenderer {
     const colorScale = this._colorScale(categories);
     const anchors = [];
 
-    data.forEach((d) => {
+    data.forEach((d, index) => {
       const size = sizeScale(d[valueField]);
       const x = margin.left + chartWidth / 2;
       const y = margin.top + yScale(d[categoryField]) + yScale.bandwidth() / 2;
@@ -140,6 +170,8 @@ export class ProportionalAreaChartRenderer extends MarkRenderer {
         colorScale(d[categoryField]),
         categoryField,
         valueField,
+        index,
+        orientation.direction,
       );
       anchors.push(
         this.rectLinkAnchor(
@@ -191,7 +223,7 @@ export class ProportionalAreaChartRenderer extends MarkRenderer {
     const colorScale = this._colorScale(categories);
     const anchors = [];
 
-    data.forEach((d) => {
+    data.forEach((d, index) => {
       const size = sizeScale(d[valueField]);
       const x = margin.left + xScale(d[categoryField]) + xScale.bandwidth() / 2;
       const y = margin.top + chartHeight / 2;
@@ -205,6 +237,8 @@ export class ProportionalAreaChartRenderer extends MarkRenderer {
         colorScale(d[categoryField]),
         categoryField,
         valueField,
+        index,
+        orientation.direction,
       );
       anchors.push(
         this.rectLinkAnchor(

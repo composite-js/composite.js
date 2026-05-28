@@ -75,20 +75,28 @@ export class GroupBarChartRenderer extends MarkRenderer {
 
     const colorScale = d3.scaleOrdinal().domain(groups).range(this.colorScheme);
 
-    data.forEach((d) => {
+    data.forEach((d, index) => {
       const value = d[xField];
       const x = margin.left + xScale(0);
       const y = margin.top + yScale(d[yField]) + groupScale(d[groupField]);
       const barWidth = xScale(value) - xScale(0);
       const barHeight = groupScale.bandwidth();
-      const rect = container
-        .append("rect")
-        .attr("x", x)
-        .attr("y", y)
-        .attr("width", barWidth)
-        .attr("height", barHeight);
+      const fill = colorScale(d[groupField]);
+      const rect = this.renderStyledRect({
+        container,
+        left: x,
+        top: y,
+        width: barWidth,
+        height: barHeight,
+        value,
+        datum: d,
+        index,
+        orientation: "horizontal",
+        role: "groupbar",
+        fill,
+      });
 
-      this.applyFillHover(rect, colorScale(d[groupField]));
+      this.applyFillHover(rect, fill);
       rect.append("title").text(`${d[yField]} - ${d[groupField]}: ${value}`);
 
       if (this.showLabels && barWidth > 20) {
@@ -145,19 +153,27 @@ export class GroupBarChartRenderer extends MarkRenderer {
 
     const colorScale = d3.scaleOrdinal().domain(groups).range(this.colorScheme);
 
-    data.forEach((d) => {
+    data.forEach((d, index) => {
       const value = d[yField];
       const ySpan = scaleSpan(yScale, 0, value);
       const x = margin.left + xScale(d[xField]) + groupScale(d[groupField]);
       const y = margin.top + ySpan.position;
-      const rect = container
-        .append("rect")
-        .attr("x", x)
-        .attr("y", y)
-        .attr("width", groupScale.bandwidth())
-        .attr("height", ySpan.size);
+      const fill = colorScale(d[groupField]);
+      const rect = this.renderStyledRect({
+        container,
+        left: x,
+        top: y,
+        width: groupScale.bandwidth(),
+        height: ySpan.size,
+        value,
+        datum: d,
+        index,
+        orientation: "vertical",
+        role: "groupbar",
+        fill,
+      });
 
-      this.applyFillHover(rect, colorScale(d[groupField]));
+      this.applyFillHover(rect, fill);
       rect.append("title").text(`${d[xField]} - ${d[groupField]}: ${value}`);
 
       if (this.showLabels && ySpan.size > 15) {
@@ -275,6 +291,7 @@ export class StackBarChartRenderer extends MarkRenderer {
       xRange(chartWidth, reverseX),
     );
 
+    let segmentIndex = 0;
     stackedData.forEach((layer) => {
       const stackKey = layer.key;
       layer.forEach((d) => {
@@ -284,18 +301,26 @@ export class StackBarChartRenderer extends MarkRenderer {
         const barWidth = xSpan.size;
         const barHeight = yScale.bandwidth();
         const y = yScale(category);
+        const value = d[1] - d[0];
+        const fill = colorScale(stackKey);
 
-        const rect = container
-          .append("rect")
-          .attr("x", margin.left + barX)
-          .attr("y", margin.top + y)
-          .attr("width", barWidth)
-          .attr("height", barHeight)
-          .attr("fill", colorScale(stackKey));
+        const rect = this.renderStyledRect({
+          container,
+          left: margin.left + barX,
+          top: margin.top + y,
+          width: barWidth,
+          height: barHeight,
+          value,
+          datum: d.data,
+          index: segmentIndex,
+          orientation: "horizontal",
+          role: "stackbar",
+          fill,
+        });
 
         this.applyOpacityHover(rect);
 
-        rect.append("title").text(`${category} - ${stackKey}: ${d[1] - d[0]}`);
+        rect.append("title").text(`${category} - ${stackKey}: ${value}`);
 
         if (this.showLabels && barWidth > 20) {
           container
@@ -305,8 +330,9 @@ export class StackBarChartRenderer extends MarkRenderer {
             .attr("text-anchor", "middle")
             .attr("font-size", "10px")
             .attr("fill", "white")
-            .text(d[1] - d[0]);
+            .text(value);
         }
+        segmentIndex += 1;
       });
     });
 
@@ -373,6 +399,7 @@ export class StackBarChartRenderer extends MarkRenderer {
       yRange(chartHeight, reverseY),
     );
 
+    let segmentIndex = 0;
     stackedData.forEach((layer) => {
       const stackKey = layer.key;
       layer.forEach((d) => {
@@ -382,18 +409,26 @@ export class StackBarChartRenderer extends MarkRenderer {
         const barHeight = ySpan.size;
         const barWidth = xScale.bandwidth();
         const x = xScale(category);
+        const value = d[1] - d[0];
+        const fill = colorScale(stackKey);
 
-        const rect = container
-          .append("rect")
-          .attr("x", margin.left + x)
-          .attr("y", margin.top + barY)
-          .attr("width", barWidth)
-          .attr("height", barHeight)
-          .attr("fill", colorScale(stackKey));
+        const rect = this.renderStyledRect({
+          container,
+          left: margin.left + x,
+          top: margin.top + barY,
+          width: barWidth,
+          height: barHeight,
+          value,
+          datum: d.data,
+          index: segmentIndex,
+          orientation: "vertical",
+          role: "stackbar",
+          fill,
+        });
 
         this.applyOpacityHover(rect);
 
-        rect.append("title").text(`${category} - ${stackKey}: ${d[1] - d[0]}`);
+        rect.append("title").text(`${category} - ${stackKey}: ${value}`);
 
         if (this.showLabels && barHeight > 15) {
           container
@@ -403,8 +438,9 @@ export class StackBarChartRenderer extends MarkRenderer {
             .attr("text-anchor", "middle")
             .attr("font-size", "10px")
             .attr("fill", "white")
-            .text(d[1] - d[0]);
+            .text(value);
         }
+        segmentIndex += 1;
       });
     });
 
@@ -491,7 +527,7 @@ export class BarChartRenderer extends MarkRenderer {
     );
     const anchors = [];
 
-    data.forEach((d) => {
+    data.forEach((d, index) => {
       const value = d[xField];
       const xSpan = scaleSpan(xScale, 0, value);
       const barWidth = xSpan.size;
@@ -500,12 +536,19 @@ export class BarChartRenderer extends MarkRenderer {
       const x = margin.left + xSpan.position;
       const y = margin.top + yScale(d[yField]);
 
-      const rect = container
-        .append("rect")
-        .attr("x", x)
-        .attr("y", y)
-        .attr("width", barWidth)
-        .attr("height", barHeight);
+      const rect = this.renderStyledRect({
+        container,
+        left: x,
+        top: y,
+        width: barWidth,
+        height: barHeight,
+        value,
+        datum: d,
+        index,
+        orientation: "horizontal",
+        role: "bar",
+        fill: this.color,
+      });
       anchors.push(
         this.rectLinkAnchor(d, xField, yField, x, y, barWidth, barHeight),
       );
@@ -572,7 +615,7 @@ export class BarChartRenderer extends MarkRenderer {
     );
     const anchors = [];
 
-    data.forEach((d) => {
+    data.forEach((d, index) => {
       const value = d[yField];
       const barWidth = xScale.bandwidth();
       const ySpan = scaleSpan(yScale, 0, value);
@@ -581,12 +624,19 @@ export class BarChartRenderer extends MarkRenderer {
       const x = margin.left + xScale(d[xField]);
       const y = margin.top + ySpan.position;
 
-      const rect = container
-        .append("rect")
-        .attr("x", x)
-        .attr("y", y)
-        .attr("width", barWidth)
-        .attr("height", barHeight);
+      const rect = this.renderStyledRect({
+        container,
+        left: x,
+        top: y,
+        width: barWidth,
+        height: barHeight,
+        value,
+        datum: d,
+        index,
+        orientation: "vertical",
+        role: "bar",
+        fill: this.color,
+      });
       anchors.push(
         this.rectLinkAnchor(d, xField, yField, x, y, barWidth, barHeight),
       );

@@ -52,29 +52,44 @@ export class ScatterChartRenderer extends MarkRenderer {
     const anchors = [];
 
     // Draw Points
-    data.forEach((d) => {
+    data.forEach((d, index) => {
       const cx = margin.left + xScale(d[xField]);
       const cy = margin.top + yScale(d[yField]);
 
       const radius = this.radius;
       const color = this.color;
-      const circle = container
-        .append("circle")
-        .attr("cx", cx)
-        .attr("cy", cy)
-        .attr("r", radius)
-        .attr("fill", color)
-        .attr("opacity", 0.7)
-        .attr("stroke", "white")
-        .attr("stroke-width", 1)
-        .on("mouseenter", function () {
-          d3.select(this)
-            .attr("fill", "orange")
-            .attr("r", radius * 1.5);
-        })
-        .on("mouseleave", function () {
-          d3.select(this).attr("fill", color).attr("r", radius);
-        });
+      const circle = this.renderStyledCircle({
+        container,
+        centerX: cx,
+        centerY: cy,
+        radius,
+        left: cx - radius,
+        top: cy - radius,
+        width: radius * 2,
+        height: radius * 2,
+        value: d[yField],
+        datum: d,
+        index,
+        orientation: "point",
+        role: "point",
+        fill: color,
+        opacity: 0.7,
+        stroke: "white",
+        strokeWidth: 1,
+      });
+      if (circle.node()?.tagName === "circle") {
+        circle
+          .on("mouseenter", function () {
+            d3.select(this)
+              .attr("fill", "orange")
+              .attr("r", radius * 1.5);
+          })
+          .on("mouseleave", function () {
+            d3.select(this).attr("fill", color).attr("r", radius);
+          });
+      } else {
+        this.applyFillHover(circle, color);
+      }
       anchors.push(
         this.rectLinkAnchor(
           d,

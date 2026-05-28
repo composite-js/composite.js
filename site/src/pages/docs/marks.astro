@@ -11,6 +11,36 @@ const chartShapeCode = `chart({
   height: 240,
 });`;
 
+const markStyleCode = `chart({
+  mark: "bar",
+  data,
+  encoding: { x: "category", y: "value" },
+  markStyle: "rounded",
+});
+
+chart({
+  mark: "scatter",
+  data,
+  encoding: { x: "score", y: "cost" },
+  markStyle: "sketch",
+});
+
+chart({
+  mark: "bar",
+  data,
+  encoding: { x: "category", y: "value" },
+  markStyle: {
+    rect(context) {
+      return context.container
+        .append("rect")
+        .attr("x", context.left)
+        .attr("y", context.top)
+        .attr("width", context.width)
+        .attr("height", context.height);
+    },
+  },
+});`;
+
 const markSections = [
   {
     id: "bar",
@@ -364,7 +394,17 @@ const formatFields = (fields) => fields.join(", ");
             and <code>yAxisPos</code>.
           </dd>
         </div>
+        <div>
+          <dt><code>markStyle</code></dt>
+          <dd>
+            Shape styling for supported rect, circle, and sector marks. Use
+            <code>"rounded"</code>, Rough.js-backed <code>"sketch"</code>, or
+            provide custom primitive renderers such as <code>rect(context)</code>,
+            <code>circle(context)</code>, and <code>sector(context)</code>.
+          </dd>
+        </div>
       </dl>
+      <pre class="docs-code"><code>{markStyleCode}</code></pre>
     </section>
 
     <section class="docs-section mark-grid" aria-label="Mark reference">

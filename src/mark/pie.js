@@ -32,7 +32,6 @@ export class PieChartRenderer extends MarkRenderer {
 
     const radius = Math.min(this.width, this.height) / 2;
     const pie = d3.pie().value((d) => d[valueField]);
-    const arc = d3.arc().innerRadius(this.innerRadius).outerRadius(radius);
 
     // Create color scale
     const uniqueCategories = this.encoding.xDomain || [
@@ -51,12 +50,26 @@ export class PieChartRenderer extends MarkRenderer {
       .append("g")
       .attr("class", "arc");
 
-    arcs
-      .append("path")
-      .attr("d", arc)
-      .attr("fill", (d) => color(d.data[categoryField]))
-      .attr("stroke", "white")
-      .style("stroke-width", "2px");
+    arcs.each((d, index, nodes) => {
+      const path = this.renderStyledSector({
+        container: d3.select(nodes[index]),
+        arcDatum: d,
+        startAngle: d.startAngle,
+        endAngle: d.endAngle,
+        innerRadius: this.innerRadius,
+        outerRadius: radius,
+        value: d.data[valueField],
+        category: d.data[categoryField],
+        datum: d.data,
+        index,
+        orientation: "radial",
+        role: "sector",
+        fill: color(d.data[categoryField]),
+        stroke: "white",
+      });
+
+      path.attr("stroke", "white").style("stroke-width", "2px");
+    });
 
     if (this.showLabels) {
       const labelArc = d3

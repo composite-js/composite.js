@@ -362,3 +362,121 @@ function baseOptions(overrides = {}) {
   assert.deepEqual(axisConfig.scales.x.range(), [120, 0]);
   assert.deepEqual(axisConfig.scales.y.range(), [0, 80]);
 }
+
+{
+  const svg = createFakeSvg();
+  const renderer = new BarChartRenderer({
+    ...baseOptions(),
+    mark: "bar",
+    color: "teal",
+    markStyle: "rounded",
+    encoding: { x: "category", y: "value" },
+  });
+
+  renderer.render(svg, [{ category: "A", value: 10 }]);
+
+  const rect = findFirstElement(svg, "rect");
+  assert.ok(rect, "Rounded bar style should render a rect");
+  assert.ok(Number(rect.getAttribute("rx")) > 0);
+  assert.equal(rect.getAttribute("rx"), rect.getAttribute("ry"));
+  assert.equal(rect.getAttribute("fill"), "teal");
+}
+
+{
+  const svg = createFakeSvg();
+  const renderer = new GroupBarChartRenderer({
+    ...baseOptions(),
+    mark: "groupbar",
+    markStyle: "sketch",
+    colorScheme: ["orange", "purple"],
+    encoding: { x: "date", y: "count", group: "kind", yDomain: [0, 50] },
+  });
+
+  renderer.render(svg, [
+    { date: "18-Jun", kind: "posts", count: 20 },
+    { date: "18-Jun", kind: "views", count: 30 },
+  ]);
+
+  const sketchGroups = svg
+    .querySelectorAll("g")
+    .filter((node) => node.getAttribute("data-mark-style") === "sketch");
+  const paths = svg.querySelectorAll("path");
+  assert.equal(svg.querySelectorAll("rect").length, 0);
+  assert.equal(sketchGroups.length, 2);
+  assert.ok(paths.length > 2);
+  assert.match(
+    sketchGroups[0].querySelectorAll("path")[0].getAttribute("d"),
+    /[MLC]/,
+  );
+  assert.equal(
+    sketchGroups[0].querySelectorAll("path")[0].getAttribute("stroke"),
+    "orange",
+  );
+}
+
+{
+  const svg = createFakeSvg();
+  const renderer = new StackBarChartRenderer({
+    ...baseOptions(),
+    mark: "stackbar",
+    markStyle: "rounded",
+    colorScheme: ["red", "blue"],
+    encoding: { x: "category", y: "value", group: "group" },
+  });
+
+  renderer.render(svg, [
+    { category: "A", group: "g1", value: 10 },
+    { category: "A", group: "g2", value: 15 },
+  ]);
+
+  const rects = svg.querySelectorAll("rect");
+  assert.equal(rects.length, 2);
+  rects.forEach((rect) => {
+    assert.ok(Number(rect.getAttribute("rx")) > 0);
+    assert.equal(rect.getAttribute("rx"), rect.getAttribute("ry"));
+  });
+}
+
+{
+  const svg = createFakeSvg();
+  const styleOptions = {};
+  const contexts = [];
+  const renderer = new BarChartRenderer({
+    ...baseOptions({ margin: { top: 1, right: 0, bottom: 0, left: 2 } }),
+    mark: "bar",
+    color: "navy",
+    markStyle: {
+      type: "rounded",
+      options: styleOptions,
+      rect(context) {
+        contexts.push(context);
+        return context.container
+          .append("rect")
+          .attr("x", context.left)
+          .attr("y", context.top)
+          .attr("width", context.width)
+          .attr("height", context.height)
+          .attr("data-role", context.role);
+      },
+    },
+    encoding: { x: "category", y: "value", yDomain: [0, 20] },
+  });
+  const datum = { category: "A", value: 10 };
+
+  renderer.render(svg, [datum]);
+
+  assert.equal(contexts.length, 1);
+  assert.equal(contexts[0].container.node(), svg);
+  assert.equal(contexts[0].datum, datum);
+  assert.equal(contexts[0].value, 10);
+  assert.equal(contexts[0].orientation, "vertical");
+  assert.equal(contexts[0].role, "bar");
+  assert.equal(contexts[0].fill, "navy");
+  assert.equal(contexts[0].mark, "bar");
+  assert.equal(contexts[0].encoding, renderer.encoding);
+  assert.equal(contexts[0].styleOptions, styleOptions);
+  assert.equal(
+    svg.querySelectorAll("rect")[0].getAttribute("data-role"),
+    "bar",
+  );
+}

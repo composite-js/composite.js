@@ -35,6 +35,75 @@ export interface Encoding {
   [channel: string]: string | Primitive[] | undefined;
 }
 
+export interface StyleSelection {
+  append(name: string): StyleSelection;
+  attr(name: string, value?: unknown): StyleSelection;
+  style(name: string, value?: unknown): StyleSelection;
+  text(value?: unknown): StyleSelection;
+  on(type: string, listener: (...args: unknown[]) => void): StyleSelection;
+  node(): unknown;
+}
+
+export interface BaseStyleContext<T extends Datum = Datum> {
+  container: StyleSelection;
+  value?: unknown;
+  datum: T;
+  index: number;
+  orientation: string;
+  role: string;
+  fill?: string;
+  stroke?: string;
+  strokeWidth?: number | string;
+  opacity?: number;
+  mark: string;
+  encoding: Encoding;
+  styleOptions: object;
+}
+
+export interface RectStyleContext<
+  T extends Datum = Datum,
+> extends BaseStyleContext<T> {
+  left: number;
+  top: number;
+  width: number;
+  height: number;
+}
+
+export interface CircleStyleContext<
+  T extends Datum = Datum,
+> extends BaseStyleContext<T> {
+  centerX: number;
+  centerY: number;
+  radius: number;
+  left: number;
+  top: number;
+  width: number;
+  height: number;
+}
+
+export interface SectorStyleContext<
+  T extends Datum = Datum,
+> extends BaseStyleContext<T> {
+  arcDatum: unknown;
+  startAngle: number;
+  endAngle: number;
+  innerRadius: number;
+  outerRadius: number;
+  category?: unknown;
+}
+
+export type BuiltinMarkStyle = "default" | "rounded" | "sketch";
+
+export type MarkStyle<T extends Datum = Datum> =
+  | BuiltinMarkStyle
+  | {
+      type?: BuiltinMarkStyle;
+      options?: object;
+      rect?: (context: RectStyleContext<T>) => StyleSelection;
+      circle?: (context: CircleStyleContext<T>) => StyleSelection;
+      sector?: (context: SectorStyleContext<T>) => StyleSelection;
+    };
+
 export interface ChartConfig<T extends Datum = Datum> {
   mark?: string;
   data?: T[];
@@ -62,6 +131,7 @@ export interface ChartConfig<T extends Datum = Datum> {
   colors?: string[];
   colorScheme?: string[];
   colorBy?: "x" | "group" | string;
+  markStyle?: MarkStyle<T>;
   showXAxis?: boolean;
   showYAxis?: boolean;
   xAxisName?: string;
@@ -362,4 +432,6 @@ export function crossJoin<L, R, O>(
   mapper: (left: L, right: R, leftIndex: number, rightIndex: number) => O,
 ): O[];
 
-export function validateChartConfig(config?: ChartConfig): void;
+export function validateChartConfig<T extends Datum = Datum>(
+  config?: ChartConfig<T>,
+): void;

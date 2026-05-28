@@ -97,7 +97,7 @@ export class BubbleChartRenderer extends MarkRenderer {
         .range([0, this.maxRadius]);
     }
 
-    data.forEach((d) => {
+    data.forEach((d, index) => {
       const cx =
         margin.left +
         (xIsCategorical
@@ -110,14 +110,25 @@ export class BubbleChartRenderer extends MarkRenderer {
           : yScale(d[yField]));
       const r = sizeField ? rScale(d[sizeField]) : 5;
 
-      const circle = container
-        .append("circle")
-        .attr("cx", cx)
-        .attr("cy", cy)
-        .attr("r", r)
-        .attr("opacity", 0.7)
-        .attr("stroke", "white")
-        .attr("stroke-width", 1);
+      const circle = this.renderStyledCircle({
+        container,
+        centerX: cx,
+        centerY: cy,
+        radius: r,
+        left: cx - r,
+        top: cy - r,
+        width: r * 2,
+        height: r * 2,
+        value: sizeField ? d[sizeField] : undefined,
+        datum: d,
+        index,
+        orientation: "point",
+        role: "bubble",
+        fill: this.color,
+        opacity: 0.7,
+        stroke: "white",
+        strokeWidth: 1,
+      });
 
       this.applyFillHover(circle, this.color);
 

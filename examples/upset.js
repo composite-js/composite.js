@@ -160,6 +160,7 @@ const stackBarChart = chart({
   showLabels: false,
   xAxisName: "Count",
   showYAxis: false,
+  markStyle: "sketch",
 });
 
 // 6. Pie Chart Row (below Matrix)
@@ -185,6 +186,7 @@ const pieRow = repeatX(
       },
       width: 40,
       height: 40,
+      markStyle: "sketch",
       showLabels: false,
     });
   },

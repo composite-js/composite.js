@@ -66,3 +66,27 @@ assert.equal(circles[0].getAttribute("r"), "5");
   assert.deepEqual(domainAxisConfig.scales.x.range(), [100, 0]);
   assert.deepEqual(domainAxisConfig.scales.y.range(), [0, 80]);
 }
+
+{
+  const roundedSvg = createFakeSvg();
+  const roundedRenderer = new ScatterChartRenderer({
+    width: 100,
+    height: 80,
+    margin: { top: 0, right: 0, bottom: 0, left: 0 },
+    mark: "scatter",
+    markStyle: "rounded",
+    color: "darkgreen",
+    radius: 6,
+    encoding: { x: "x", y: "y" },
+  });
+
+  roundedRenderer.render(roundedSvg, [
+    { x: 1, y: 10 },
+    { x: 2, y: 20 },
+  ]);
+
+  const circles = roundedSvg.querySelectorAll("circle");
+  assert.equal(circles.length, 2);
+  assert.equal(circles[0].getAttribute("r"), "6");
+  assert.equal(circles[0].getAttribute("fill"), "darkgreen");
+}

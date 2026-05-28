@@ -1,4 +1,10 @@
 import * as d3 from "d3";
+import {
+  normalizeMarkStyle,
+  renderStyledCircle,
+  renderStyledRect,
+  renderStyledSector,
+} from "./style.js";
 import { validateChartConfig } from "./validation.js";
 
 /**
@@ -11,6 +17,7 @@ export class MarkRenderer {
    */
   constructor(options = {}) {
     this.options = options;
+    this.mark = options.mark || "";
     this.encoding = options.encoding || {};
     this.width = options.width || 400;
     this.height = options.height || 300;
@@ -26,6 +33,7 @@ export class MarkRenderer {
     this.yAxisName = options.yAxisName || "";
     this.xAxisPos = options.xAxisPos || "bottom";
     this.yAxisPos = options.yAxisPos || "left";
+    this.markStyle = normalizeMarkStyle(options.markStyle);
   }
 
   validate(data = this.options.data) {
@@ -73,13 +81,36 @@ export class MarkRenderer {
   }
 
   applyFillHover(selection, normalFill, hoverFill = "orange") {
+    const setFill = (node, fill) => {
+      const selected = d3.select(node).attr("fill", fill);
+
+      if (node.getAttribute("data-mark-style") !== "sketch") return;
+
+      node.querySelectorAll("path").forEach((path) => {
+        if (path.getAttribute("data-sketch-fill") !== "true") return;
+
+        const pathSelection = d3.select(path);
+        if (path.getAttribute("stroke") !== "none") {
+          pathSelection.attr("stroke", fill);
+        }
+        if (path.getAttribute("fill") !== "none") {
+          pathSelection.attr("fill", fill);
+        }
+      });
+
+      return selected;
+    };
+
     return selection
+      .each(function () {
+        setFill(this, normalFill);
+      })
       .attr("fill", normalFill)
       .on("mouseenter", function () {
-        d3.select(this).attr("fill", hoverFill);
+        setFill(this, hoverFill);
       })
       .on("mouseleave", function () {
-        d3.select(this).attr("fill", normalFill);
+        setFill(this, normalFill);
       });
   }
 
@@ -91,6 +122,27 @@ export class MarkRenderer {
       .on("mouseleave", function () {
         d3.select(this).attr("opacity", normalOpacity);
       });
+  }
+
+  styleContext(context) {
+    return {
+      mark: this.mark,
+      encoding: this.encoding,
+      styleOptions: this.markStyle.options,
+      ...context,
+    };
+  }
+
+  renderStyledRect(context) {
+    return renderStyledRect(this.markStyle, this.styleContext(context));
+  }
+
+  renderStyledCircle(context) {
+    return renderStyledCircle(this.markStyle, this.styleContext(context));
+  }
+
+  renderStyledSector(context) {
+    return renderStyledSector(this.markStyle, this.styleContext(context));
   }
 
   /**

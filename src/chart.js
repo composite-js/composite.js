@@ -77,6 +77,7 @@ export class Chart {
   _createRenderer() {
     const rendererOptions = {
       ...this.options,
+      mark: this.mark,
       encoding: this.encoding,
       width: this.width,
       height: this.height,

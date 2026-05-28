@@ -22,9 +22,13 @@ import {
   text,
   validateChartConfig,
   type ChartConfig,
+  type CircleStyleContext,
   type Container,
   type CustomRenderable,
   type LayoutNode,
+  type MarkStyle,
+  type RectStyleContext,
+  type SectorStyleContext,
 } from "composite-js";
 
 // @ts-expect-error Internals are not part of the public package entry.
@@ -79,6 +83,40 @@ const config: ChartConfig<Row> = {
   },
   width: 240,
   height: 160,
+};
+
+const customMarkStyle: MarkStyle<Row> = {
+  type: "rounded",
+  options: {},
+  rect(context: RectStyleContext<Row>) {
+    const datum: Row = context.datum;
+    const value: unknown = context.value;
+    void datum;
+    void value;
+    return context.container
+      .append("rect")
+      .attr("x", context.left)
+      .attr("y", context.top)
+      .attr("width", context.width)
+      .attr("height", context.height);
+  },
+  circle(context: CircleStyleContext<Row>) {
+    return context.container
+      .append("circle")
+      .attr("cx", context.centerX)
+      .attr("cy", context.centerY)
+      .attr("r", context.radius);
+  },
+  sector(context: SectorStyleContext<Row>) {
+    const category: unknown = context.category;
+    void category;
+    return context.container.append("path").attr("d", "M0,0");
+  },
+};
+
+const styledConfig: ChartConfig<Row> = {
+  ...config,
+  markStyle: customMarkStyle,
 };
 
 validateChartConfig(config);
@@ -183,6 +221,7 @@ void loadedCsvText;
 void headerlessRows;
 void parsedColumns;
 void pairs;
+void styledConfig;
 void BarChartRenderer;
 void Chart;
 void LayoutEngine;
