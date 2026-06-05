@@ -6,7 +6,7 @@ import {
   Node,
 } from "../../src/layout.js";
 import { embed, repeat, sequenceContainer } from "../../src/index.js";
-import { createFakeSvg } from "../helpers/fake-svg.mjs";
+import { createFakeSvg, withFakeSvgDocument } from "../helpers/fake-svg.mjs";
 
 const zeroMargin = { top: 0, right: 0, bottom: 0, left: 0 };
 const originalAdapter = LayoutCalculator.getMeasurementAdapter();
@@ -81,6 +81,40 @@ try {
         (group) => group.getAttribute("transform") === "translate(85, 55)",
       ),
     );
+  }
+
+  {
+    const repeated = repeat(
+      [
+        { id: "a0", week: 0, learner: "learner-a" },
+        { id: "b1", week: 1, learner: "learner-b" },
+      ],
+      (item) => fakeLeaf(item.id),
+    );
+
+    const embedded = embed(
+      sequenceContainer({
+        width: 120,
+        height: 80,
+        xDomain: [0, 1],
+        yDomain: ["learner-a", "learner-b"],
+        tracks: ["learner-a", "learner-b"],
+      }),
+      repeated,
+      { x: "week", y: "learner", key: "id", width: 10, height: 10 },
+    );
+
+    await withFakeSvgDocument(async (document) => {
+      const container = document.createElement("div");
+      const rendered = embedded.render(container);
+      const svg = container.firstElementChild;
+
+      assert.equal(svg?.tagName, "svg");
+      assert.equal(rendered, svg);
+      assert.equal(svg.getAttribute("width"), "120");
+      assert.equal(svg.getAttribute("height"), "80");
+      assert.equal(svg.querySelectorAll("rect").length, 2);
+    });
   }
 
   {

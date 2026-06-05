@@ -80,8 +80,16 @@ import {
     "scatterplotmatrix should not need test-only CSS classes",
   );
   assert.ok(
-    source.includes("align: [null, matrix]"),
-    "scatterplotmatrix should keep matrix alignment explicit",
+    !source.includes("columnLabels"),
+    "scatterplotmatrix should not render external column labels",
+  );
+  assert.ok(
+    !source.includes("rowLabels"),
+    "scatterplotmatrix should not render external row labels",
+  );
+  assert.ok(
+    source.includes("return matrix;"),
+    "scatterplotmatrix should render the embedded matrix directly",
   );
   assert.ok(
     source.includes("./dataset/iris.csv"),

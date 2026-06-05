@@ -7,10 +7,6 @@ import {
   numericColumns,
   parseCsv,
   repeat,
-  repeatX,
-  repeatY,
-  stackX,
-  stackY,
   text,
 } from "../src/index.js";
 
@@ -24,8 +20,6 @@ const variableLabels = {
 };
 
 const cellSize = 136;
-const labelWidth = 112;
-const labelHeight = 34;
 
 function buildView(samples) {
   const variables = numericColumns(samples, { exclude: ["Id", "Species"] }).map(
@@ -49,15 +43,13 @@ function buildView(samples) {
       rowDomain: variables.map((variable) => variable.key),
       columnDomain: variables.map((variable) => variable.key),
       stroke: "#94a3b8",
-      fill: "#ffffff",
     }),
     repeat(matrixCells, (cell) => {
       if (cell.row === cell.column) {
         return text({
           text: cell.label,
           fill: "#334155",
-          fontSize: 13,
-          fontWeight: 600,
+          fontSize: 18,
         });
       }
 
@@ -78,45 +70,7 @@ function buildView(samples) {
     { row: "row", column: "column", key: "id" },
   );
 
-  const columnLabels = repeatX(
-    variables,
-    (variable) =>
-      text({
-        text: variable.label,
-        fill: "#334155",
-        fontSize: 12,
-        fontWeight: 600,
-      }),
-    {
-      width: matrixSize,
-      height: labelHeight,
-      paddingInner: 0,
-      paddingOuter: 0,
-    },
-  );
-
-  const rowLabels = repeatY(
-    variables,
-    (variable) =>
-      text({
-        text: variable.label,
-        x: labelWidth - 8,
-        fill: "#334155",
-        fontSize: 12,
-        fontWeight: 600,
-        textAnchor: "end",
-      }),
-    {
-      width: labelWidth,
-      height: matrixSize,
-      paddingInner: 0,
-      paddingOuter: 0,
-    },
-  );
-
-  return stackX([rowLabels, stackY([columnLabels, matrix])], {
-    align: [null, matrix],
-  });
+  return matrix;
 }
 
 export async function createExample() {

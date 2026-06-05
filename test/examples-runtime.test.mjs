@@ -84,6 +84,11 @@ for (const file of exampleFiles) {
         labels.includes("Sepal length"),
         "scatterplot-matrix should render variable labels",
       );
+      assert.equal(
+        labels.filter((label) => label === "Sepal length").length,
+        1,
+        "scatterplot-matrix should only render each variable label once",
+      );
     }
   });
 }

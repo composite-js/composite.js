@@ -397,7 +397,11 @@ export class Embedded extends Node {
     return this.embeddedChildren;
   }
 
-  render(svg, renderOptions = {}) {
+  render(container, renderOptions = {}) {
+    if (!isSvgContainer(container)) {
+      return LayoutEngine.layout(this, container, renderOptions);
+    }
+
     const width = renderOptions.width || this.container.width;
     const height = renderOptions.height || this.container.height;
     const margin = renderOptions.margin || this.container.margin;
@@ -410,10 +414,10 @@ export class Embedded extends Node {
     });
 
     if (typeof this.container.render === "function") {
-      this.container.render(svg, { width, height, margin });
+      this.container.render(container, { width, height, margin });
     }
 
-    const parent = d3.select(svg);
+    const parent = d3.select(container);
     children.forEach((child, index) => {
       const slot = slots[index];
       const childRect = child.bbox.contentRect();
