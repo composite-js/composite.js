@@ -2,7 +2,7 @@
   "name": "composite-js",
   "version": "0.1.0",
   "type": "module",
-  "packageManager": "pnpm@10.28.1",
+  "packageManager": "pnpm@11.9.0",
   "description": "A JavaScript grammar for building composite visualizations in the browser.",
   "main": "dist/cjs/index.cjs",
   "module": "dist/esm/index.js",
