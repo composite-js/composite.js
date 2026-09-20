@@ -79,9 +79,10 @@ DOM; run it through your app tooling instead of evaluating it in Node directly.
 
 ## Documentation
 
-Read the [project guide](docs/PROJECT.md) for architecture, concepts, API
-details, and maintenance notes. The full documentation and example site lives
-in [`site/`](site/README.md) and can be run locally with `pnpm run site:dev`.
+Visit the [documentation website](https://composite-js.github.io/) for guides,
+API documentation, and examples. Read the [project guide](docs/PROJECT.md) for
+architecture and maintenance notes. The site source lives in
+[`site/`](site/README.md) and can be run locally with `pnpm run site:dev`.
 
 ## Requirements
 
@@ -136,6 +137,6 @@ If you use `composite.js` in your work, please cite it as follows:
   author = {Zhiyang Shen},
   title = {composite.js: A JavaScript Grammar for Composite Visualizations},
   year = {2026},
-  url = {https://github.com/shenzhiy21/composite.js}
+  url = {https://github.com/composite-js/composite.js}
 }
 ```

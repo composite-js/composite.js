@@ -7,7 +7,7 @@ import { navItems } from "../../site/src/data/nav.js";
   const githubItem = navItems.find((item) => item.label === "GitHub");
 
   assert.ok(githubItem, "Primary navigation should include a GitHub link");
-  assert.equal(githubItem.href, "https://github.com/shenzhiy21/composite.js");
+  assert.equal(githubItem.href, "https://github.com/composite-js/composite.js");
   assert.equal(githubItem.external, true);
 }
 

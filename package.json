@@ -45,12 +45,12 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/shenzhiy21/composite.js.git"
+    "url": "git+https://github.com/composite-js/composite.js.git"
   },
   "bugs": {
-    "url": "https://github.com/shenzhiy21/composite.js/issues"
+    "url": "https://github.com/composite-js/composite.js/issues"
   },
-  "homepage": "https://github.com/shenzhiy21/composite.js#readme",
+  "homepage": "https://composite-js.github.io/",
   "author": "",
   "license": "MIT",
   "devDependencies": {

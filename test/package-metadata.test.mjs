@@ -16,15 +16,12 @@ assert.deepEqual(packageJson.keywords, [
 ]);
 assert.deepEqual(packageJson.repository, {
   type: "git",
-  url: "git+https://github.com/shenzhiy21/composite.js.git",
+  url: "git+https://github.com/composite-js/composite.js.git",
 });
 assert.deepEqual(packageJson.bugs, {
-  url: "https://github.com/shenzhiy21/composite.js/issues",
+  url: "https://github.com/composite-js/composite.js/issues",
 });
-assert.equal(
-  packageJson.homepage,
-  "https://github.com/shenzhiy21/composite.js#readme",
-);
+assert.equal(packageJson.homepage, "https://composite-js.github.io/");
 assert.deepEqual(packageJson.exports, {
   ".": {
     types: "./index.d.ts",
