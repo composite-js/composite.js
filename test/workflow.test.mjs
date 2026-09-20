@@ -28,7 +28,7 @@ assert.ok(existsSync(ciPath), "GitHub Actions CI workflow should exist");
 const ci = readFileSync(ciPath, "utf8");
 assert.match(ci, /^name: CI$/m);
 assert.match(ci, /\bpnpm\/action-setup@v4\b/);
-assert.match(ci, /\bactions\/setup-node@v4\b/);
+assert.match(ci, /\bactions\/setup-node@v6\b/);
 assert.match(ci, /pnpm install --frozen-lockfile/);
 assert.match(ci, /pnpm run format:check/);
 assert.match(ci, /pnpm run check$/m);
