@@ -64,10 +64,9 @@ DOM; run it through your app tooling instead of evaluating it in Node directly.
 
 ## Documentation
 
-Read the [Documentation site](TODO_DOCS_SITE_URL) for concepts, API details,
-marks, examples, and composition patterns.
-
-`TODO_DOCS_SITE_URL` is a placeholder for the final docs site URL.
+Read the [project guide](docs/PROJECT.md) for architecture, concepts, API
+details, and maintenance notes. The full documentation and example site lives
+in [`site/`](site/README.md) and can be run locally with `pnpm run site:dev`.
 
 ## Requirements
 
@@ -90,6 +89,8 @@ pnpm run dev --example dropoutseer
 pnpm run build
 pnpm run test
 pnpm run lint
+pnpm run check
+pnpm run check:site
 ```
 
 - `pnpm run dev` starts the Vite example server and loads `examples/upset.js`.
@@ -97,6 +98,8 @@ pnpm run lint
 - `pnpm run build` creates the production bundle.
 - `pnpm run test` runs the Node-based test runner.
 - `pnpm run lint` runs ESLint.
+- `pnpm run check` runs the complete library verification sequence.
+- `pnpm run check:site` builds the documentation and example site.
 
 Enable the repository hooks once per clone:
 

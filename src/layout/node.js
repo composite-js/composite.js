@@ -8,10 +8,6 @@ export class Node {
     this.bbox = new BBox(0, 0, 0, 0);
   }
 
-  static isComposition(node) {
-    return isLayoutNode(node) && Array.isArray(node.children);
-  }
-
   static isRepeat(node) {
     return isLayoutNode(node) && node.isRepeat === true;
   }

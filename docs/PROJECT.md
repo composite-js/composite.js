@@ -59,6 +59,8 @@ internal modules.
 options)` method as a custom leaf layout node.
 - `text(config)` creates a leaf layout node for SVG text annotations, including
   rotated labels.
+- `image(config)` creates an SVG image leaf with fitting, clipping, and
+  transform options.
 - `frame(node, options)` wraps a layout node with a rectangular SVG border.
 - `stackX(nodes, options)` arranges layout nodes horizontally. For two direct
   chart nodes, `link: true` draws connector lines between matching
@@ -73,10 +75,16 @@ options)` method as a custom leaf layout node.
 - `sequenceContainer(options)` creates a container abstraction for sequence-style embedded layouts.
 - `gridContainer(options)` creates a two-dimensional discrete grid container for embedded layouts.
 - `customContainer(options)` creates a user-defined container with normalized sizing, margin defaults, and contract validation.
+- `GridContainer` and `SequenceContainer` are the class-based equivalents of
+  the corresponding container factories.
 - `isLayoutNode(value)` and `assertLayoutNode(value, label)` check values before
   passing them into composition helpers.
 - `validateChartConfig(config)` validates chart mark, encoding, and data shape
   without rendering.
+- `parseCsv(text, options)` parses CSV data, while `loadCsvText(url)` loads CSV
+  text in browser and Node environments.
+- `tableColumns(rows)` and `numericColumns(rows, options)` inspect tabular data,
+  and `crossJoin(left, right, mapper)` builds Cartesian products.
 
 Composition helpers expect layout nodes. Use `chart({...})` to wrap chart configurations before composing them:
 

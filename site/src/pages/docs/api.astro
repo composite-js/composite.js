@@ -47,6 +47,26 @@ const view = embed(
   { x: "week", y: "learner", key: "id", width: 48, height: 48 },
 );`;
 
+const containerCode = `const grid = gridContainer({
+  rowDomain: cohorts,
+  columnDomain: metrics,
+  row: "cohort",
+  column: "metric",
+});
+
+const customGrid = customContainer({
+  width: 480,
+  height: 240,
+  slots(data) {
+    return data.map((datum, index) => ({
+      datum,
+      key: datum.id,
+      x: 40 + index * 64,
+      y: 120,
+    }));
+  },
+});`;
+
 const annotationCode = `const label = text({
   text: "Intersections",
   width: 120,
@@ -85,6 +105,20 @@ const customCode = `const timeline = custom(
 
 const renderCode = `const root = document.querySelector("#app");
 view.render(root, { width: 720, height: 420 });`;
+
+const dataCode = `const csv = await loadCsvText(new URL("./data.csv", import.meta.url));
+const rows = parseCsv(csv);
+const columns = tableColumns(rows);
+const measures = numericColumns(rows, { exclude: ["category"] });
+const cells = crossJoin(rows, measures, (row, measure) => ({ row, measure }));`;
+
+const validationCode = `validateChartConfig(config);
+
+if (isLayoutNode(value)) {
+  value.render(document.querySelector("#app"));
+}
+
+assertLayoutNode(value, "value");`;
 ---
 
 <DocsLayout title="Composition API | composite.js">
@@ -153,6 +187,20 @@ view.render(root, { width: 720, height: 420 });`;
 
     <section class="docs-section">
       <h2>
+        <code>gridContainer(options)</code> and <code>customContainer(options)</code>
+      </h2>
+      <p>
+        <code>gridContainer()</code> creates row-and-column slots for embedded
+        children. <code>customContainer()</code> is the extension point for
+        user-defined slot placement and optional structural rendering. The
+        exported <code>GridContainer</code> and <code>SequenceContainer</code>
+        constructors provide class-based equivalents to their factory helpers.
+      </p>
+      <pre class="docs-code"><code>{containerCode}</code></pre>
+    </section>
+
+    <section class="docs-section">
+      <h2>
         <code>text(config)</code>, <code>image(config)</code>,
         <code>custom(renderable, options)</code>, and <code>frame(node, options)</code>
       </h2>
@@ -178,6 +226,29 @@ view.render(root, { width: 720, height: 420 });`;
         container and computes layout from the composed node tree.
       </p>
       <pre class="docs-code"><code>{renderCode}</code></pre>
+    </section>
+
+    <section class="docs-section">
+      <h2>Data helpers</h2>
+      <p>
+        <code>loadCsvText()</code> loads CSV text, <code>parseCsv()</code>
+        parses it into rows, and <code>tableColumns()</code> and
+        <code>numericColumns()</code> inspect the resulting table.
+        <code>crossJoin()</code> builds a Cartesian product, optionally mapping
+        each pair into a new value.
+      </p>
+      <pre class="docs-code"><code>{dataCode}</code></pre>
+    </section>
+
+    <section class="docs-section">
+      <h2>Validation and node guards</h2>
+      <p>
+        <code>validateChartConfig()</code> checks a chart configuration without
+        rendering it. <code>isLayoutNode()</code> tests unknown values, while
+        <code>assertLayoutNode()</code> throws a descriptive error for invalid
+        composition inputs.
+      </p>
+      <pre class="docs-code"><code>{validationCode}</code></pre>
     </section>
   </div>
 </DocsLayout>

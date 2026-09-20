@@ -1,6 +1,7 @@
 # composite.js Site
 
-This directory contains the static website scaffold for `composite.js`.
+This directory contains the documentation and interactive example site for
+`composite.js`.
 
 ## Preview
 

@@ -161,22 +161,6 @@ export class Chart {
   }
 
   /**
-   * Gets the total width including margins.
-   * @returns {number} Total width.
-   */
-  getTotalWidth() {
-    return this.width + this.margin.left + this.margin.right;
-  }
-
-  /**
-   * Gets the total height including margins.
-   * @returns {number} Total height.
-   */
-  getTotalHeight() {
-    return this.height + this.margin.top + this.margin.bottom;
-  }
-
-  /**
    * Renders the chart into the specified DOM container.
    * @param {HTMLElement} container - The container element.
    * @param {Object} [renderOptions] - Optional render overrides.

@@ -292,27 +292,6 @@ export class Stack extends Composition {
     }
   }
 
-  _getAllNodes(node) {
-    if (node instanceof Stack) {
-      return node.flatten();
-    }
-    return [node];
-  }
-
-  flatten() {
-    const allNodes = [];
-
-    this.children.forEach((child) => {
-      if (child instanceof Stack) {
-        allNodes.push(...child.flatten());
-      } else {
-        allNodes.push(child);
-      }
-    });
-
-    return [...new Set(allNodes)];
-  }
-
   render(container, renderOptions = {}) {
     return LayoutEngine.layout(this, container, renderOptions);
   }

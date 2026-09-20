@@ -91,45 +91,6 @@ export class LayoutEngine {
     return { ...node.children[0].bbox.contentRect() };
   }
 
-  static findNodeLayout(computedNode, targetNode) {
-    if (computedNode.node === targetNode) {
-      if (targetNode.bbox instanceof BBox) {
-        return {
-          x: targetNode.bbox.content.x,
-          y: targetNode.bbox.content.y,
-          width: targetNode.bbox.content.width,
-          height: targetNode.bbox.content.height,
-        };
-      }
-      throw new Error("Invalid layout tree: targetNode.bbox must be a BBox");
-    }
-
-    if (computedNode.children) {
-      for (const child of computedNode.children) {
-        const res = this.findNodeLayout(child, targetNode);
-        if (res) {
-          return {
-            x: (child.x || 0) + res.x,
-            y: (child.y || 0) + res.y,
-            width: res.width,
-            height: res.height,
-          };
-        }
-      }
-    }
-
-    return null;
-  }
-
-  static traverseTree(node, callback) {
-    callback(node);
-    if (Node.isStack(node)) {
-      node.children.forEach((child) => {
-        this.traverseTree(child, callback);
-      });
-    }
-  }
-
   static computeLayout(node) {
     assertLayoutNode(node);
 

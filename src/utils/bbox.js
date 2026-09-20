@@ -88,7 +88,6 @@ export class BBox {
    */
   getMargin() {
     return this.margin;
-    // TODO: API consistency: getXxx vs xxx()?
   }
 
   /**
