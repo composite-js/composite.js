@@ -5,22 +5,17 @@ const chartCode = `const bars = chart({
   mark: "bar",
   data,
   encoding: { x: "category", y: "value" },
-  width: 360,
-  height: 240,
 });`;
 
-const stackCode = `const row = stackX([leftBars, matrix, details], { margin: [8, 20] });
-const view = stackY([topBars, row], {
+const stackCode = `const row = stackX([leftBars, matrix, details]);
+const view = stackY([topBars, row]);
+
+// Optional refinements for a specific design:
+const alignedView = stackY([topBars, row], {
   align: [matrix, matrix],
 });
 
 const linkedRow = stackX([horizontalBars, pac], {
-  margin: 12,
-  link: true,
-});
-
-const linkedColumn = stackY([verticalBars, horizontalPac], {
-  margin: 12,
   link: true,
 });`;
 
@@ -30,7 +25,6 @@ const repeatCode = `const pies = repeatX(ids, (id) =>
     data: detailsById[id],
     encoding: { x: "category", y: "value" },
   }),
-  { paddingInner: 0.2 },
 );`;
 
 const embedCode = `const repeated = repeat(events, (event) =>
@@ -104,7 +98,7 @@ const customCode = `const timeline = custom(
 );`;
 
 const renderCode = `const root = document.querySelector("#app");
-view.render(root, { width: 720, height: 420 });`;
+view.render(root);`;
 
 const dataCode = `const csv = await loadCsvText(new URL("./data.csv", import.meta.url));
 const rows = parseCsv(csv);
@@ -125,20 +119,30 @@ assertLayoutNode(value, "value");`;
   <div class="docs-content">
     <header class="docs-hero">
       <p class="eyebrow">API</p>
-      <h1>Factory functions for layout trees</h1>
+      <h1>Factories for charts and their relationships</h1>
       <p>
-        The primary API is a small set of factory helpers. They create layout
-        nodes, compose those nodes, and render the resulting tree in the
-        browser.
+        The primary API defines charts and abstract composition relationships.
+        The resulting nodes are measured, positioned, and rendered by the
+        layout system.
       </p>
     </header>
+
+    <section class="docs-section">
+      <h2>Default-first composition</h2>
+      <p>
+        Begin with the required chart data, encodings, and composition
+        operators. Sizes, margins, repeat padding, and alignment all have
+        default behavior. Their options are available for deliberate overrides,
+        but they are not required to produce a complete layout.
+      </p>
+    </section>
 
     <section class="docs-section">
       <h2><code>chart(config)</code></h2>
       <p>
         Creates a chart leaf node. The config includes <code>mark</code>,
-        <code>data</code>, <code>encoding</code>, and optional sizing, color,
-        padding, label, and axis options supported by the selected mark.
+        <code>data</code>, and <code>encoding</code>. Sizing, color, padding,
+        label, and axis options supported by the selected mark are optional.
       </p>
       <pre class="docs-code"><code>{chartCode}</code></pre>
     </section>
@@ -146,9 +150,10 @@ assertLayoutNode(value, "value");`;
     <section class="docs-section">
       <h2><code>stackX(nodes, options)</code> and <code>stackY(nodes, options)</code></h2>
       <p>
-        Arrange layout nodes horizontally or vertically. Pass only layout nodes,
-        not raw chart instances. Use <code>margin</code> for spacing; pass one
-        number for uniform gaps or a per-gap list with
+        Express a left-to-right or top-to-bottom relationship between layout
+        nodes. Pass only layout nodes, not raw chart instances. Concrete
+        positions and dimensions are computed automatically. To override the
+        default gap, pass <code>margin</code> as one number or a list with
         <code>nodes.length - 1</code> values. Use
         <code>align</code> when a stack child should align to a nested node.
         Use <code>link: true</code> on a two-chart stack to draw connector
@@ -163,8 +168,9 @@ assertLayoutNode(value, "value");`;
     <section class="docs-section">
       <h2><code>repeatX(domain, fn, options)</code> and <code>repeatY(domain, fn, options)</code></h2>
       <p>
-        Generate repeated child nodes along one axis. The factory callback
-        receives each domain value and returns a layout node. Use
+        Express that one child view repeats for every domain value along an
+        axis. The factory callback receives each value and returns a layout
+        node. Defaults provide repeat sizing and padding; use
         <code>paddingInner</code>, <code>paddingOuter</code>, <code>width</code>,
         and <code>height</code> to tune repeat sizing.
       </p>
@@ -223,7 +229,8 @@ assertLayoutNode(value, "value");`;
       <p>
         Render any layout node into a browser DOM element with
         <code>.render()</code>. The library creates an SVG subtree inside the
-        container and computes layout from the composed node tree.
+        container and computes layout from the composed node tree. Optional
+        render dimensions can override the computed size when necessary.
       </p>
       <pre class="docs-code"><code>{renderCode}</code></pre>
     </section>

@@ -28,7 +28,7 @@ const line = chart({
   encoding: { x: "year", y: "value" },
 });
 
-const view = stackY([bars, line], { margin: 16 });`;
+const view = stackY([bars, line]);`;
 
 const renderCode = `<div id="app"></div>
 
@@ -43,9 +43,9 @@ const renderCode = `<div id="app"></div>
       <p class="eyebrow">Getting Started</p>
       <h1>Create and render your first composite view</h1>
       <p>
-        Install the package, build chart leaves with <code>chart()</code>, pass
-        those leaves into composition helpers, and render the resulting layout
-        node into a browser element.
+        Define the charts, express how they relate, and render the result.
+        composite.js supplies the chart implementations and computes the
+        concrete layout.
       </p>
     </header>
 
@@ -55,20 +55,34 @@ const renderCode = `<div id="app"></div>
     </section>
 
     <section class="docs-section">
-      <h2>Create chart leaves</h2>
+      <h2>Define charts and their relationship</h2>
       <p>
         Each chart leaf uses a mark, rows of data, and an encoding object. The
         encoding keys are visual channels; the values are field names from your
-        rows.
+        rows. <code>stackY([bars, line])</code> expresses only that the two
+        charts form a vertical sequence; it does not require coordinates or
+        manual size calculations.
       </p>
       <pre class="docs-code"><code>{createCode}</code></pre>
+    </section>
+
+    <section class="docs-section">
+      <h2>Start with defaults</h2>
+      <p>
+        The example above does not specify chart sizes, stack spacing, or
+        alignment targets. Built-in defaults and content measurement provide a
+        complete layout. Add <code>width</code>, <code>height</code>,
+        <code>margin</code>, or <code>align</code> only when the design calls for
+        a specific result.
+      </p>
     </section>
 
     <section class="docs-section">
       <h2>Render</h2>
       <p>
         Every layout node exposes <code>render()</code>. When you render a
-        composed node, composite.js measures and draws the whole tree.
+        composed node, composite.js measures, positions, and draws the whole
+        tree.
       </p>
       <pre class="docs-code"><code>{renderCode}</code></pre>
     </section>
@@ -78,7 +92,7 @@ const renderCode = `<div id="app"></div>
       <dl class="api-list">
         <div>
           <dt>Learn the model</dt>
-          <dd>Read Concepts for layout nodes, repeats, embedding, and alignment.</dd>
+          <dd>Read Concepts for abstract relationships, automatic layout, and recursive composition.</dd>
         </div>
         <div>
           <dt>Check signatures</dt>

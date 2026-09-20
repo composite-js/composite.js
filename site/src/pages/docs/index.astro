@@ -19,7 +19,7 @@ const matrix = chart({
   encoding: { x: "item", group: "set", y: "active" },
 });
 
-const view = stackY([top, matrix], { align: [matrix, matrix] });
+const view = stackY([top, matrix]);
 view.render(document.querySelector("#app"));`;
 ---
 
@@ -27,11 +27,11 @@ view.render(document.querySelector("#app"));`;
   <div class="docs-content">
     <header class="docs-hero">
       <p class="eyebrow">Documentation</p>
-      <h1>Build composite visualizations from layout nodes</h1>
+      <h1>Describe charts and how they relate</h1>
       <p>
-        composite.js represents a visualization as a tree. Leaf nodes render
-        individual charts, and composition nodes arrange those leaves through
-        stacking, repetition, alignment, and embedding.
+        You define individual charts and express abstract relationships through
+        stacking, repetition, alignment, and embedding. composite.js renders
+        the charts, measures their content, and computes the concrete layout.
       </p>
       <pre class="docs-code"><code>{layoutNodeCode}</code></pre>
     </header>
@@ -39,9 +39,9 @@ view.render(document.querySelector("#app"));`;
     <section class="docs-section">
       <h2>Recommended path</h2>
       <p>
-        Start with installation and rendering, then learn the layout-node model
-        before using the API and marks reference. The pages below are ordered
-        for a first pass through the library.
+        Start by defining and composing charts with the default layout behavior.
+        Then learn the underlying layout-node model and optional controls before
+        using the complete API and marks reference.
       </p>
       <div class="docs-entry-grid">
         {
@@ -56,28 +56,26 @@ view.render(document.querySelector("#app"));`;
     </section>
 
     <section class="docs-section">
-      <h2>What the grammar gives you</h2>
+      <h2>Responsibility at a glance</h2>
       <dl class="api-list">
         <div>
-          <dt>Chart leaves</dt>
+          <dt>You describe the charts</dt>
           <dd>
-            Create browser-rendered charts with <code>chart()</code> and the
-            supported mark definitions.
+            Provide data, a mark type, and visual encodings for each component.
           </dd>
         </div>
         <div>
-          <dt>Recursive layouts</dt>
+          <dt>You describe the relationships</dt>
           <dd>
-            Compose charts and compositions with <code>stackX()</code>,
-            <code>stackY()</code>, <code>repeatX()</code>, and
-            <code>repeatY()</code>.
+            State whether components stack, repeat, align, or embed without
+            calculating pixel coordinates.
           </dd>
         </div>
         <div>
-          <dt>Coordinated views</dt>
+          <dt>composite.js handles the concrete layout</dt>
           <dd>
-            Align nested views or embed repeated children into container slots
-            to build richer analytical displays.
+            Built-in defaults, renderers, measurement, and positioning turn the
+            description into a coordinated browser visualization.
           </dd>
         </div>
       </dl>

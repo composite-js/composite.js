@@ -19,19 +19,18 @@ export const docsCards = [
     href: "/docs/getting-started/",
     label: "Getting Started",
     summary:
-      "Install the package, create chart leaves, compose a view, and render it.",
+      "Define charts, express a relationship, and render with layout defaults.",
   },
   {
     href: "/docs/concepts/",
     label: "Core Concepts",
     summary:
-      "Understand layout nodes, recursive composition, repeats, embedding, and alignment.",
+      "Understand abstract relationships, automatic layout, and recursive composition.",
   },
   {
     href: "/docs/api/",
     label: "Composition API",
-    summary:
-      "Reference the factory functions used to build and render layout trees.",
+    summary: "Reference composition factories and optional layout controls.",
   },
   {
     href: "/docs/marks/",
@@ -43,6 +42,6 @@ export const docsCards = [
     href: "/docs/patterns/",
     label: "Patterns",
     summary:
-      "Apply short recipes for stacks, small multiples, embedded layouts, and annotations.",
+      "Translate common relationships between charts into composition code.",
   },
 ];

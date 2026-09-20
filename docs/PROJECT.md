@@ -2,11 +2,13 @@
 
 ## Overview
 
-`composite.js` is a JavaScript visualization grammar for building composite visualizations. It helps users describe a visualization as a tree of reusable layout nodes, where individual charts can be stacked, repeated, aligned, or embedded to form richer analytical views.
+`composite.js` is a JavaScript grammar for building composite visualizations. It is designed for users who know which charts belong in a view and how those charts are related, but do not want to implement every chart renderer or calculate the concrete layout themselves.
+
+Users describe chart data and visual encodings, then express abstract composition relationships such as stacking, repetition, alignment, and embedding. The library chooses the built-in renderers, measures content, assigns default dimensions and spacing, computes positions, and renders the resulting SVG. Explicit sizes, margins, and alignment targets are optional refinements rather than prerequisites.
 
 A composite visualization combines multiple basic charts in a meaningful layout to show different facets of the same data. For example, an UpSet-style view can combine a top bar chart, a matrix, side bars, box plots, stacked bars, and repeated pies into a single coordinated display.
 
-Each leaf chart is wrapped as a layout node, and each composition also behaves as a layout node. This makes composition recursive: a chart can be rendered alone, a group of charts can be rendered together, and that group can become part of a larger composition.
+Internally, each leaf chart is wrapped as a layout node, and each composition also behaves as a layout node. This makes composition recursive: a chart can be rendered alone, a group of charts can be rendered together, and that group can become part of a larger composition. The layout tree is the mechanism behind the grammar, while charts and their relationships are the user-facing model.
 
 ## Installation and Workflow
 
@@ -53,6 +55,13 @@ The project is designed for browser rendering. Tests run through a Node-based ru
 The stable public exports are available through `src/index.js`. Implementation
 classes for charts, renderers, layout engines, and bounding boxes remain
 internal modules.
+
+The composition factories describe abstract relationships. For example,
+`stackY([overview, details])` says that one view follows another vertically; it
+does not require the caller to calculate either chart's coordinates. Unless an
+option is supplied, the layout system uses built-in sizing, margin, padding,
+and alignment behavior. Callers can override those decisions when a specific
+design requires it.
 
 - `chart(config)` creates a leaf layout node around a chart configuration.
 - `custom(renderable, options)` wraps an object with a `render(container,
@@ -103,7 +112,7 @@ const matrix = chart({
   encoding: { x: "id", group: "set", y: "active" },
 });
 
-const view = stackY([top, matrix], { align: [matrix, matrix] });
+const view = stackY([top, matrix]);
 view.render(document.getElementById("app"));
 ```
 
@@ -112,9 +121,8 @@ beside proportional area circles, or vertical bars above a horizontal
 proportional area chart:
 
 ```javascript
-const row = stackX([horizontalBars, pac], { margin: 12, link: true });
+const row = stackX([horizontalBars, pac], { link: true });
 const column = stackY([verticalBars, horizontalPac], {
-  margin: 12,
   link: true,
 });
 ```
@@ -129,6 +137,16 @@ axis padding for marks that use band padding objects, such as `bar`, `pac`,
 `box`, `dumbbell`, and `matrix`. Explicit child padding is preserved; missing
 axis-specific padding is copied only when matching direct chart children use
 the same categorical field.
+
+### Default-first layout
+
+The shortest valid composition should be the normal starting point. Chart
+dimensions and margins have built-in defaults, layout measurement accounts for
+rendered content, stack positions are derived from child bounds, and repeats
+provide default sizing and padding. Options such as `width`, `height`,
+`margin`, `paddingInner`, `paddingOuter`, and `align` are escape hatches for
+intentional refinement. User-facing examples should introduce those options
+only when the example has a concrete reason to override the automatic result.
 
 ## Architecture
 

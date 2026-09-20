@@ -14,7 +14,7 @@ const matrix = chart({
 });
 
 const body = stackX([leftBars, matrix, detailChart]);
-const view = stackY([top, body], { align: [matrix, matrix] });`;
+const view = stackY([top, body]);`;
 
 const embedCode = `const events = repeat(eventRows, (event) =>
   chart({
@@ -27,7 +27,7 @@ const embedCode = `const events = repeat(eventRows, (event) =>
 const sequence = embed(
   sequenceContainer({ xDomain: weeks, yDomain: learners }),
   events,
-  { x: "week", y: "learner", key: "id", width: 32, height: 32 },
+  { x: "week", y: "learner", key: "id" },
 );`;
 ---
 
@@ -35,26 +35,25 @@ const sequence = embed(
   <div class="docs-content">
     <header class="docs-hero">
       <p class="eyebrow">Concepts</p>
-      <h1>The layout tree</h1>
+      <h1>Charts and their relationships</h1>
       <p>
-        composite.js uses one layout-node contract for charts and compositions.
-        That shared contract lets you render one chart, stack several charts, or
-        treat the result as a child inside a larger view.
+        A composite view starts with individual charts and the relationships
+        among them. You describe those relationships; composite.js turns them
+        into a measured and positioned layout tree.
       </p>
     </header>
 
     <section class="docs-section">
-      <h2>Layout nodes</h2>
+      <h2>The user-facing model</h2>
       <p>
-        A layout node is anything created by the public factory helpers. Chart
-        leaves come from <code>chart()</code>, annotations come from
-        <code>text()</code>, framed groups come from <code>frame()</code>, and
-        composition nodes come from stack, repeat, and embed helpers.
+        Users make two kinds of decisions: what each chart shows, and how those
+        charts are related. A relationship can place views in a horizontal or
+        vertical sequence, repeat a view across a domain, align related views,
+        or embed child views in a semantic container.
       </p>
       <p>
-        Composition helpers expect layout nodes. Wrap chart configuration with
-        <code>chart(&#123;...&#125;)</code> before passing it into a stack or
-        repeat.
+        These are abstract layout decisions. They do not require SVG transforms,
+        pixel coordinates, or manual bounding-box calculations.
       </p>
     </section>
 
@@ -69,12 +68,13 @@ const sequence = embed(
     </section>
 
     <section class="docs-section">
-      <h2>Recursive composition</h2>
+      <h2>Composition relationships</h2>
       <p>
-        <code>stackX()</code> arranges nodes left to right and
-        <code>stackY()</code> arranges nodes top to bottom. Because stacks are
-        nodes too, a stack can contain charts, repeats, framed nodes, or other
-        stacks.
+        <code>stackX()</code> expresses a left-to-right relationship and
+        <code>stackY()</code> expresses a top-to-bottom relationship. The
+        layout engine derives concrete positions from the measured children.
+        Because compositions can be nested, the same operators build both
+        simple pairs and larger analytical views.
       </p>
       <pre class="docs-code"><code>{treeCode}</code></pre>
     </section>
@@ -91,12 +91,30 @@ const sequence = embed(
     </section>
 
     <section class="docs-section">
-      <h2>Alignment basics</h2>
+      <h2>The layout-node mechanism</h2>
       <p>
-        Stack alignment lets a child align against a nested node instead of the
-        child as a whole. In an UpSet-style layout, for example, a top bar chart
-        can align to the matrix inside the row beneath it while the full row
-        still includes side charts.
+        Internally, charts and compositions share one layout-node contract.
+        Chart leaves come from <code>chart()</code>, annotations come from
+        <code>text()</code>, framed groups come from <code>frame()</code>, and
+        composition nodes come from stack, repeat, and embed helpers. This
+        shared contract is what makes recursive composition possible.
+      </p>
+      <p>
+        Composition helpers expect layout nodes, so wrap each chart
+        configuration with <code>chart(&#123;...&#125;)</code> before composing it.
+      </p>
+    </section>
+
+    <section class="docs-section">
+      <h2>Automatic layout and optional refinement</h2>
+      <p>
+        When options are omitted, composite.js supplies dimensions, margins,
+        repeat padding, and default stack alignment, then measures and positions
+        the complete tree. Explicit options refine that result. For example,
+        <code>margin</code> changes a stack gap, while <code>align</code> can make
+        a top chart align with a matrix nested inside the row below it. These
+        controls are available when the intended relationship cannot be inferred
+        from the basic composition alone.
       </p>
     </section>
   </div>

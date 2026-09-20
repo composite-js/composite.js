@@ -1,8 +1,9 @@
 # composite.js
 
-`composite.js` is a JavaScript visualization grammar for building composite
-browser visualizations. Create charts as layout nodes, then stack, repeat,
-align, and embed them into one coordinated view.
+`composite.js` is a JavaScript grammar for building composite visualizations.
+Describe the charts you need and their abstract
+relationships—such as stacking, repetition, alignment, and embedding—and let
+the library render the charts and compute their concrete layout.
 
 ## Install
 
@@ -14,8 +15,9 @@ pnpm add composite-js
 
 ## Quick Start
 
-Import the layout helpers, wrap chart configurations with `chart()`, compose
-the resulting nodes, and render the final layout into a browser element.
+Define each chart from its data and visual encoding, describe how the charts
+belong together, and render the resulting composite view. Built-in defaults
+handle sizing, spacing, measurement, and positioning for the common case.
 
 ```javascript
 import { chart, stackY } from "composite-js";
@@ -44,10 +46,23 @@ const line = chart({
   encoding: { x: "year", y: "value" },
 });
 
-const view = stackY([bars, line], { margin: 16 });
+// Express the abstract relationship: the trend follows the totals vertically.
+const view = stackY([bars, line]);
 
 view.render(document.querySelector("#app"));
 ```
+
+## What You Describe
+
+You provide the chart data, mark types, visual encodings, and high-level
+relationships between charts. Operations such as `stackX()`, `stackY()`,
+`repeatX()`, `repeatY()`, and `embed()` describe composition intent without
+requiring pixel coordinates or SVG transforms.
+
+`composite.js` selects the built-in chart renderers, measures content, assigns
+default dimensions and spacing, positions every node, and renders the complete
+SVG. Optional controls such as explicit sizes, margins, and alignment targets
+remain available when a design needs precise refinement.
 
 ## Minimal Browser App
 

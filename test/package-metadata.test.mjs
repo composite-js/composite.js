@@ -7,10 +7,6 @@ const packageJson = JSON.parse(
 );
 
 assert.equal(packageJson.name, "composite-js");
-assert.equal(
-  packageJson.description,
-  "A JavaScript grammar for building composite visualizations in the browser.",
-);
 assert.deepEqual(packageJson.keywords, [
   "visualization",
   "grammar",

@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "type": "module",
   "packageManager": "pnpm@11.9.0",
-  "description": "A JavaScript grammar for building composite visualizations in the browser.",
+  "description": "A JavaScript grammar for composite visualization designs.",
   "main": "dist/cjs/index.cjs",
   "module": "dist/esm/index.js",
   "types": "./index.d.ts",

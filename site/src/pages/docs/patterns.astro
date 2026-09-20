@@ -3,15 +3,15 @@ import DocsLayout from "../../layouts/DocsLayout.astro";
 
 const recipes = [
   {
-    title: "Vertical stack",
+    title: "Place an overview above details",
     description:
-      "Use stackY when several views should read from top to bottom, such as a total chart above a matrix.",
-    code: `const view = stackY([topBars, matrix, pieRow], { margin: 12 });`,
+      "Express a top-to-bottom relationship with stackY; the layout engine calculates the concrete positions.",
+    code: `const view = stackY([topBars, matrix, pieRow]);`,
   },
   {
-    title: "Nested aligned layout",
+    title: "Align through a shared component",
     description:
-      "Use align when a stack child should line up with a nested node instead of the whole child.",
+      "Add an explicit alignment target only when one view should line up with a component nested inside another view.",
     code: `const body = stackX([leftBars, matrix, detailChart]);
 
 const view = stackY([topBars, body], {
@@ -19,7 +19,7 @@ const view = stackY([topBars, body], {
 });`,
   },
   {
-    title: "Small multiples",
+    title: "Repeat one view across categories",
     description:
       "Use repeatX or repeatY when each domain value produces the same kind of child view.",
     code: `const pies = repeatX(ids, (id) =>
@@ -31,7 +31,7 @@ const view = stackY([topBars, body], {
 );`,
   },
   {
-    title: "Embedded sequence layout",
+    title: "Place views in a semantic structure",
     description:
       "Use repeat with embed when children should be placed into slots from a container.",
     code: `const repeated = repeat(events, (event) =>
@@ -45,7 +45,7 @@ const view = stackY([topBars, body], {
 const sequence = embed(
   sequenceContainer({ xDomain: weeks, yDomain: learners }),
   repeated,
-  { x: "week", y: "learner", key: "id", width: 40, height: 40 },
+  { x: "week", y: "learner", key: "id" },
 );`,
   },
   {
@@ -78,11 +78,12 @@ const view = stackY([heading, bars]);`,
   <div class="docs-content">
     <header class="docs-hero">
       <p class="eyebrow">Patterns</p>
-      <h1>Common composition recipes</h1>
+      <h1>Turn chart relationships into code</h1>
       <p>
-        These snippets show the smallest useful shape for common composite
-        visualization patterns. Each recipe returns or uses layout nodes that
-        can be nested into larger views.
+        Start from the relationship you want to express, then choose the
+        corresponding composition operator. Each recipe begins with defaults;
+        explicit layout options appear only when the relationship requires
+        additional information.
       </p>
     </header>
 

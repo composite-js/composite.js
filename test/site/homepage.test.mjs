@@ -19,7 +19,9 @@ import { navItems } from "../../site/src/data/nav.js";
   const homepageSource = readFileSync(homepagePath, "utf8");
 
   [
-    "A JavaScript grammar for composite visualizations",
+    "Describe charts. Compose their relationships.",
+    "Automatic layout",
+    "Optional overrides",
     "Get started",
     "View examples",
     "stackX",
