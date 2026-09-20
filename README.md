@@ -126,3 +126,16 @@ git config core.hooksPath .githooks
 
 This project is licensed under the MIT License. See the `LICENSE` file for
 details.
+
+## Citation
+
+If you use `composite.js` in your work, please cite it as follows:
+
+```bibtex
+@software{shen2026composite,
+  author = {Zhiyang Shen},
+  title = {composite.js: A JavaScript Grammar for Composite Visualizations},
+  year = {2026},
+  url = {https://github.com/shenzhiy21/composite.js}
+}
+```
