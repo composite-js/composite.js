@@ -25,14 +25,15 @@ import {
 }
 
 {
-  const child = chart({
-    mark: "bar",
-    data: [{ category: "A", value: 1 }],
-    encoding: { x: "category", y: "value" },
-  });
+  const makeChild = () =>
+    chart({
+      mark: "bar",
+      data: [{ category: "A", value: 1 }],
+      encoding: { x: "category", y: "value" },
+    });
 
-  assert.equal(stackX([child]).classTag, "stackX");
-  assert.equal(stackY([child]).classTag, "stackY");
+  assert.equal(stackX([makeChild()]).classTag, "stackX");
+  assert.equal(stackY([makeChild()]).classTag, "stackY");
 }
 
 {

@@ -12,6 +12,7 @@ const tests = [
   "./layout/root-render.test.mjs",
   "./layout/frame-box-model.test.mjs",
   "./layout/nested-composition-render.test.mjs",
+  "./layout/node-ownership.test.mjs",
   "./layout/embed-slot.test.mjs",
   "./layout/repeat-embed.test.mjs",
   "./layout/repeat-edge.test.mjs",

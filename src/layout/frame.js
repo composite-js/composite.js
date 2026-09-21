@@ -1,7 +1,7 @@
 import { BBox } from "../utils/bbox.js";
 import { isSvgContainer } from "../utils/dom.js";
 import { LayoutEngine } from "./engine.js";
-import { Node, assertLayoutNode } from "./node.js";
+import { Node, assertLayoutNode, replaceLayoutChildren } from "./node.js";
 
 function normalizePadding(padding = 0) {
   if (typeof padding === "number") {
@@ -33,6 +33,7 @@ export class Frame extends Node {
       ...options,
       margin: options.margin || { top: 0, right: 0, bottom: 0, left: 0 },
     };
+    replaceLayoutChildren(this, [], [child], "frame children");
   }
 
   updateBBoxFromChild() {

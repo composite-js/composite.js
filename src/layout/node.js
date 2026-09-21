@@ -2,6 +2,7 @@ import { BBox } from "../utils/bbox.js";
 import { createSvgElement, isHtmlContainer } from "../utils/dom.js";
 
 const ZERO_MARGIN = { top: 0, right: 0, bottom: 0, left: 0 };
+const layoutParents = new WeakMap();
 
 function resolvedMargin(element, renderMargin) {
   const configuredMargin = element.margin || element.options?.margin || {};
@@ -114,4 +115,74 @@ export function assertLayoutNode(value, label = "node") {
   throw new TypeError(
     `${label} must be a layout node created by chart(), custom(), text(), image(), frame(), stackX(), stackY(), repeatX(), repeatY(), or embed(); received ${actual}.`,
   );
+}
+
+function assertCanAdopt(parent, child, previousChildren) {
+  if (parent === child) {
+    throw new Error("Layout tree contains a circular reference.");
+  }
+
+  for (
+    let ancestor = parent;
+    ancestor;
+    ancestor = layoutParents.get(ancestor)
+  ) {
+    if (ancestor === child) {
+      throw new Error("Layout tree contains a circular reference.");
+    }
+  }
+
+  const currentParent = layoutParents.get(child);
+  const retainedByParent =
+    currentParent === parent && previousChildren.has(child);
+  if (currentParent && !retainedByParent) {
+    if (currentParent === parent) {
+      throw new Error(
+        "Duplicate layout node: a node cannot appear more than once under the same parent.",
+      );
+    }
+    throw new Error("A layout node cannot have multiple parents.");
+  }
+}
+
+/**
+ * Registers the exclusive parent of each child layout node.
+ * @internal
+ */
+export function replaceLayoutChildren(
+  parent,
+  previousChildren,
+  children,
+  label = "children",
+) {
+  const seen = new Set();
+  const previous = new Set(previousChildren);
+
+  children.forEach((child, index) => {
+    assertLayoutNode(child, `${label}[${index}]`);
+    if (seen.has(child)) {
+      throw new Error(
+        "Duplicate layout node: a node cannot appear more than once under the same parent.",
+      );
+    }
+    seen.add(child);
+    assertCanAdopt(parent, child, previous);
+  });
+
+  previousChildren.forEach((child) => {
+    if (!seen.has(child) && layoutParents.get(child) === parent) {
+      layoutParents.delete(child);
+    }
+  });
+  children.forEach((child) => layoutParents.set(child, parent));
+}
+
+/**
+ * Checks or records a parent relationship discovered while traversing a tree.
+ * @internal
+ */
+export function assertLayoutParent(parent, child) {
+  if (layoutParents.get(child) === parent) return;
+  assertCanAdopt(parent, child, new Set());
+  if (!layoutParents.has(child)) layoutParents.set(child, parent);
 }

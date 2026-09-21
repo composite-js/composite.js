@@ -4,7 +4,7 @@ import { normalizePadding } from "../mark/padding.js";
 import { BBox } from "../utils/bbox.js";
 import { isSvgContainer } from "../utils/dom.js";
 import { LayoutEngine } from "./engine.js";
-import { Node, assertLayoutNode } from "./node.js";
+import { Node, assertLayoutNode, replaceLayoutChildren } from "./node.js";
 import { applySharedChartDomains } from "./shared-domain.js";
 
 function assertNodeArray(nodes, label) {
@@ -345,8 +345,6 @@ export class Stack extends Composition {
       validateStackLink(nodes, direction);
     }
 
-    inferStackPadding(nodes, direction);
-
     for (let i = 0; i < nodes.length; i++) {
       const alignedNode =
         this.align[i] !== undefined && this.align[i] !== null
@@ -358,6 +356,9 @@ export class Stack extends Composition {
       }
       this.alignedNodes.push(alignedNode);
     }
+
+    replaceLayoutChildren(this, [], nodes, "nodes");
+    inferStackPadding(nodes, direction);
   }
 
   render(container, renderOptions = {}) {
@@ -395,11 +396,14 @@ export class Repeat extends Composition {
   }
 
   instantiateChildren(label = "repeat") {
-    this.children = this.domain.map((value, index) => {
+    const children = this.domain.map((value, index) => {
       const node = this.func(value, index);
       assertLayoutNode(node, `${label} child ${index}`);
       return node;
     });
+
+    replaceLayoutChildren(this, this.children, children, `${label} children`);
+    this.children = children;
 
     if (this.shareDomains) {
       applySharedChartDomains(this.children);
@@ -438,11 +442,19 @@ export class Embedded extends Node {
   }
 
   instantiateChildren() {
-    this.embeddedChildren = this.repeated.domain.map((datum, index) => {
+    const children = this.repeated.domain.map((datum, index) => {
       const child = this.repeated.func(datum, index);
       assertLayoutNode(child, `repeat child ${index}`);
       return child;
     });
+
+    replaceLayoutChildren(
+      this,
+      this.embeddedChildren,
+      children,
+      "repeat children",
+    );
+    this.embeddedChildren = children;
 
     if (this.repeated.shareDomains) {
       applySharedChartDomains(this.embeddedChildren);

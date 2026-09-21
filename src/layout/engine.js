@@ -1,7 +1,7 @@
 import { BBox } from "../utils/bbox.js";
 import { LayoutCalculator } from "./calculator.js";
 import { renderComputedLayout, renderComputedLayoutInto } from "./renderer.js";
-import { Node, assertLayoutNode } from "./node.js";
+import { Node, assertLayoutNode, assertLayoutParent } from "./node.js";
 
 function isEmbeddedNode(node) {
   return node?.type === "embed";
@@ -91,16 +91,60 @@ export class LayoutEngine {
     return { ...node.children[0].bbox.contentRect() };
   }
 
-  static computeLayout(node, context = {}) {
+  static validateLayoutTree(
+    node,
+    parent = null,
+    state = { active: new Set(), visitedParents: new Map() },
+  ) {
     assertLayoutNode(node);
 
-    if (Node.isStack(node)) {
-      if (node.children.length === 0) {
-        throw new Error("Invalid: composition node has no children.");
+    if (state.active.has(node)) {
+      throw new Error("Layout tree contains a circular reference.");
+    }
+    if (state.visitedParents.has(node)) {
+      const firstParent = state.visitedParents.get(node);
+      if (firstParent === parent) {
+        throw new Error(
+          "Duplicate layout node: a node cannot appear more than once under the same parent.",
+        );
+      }
+      throw new Error("A layout node cannot have multiple parents.");
+    }
+    if (parent) assertLayoutParent(parent, node);
+
+    state.active.add(node);
+    state.visitedParents.set(node, parent);
+
+    try {
+      let children = [];
+      if (Node.isStack(node)) {
+        if (node.children.length === 0) {
+          throw new Error("Invalid: composition node has no children.");
+        }
+        children = node.children;
+      } else if (Node.isRepeat(node)) {
+        children = node.instantiateChildren(node.classTag);
+      } else if (isEmbeddedNode(node)) {
+        children = node.instantiateChildren();
+      } else if (isFrameNode(node)) {
+        children = [node.child];
       }
 
+      children.forEach((child) => this.validateLayoutTree(child, node, state));
+    } finally {
+      state.active.delete(node);
+    }
+  }
+
+  static computeLayout(node, context = {}) {
+    this.validateLayoutTree(node);
+    this.computeLayoutNode(node, context);
+  }
+
+  static computeLayoutNode(node, context) {
+    if (Node.isStack(node)) {
       node.children.forEach((child) => {
-        this.computeLayout(child, context);
+        this.computeLayoutNode(child, context);
       });
 
       if (node.direction === "horizontal") {
@@ -193,8 +237,8 @@ export class LayoutEngine {
       if (!hasExplicitHeight) height = suggested.height;
     }
 
-    const children = node.instantiateChildren(node.classTag);
-    children.forEach((child) => this.computeLayout(child, context));
+    const children = node.children;
+    children.forEach((child) => this.computeLayoutNode(child, context));
 
     if (
       children.length > 0 &&
@@ -218,8 +262,8 @@ export class LayoutEngine {
   }
 
   static computeEmbedded(node, context = {}) {
-    node.instantiateChildren().forEach((child) => {
-      this.computeLayout(child, context);
+    node.embeddedChildren.forEach((child) => {
+      this.computeLayoutNode(child, context);
     });
 
     const bbox = new BBox(0, 0, node.container.width, node.container.height);
@@ -230,7 +274,7 @@ export class LayoutEngine {
   }
 
   static computeFrame(node, context = {}) {
-    this.computeLayout(node.child, context);
+    this.computeLayoutNode(node.child, context);
     node.updateBBoxFromChild();
   }
 
