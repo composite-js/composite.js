@@ -24,13 +24,14 @@ export class LayoutCalculator {
     this.measurementAdapter = adapter;
   }
 
-  static estimateMargin(element) {
+  static estimateMargin(element, context = {}) {
     const width = element.options?.width ?? element.width ?? 400;
     const height = element.options?.height ?? element.height ?? 300;
-    return LayoutCalculator.measurementAdapter.measureMargin(element, {
-      width,
-      height,
-    });
+    return LayoutCalculator.measurementAdapter.measureMargin(
+      element,
+      { width, height },
+      context,
+    );
   }
 
   static suggestWidthHeight(node) {

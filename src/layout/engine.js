@@ -1,6 +1,6 @@
 import { BBox } from "../utils/bbox.js";
 import { LayoutCalculator } from "./calculator.js";
-import { renderComputedLayout } from "./renderer.js";
+import { renderComputedLayout, renderComputedLayoutInto } from "./renderer.js";
 import { Node, assertLayoutNode } from "./node.js";
 
 function isEmbeddedNode(node) {
@@ -91,7 +91,7 @@ export class LayoutEngine {
     return { ...node.children[0].bbox.contentRect() };
   }
 
-  static computeLayout(node) {
+  static computeLayout(node, context = {}) {
     assertLayoutNode(node);
 
     if (Node.isStack(node)) {
@@ -100,7 +100,7 @@ export class LayoutEngine {
       }
 
       node.children.forEach((child) => {
-        this.computeLayout(child);
+        this.computeLayout(child, context);
       });
 
       if (node.direction === "horizontal") {
@@ -114,21 +114,21 @@ export class LayoutEngine {
     }
 
     if (Node.isRepeat(node)) {
-      this.computeRepeat(node);
+      this.computeRepeat(node, context);
       return;
     }
 
     if (isEmbeddedNode(node)) {
-      this.computeEmbedded(node);
+      this.computeEmbedded(node, context);
       return;
     }
 
     if (isFrameNode(node)) {
-      this.computeFrame(node);
+      this.computeFrame(node, context);
       return;
     }
 
-    this.computeLeaf(node);
+    this.computeLeaf(node, context);
   }
 
   static computeHorizontalStack(node) {
@@ -181,7 +181,7 @@ export class LayoutEngine {
     node.updateBBox();
   }
 
-  static computeRepeat(node) {
+  static computeRepeat(node, context = {}) {
     const hasExplicitWidth = node.options.width !== undefined;
     const hasExplicitHeight = node.options.height !== undefined;
     let width = node.options.width;
@@ -193,14 +193,15 @@ export class LayoutEngine {
       if (!hasExplicitHeight) height = suggested.height;
     }
 
+    const children = node.instantiateChildren(node.classTag);
+    children.forEach((child) => this.computeLayout(child, context));
+
     if (
-      node.domain.length > 0 &&
+      children.length > 0 &&
       ((isRepeatXNode(node) && !hasExplicitHeight) ||
         (isRepeatYNode(node) && !hasExplicitWidth))
     ) {
-      const sampleChild = node.func(node.domain[0], 0);
-      assertLayoutNode(sampleChild, "repeat sample child");
-      this.computeLayout(sampleChild);
+      const sampleChild = children[0];
 
       if (isRepeatXNode(node) && !hasExplicitHeight) {
         height = sampleChild.bbox.totalHeight();
@@ -216,9 +217,9 @@ export class LayoutEngine {
     node.bbox = bbox;
   }
 
-  static computeEmbedded(node) {
+  static computeEmbedded(node, context = {}) {
     node.instantiateChildren().forEach((child) => {
-      this.computeLayout(child);
+      this.computeLayout(child, context);
     });
 
     const bbox = new BBox(0, 0, node.container.width, node.container.height);
@@ -228,20 +229,20 @@ export class LayoutEngine {
     node.bbox = bbox;
   }
 
-  static computeFrame(node) {
-    this.computeLayout(node.child);
+  static computeFrame(node, context = {}) {
+    this.computeLayout(node.child, context);
     node.updateBBoxFromChild();
   }
 
-  static computeLeaf(node) {
+  static computeLeaf(node, context = {}) {
     const element = node.element;
     if (!element) {
       throw new Error("Invalid layout node: missing renderable element.");
     }
 
-    const margin = LayoutCalculator.estimateMargin(element);
-    let width = element.options.width;
-    let height = element.options.height;
+    const margin = LayoutCalculator.estimateMargin(element, context);
+    let width = element.options?.width ?? element.width;
+    let height = element.options?.height ?? element.height;
 
     if (width === undefined || height === undefined) {
       const suggested = LayoutCalculator.suggestWidthHeight(element);
@@ -255,7 +256,12 @@ export class LayoutEngine {
   }
 
   static layout(root, container, options = {}) {
-    this.computeLayout(root);
+    this.computeLayout(root, { document: container?.ownerDocument });
     return renderComputedLayout(root, container, options);
+  }
+
+  static renderInto(root, container, options = {}) {
+    this.computeLayout(root, { document: container?.ownerDocument });
+    return renderComputedLayoutInto(root, container, options);
   }
 }

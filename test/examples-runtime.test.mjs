@@ -33,6 +33,14 @@ for (const file of exampleFiles) {
   const node = await Promise.resolve(module.createExample());
   assert.ok(isLayoutNode(node), `${file} should create a layout node`);
 
+  if (file === "scatterplotmatrix.js") {
+    assert.equal(
+      node.repeated.shareDomains,
+      false,
+      "scatterplot-matrix should not share domains across different variables",
+    );
+  }
+
   await withFakeSvgDocument(async (document) => {
     const container = document.createElement("div");
     node.render(container);

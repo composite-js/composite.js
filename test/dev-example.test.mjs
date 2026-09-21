@@ -80,8 +80,8 @@ import {
     "scatterplotmatrix should rely on gridContainer default grid rendering",
   );
   assert.ok(
-    !source.includes("shareDomains: false"),
-    "scatterplotmatrix should not expose repeat shared-domain internals",
+    source.includes("shareDomains: false"),
+    "scatterplotmatrix should keep heterogeneous chart domains independent",
   );
   assert.ok(
     !source.includes('className: "splom'),

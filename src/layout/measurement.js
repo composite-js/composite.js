@@ -2,9 +2,10 @@
  * DOM-backed measurement adapter for SVG margin estimation.
  */
 export class DomMeasurementAdapter {
-  measureMargin(element, { width, height }) {
+  measureMargin(element, { width, height }, context = {}) {
+    const document = context.document || globalThis.document;
     if (
-      typeof document === "undefined" ||
+      !document ||
       !document?.body ||
       typeof document.createElementNS !== "function"
     ) {

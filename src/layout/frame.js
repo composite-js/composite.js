@@ -1,6 +1,5 @@
-import * as d3 from "d3";
 import { BBox } from "../utils/bbox.js";
-import { isHtmlContainer } from "../utils/dom.js";
+import { isSvgContainer } from "../utils/dom.js";
 import { LayoutEngine } from "./engine.js";
 import { Node, assertLayoutNode } from "./node.js";
 
@@ -50,70 +49,9 @@ export class Frame extends Node {
   }
 
   render(container, renderOptions = {}) {
-    if (isHtmlContainer(container)) {
-      return LayoutEngine.layout(this, container, renderOptions);
-    }
-
-    const width =
-      renderOptions.width !== undefined
-        ? renderOptions.width
-        : this.bbox.contentRect().width;
-    const height =
-      renderOptions.height !== undefined
-        ? renderOptions.height
-        : this.bbox.contentRect().height;
-    const childOuterWidth = Math.max(
-      0,
-      width - this.padding.left - this.padding.right,
-    );
-    const childOuterHeight = Math.max(
-      0,
-      height - this.padding.top - this.padding.bottom,
-    );
-    const childMargin = this.child.bbox?.getMargin?.() || {
-      top: 0,
-      right: 0,
-      bottom: 0,
-      left: 0,
-    };
-    const childWidth = Math.max(
-      0,
-      childOuterWidth - childMargin.left - childMargin.right,
-    );
-    const childHeight = Math.max(
-      0,
-      childOuterHeight - childMargin.top - childMargin.bottom,
-    );
-    const parent = d3.select(container);
-
-    parent.selectAll("*").remove();
-
-    const childGroup = parent
-      .append("g")
-      .attr(
-        "transform",
-        `translate(${this.padding.left}, ${this.padding.top})`,
-      );
-
-    this.child.render(childGroup.node(), {
-      width: childWidth,
-      height: childHeight,
-      margin: childMargin,
-    });
-
-    const rect = parent
-      .append("rect")
-      .attr("x", this.padding.left)
-      .attr("y", this.padding.top)
-      .attr("width", childOuterWidth)
-      .attr("height", childOuterHeight)
-      .attr("fill", this.fill)
-      .attr("stroke", this.stroke)
-      .attr("stroke-width", this.strokeWidth);
-
-    if (this.strokeDasharray !== undefined) {
-      rect.attr("stroke-dasharray", this.strokeDasharray);
-    }
+    return isSvgContainer(container)
+      ? LayoutEngine.renderInto(this, container, renderOptions)
+      : LayoutEngine.layout(this, container, renderOptions);
   }
 }
 

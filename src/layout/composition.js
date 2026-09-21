@@ -1,4 +1,3 @@
-import * as d3 from "d3";
 import { validateContainer, valueOf } from "../container/base.js";
 import { inferXYOrientation } from "../mark/orientation.js";
 import { normalizePadding } from "../mark/padding.js";
@@ -20,6 +19,12 @@ function assertNodeArray(nodes, label) {
 
 function isFiniteNumber(value) {
   return typeof value === "number" && Number.isFinite(value);
+}
+
+function renderComposition(node, container, renderOptions) {
+  return isSvgContainer(container)
+    ? LayoutEngine.renderInto(node, container, renderOptions)
+    : LayoutEngine.layout(node, container, renderOptions);
 }
 
 function embedChildMap(repeated, mapping, children) {
@@ -356,7 +361,7 @@ export class Stack extends Composition {
   }
 
   render(container, renderOptions = {}) {
-    return LayoutEngine.layout(this, container, renderOptions);
+    return renderComposition(this, container, renderOptions);
   }
 }
 
@@ -409,6 +414,8 @@ export class DirectionlessRepeat {
     this.domain = domain || [];
     this.func = func;
     this.options = options;
+    this.shareDomains =
+      options.shareDomains !== undefined ? options.shareDomains : true;
     this.type = "repeat";
   }
 }
@@ -436,51 +443,29 @@ export class Embedded extends Node {
       assertLayoutNode(child, `repeat child ${index}`);
       return child;
     });
+
+    if (this.repeated.shareDomains) {
+      applySharedChartDomains(this.embeddedChildren);
+    }
+
     return this.embeddedChildren;
   }
 
-  render(container, renderOptions = {}) {
-    if (!isSvgContainer(container)) {
-      return LayoutEngine.layout(this, container, renderOptions);
-    }
-
-    const width = renderOptions.width || this.container.width;
-    const height = renderOptions.height || this.container.height;
-    const margin = renderOptions.margin || this.container.margin;
+  resolveSlots(size) {
     const children = this.embeddedChildren.length
       ? this.embeddedChildren
       : this.instantiateChildren();
-    const slots = this.container.slots(this.repeated.domain, this.mapping, {
-      width,
-      height,
-    });
+    const slots = this.container.slots(
+      this.repeated.domain,
+      this.mapping,
+      size,
+    );
     const childrenByKey = embedChildMap(this.repeated, this.mapping, children);
-    const matchedSlots = matchEmbedSlots(slots, childrenByKey);
+    return matchEmbedSlots(slots, childrenByKey);
+  }
 
-    if (typeof this.container.render === "function") {
-      this.container.render(container, { width, height, margin });
-    }
-
-    const parent = d3.select(container);
-    const marginLeft = margin?.left ?? 0;
-    const marginTop = margin?.top ?? 0;
-    matchedSlots.forEach(({ slot, child }) => {
-      const childRect = child.bbox.contentRect();
-      const childWidth = slot.width ?? childRect.width;
-      const childHeight = slot.height ?? childRect.height;
-      const group = parent
-        .append("g")
-        .attr(
-          "transform",
-          `translate(${marginLeft + slot.x - childWidth / 2}, ${marginTop + slot.y - childHeight / 2})`,
-        );
-
-      child.render(group.node(), {
-        width: childWidth,
-        height: childHeight,
-        margin: child.bbox.getMargin(),
-      });
-    });
+  render(container, renderOptions = {}) {
+    return renderComposition(this, container, renderOptions);
   }
 }
 
@@ -505,38 +490,7 @@ export class RepeatX extends Repeat {
   }
 
   render(container, renderOptions = {}) {
-    if (!isSvgContainer(container)) {
-      return LayoutEngine.layout(this, container, renderOptions);
-    }
-
-    if (!this.domain || this.domain.length === 0) {
-      if (container.innerHTML !== undefined) container.innerHTML = "";
-      return;
-    }
-
-    const { width = 400, height = 300 } = renderOptions;
-    if (container.innerHTML !== undefined) container.innerHTML = "";
-    const gParent = d3.select(container);
-
-    const xScale = d3
-      .scaleBand()
-      .domain(this.domain)
-      .range([0, width])
-      .paddingInner(this.paddingInner)
-      .paddingOuter(this.paddingOuter);
-
-    const bandwidth = xScale.bandwidth();
-
-    const children = this.instantiateChildren("repeatX");
-
-    this.domain.forEach((value, index) => {
-      const node = children[index];
-      const g = gParent
-        .append("g")
-        .attr("transform", `translate(${xScale(value)}, 0)`);
-
-      node.render(g.node(), { width: bandwidth, height });
-    });
+    return renderComposition(this, container, renderOptions);
   }
 }
 
@@ -547,37 +501,6 @@ export class RepeatY extends Repeat {
   }
 
   render(container, renderOptions = {}) {
-    if (!isSvgContainer(container)) {
-      return LayoutEngine.layout(this, container, renderOptions);
-    }
-
-    if (!this.domain || this.domain.length === 0) {
-      if (container.innerHTML !== undefined) container.innerHTML = "";
-      return;
-    }
-
-    const { width = 400, height = 300 } = renderOptions;
-    if (container.innerHTML !== undefined) container.innerHTML = "";
-    const gParent = d3.select(container);
-
-    const yScale = d3
-      .scaleBand()
-      .domain(this.domain)
-      .range([0, height])
-      .paddingInner(this.paddingInner)
-      .paddingOuter(this.paddingOuter);
-
-    const bandwidth = yScale.bandwidth();
-
-    const children = this.instantiateChildren("repeatY");
-
-    this.domain.forEach((value, index) => {
-      const node = children[index];
-      const g = gParent
-        .append("g")
-        .attr("transform", `translate(0, ${yScale(value)})`);
-
-      node.render(g.node(), { width, height: bandwidth });
-    });
+    return renderComposition(this, container, renderOptions);
   }
 }
