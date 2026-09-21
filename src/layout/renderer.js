@@ -7,8 +7,8 @@ function isEmbeddedNode(node) {
   return node?.type === "embed";
 }
 
-function isFrameNode(node) {
-  return node?.type === "frame";
+function isWrapperNode(node) {
+  return node?.type === "wrapper";
 }
 
 function isRepeatXNode(node) {
@@ -123,9 +123,9 @@ export class LayoutRenderer {
     return { node, children: childMetadata };
   }
 
-  static renderFrame(node, container, x, y, renderSize) {
+  static renderWrapper(node, container, x, y) {
     const margin = node.bbox.getMargin();
-    const { width, height } = renderedSize(node, renderSize);
+    const { width, height } = node.bbox.contentRect();
     const group = container
       .append("g")
       .attr("class", node.classTag)
@@ -147,17 +147,17 @@ export class LayoutRenderer {
       0,
       childOuterHeight - childMargin.top - childMargin.bottom,
     );
-    const rectX = margin.left + node.padding.left;
-    const rectY = margin.top + node.padding.top;
+    const rectX = margin.left;
+    const rectY = margin.top;
 
     if (node.fill !== "none") {
       group
         .append("rect")
-        .attr("class", "frame-background")
+        .attr("class", "wrapper-background")
         .attr("x", rectX)
         .attr("y", rectY)
-        .attr("width", childOuterWidth)
-        .attr("height", childOuterHeight)
+        .attr("width", width)
+        .attr("height", height)
         .attr("fill", node.fill)
         .attr("stroke", "none");
     }
@@ -165,17 +165,17 @@ export class LayoutRenderer {
     const childMetadata = this.renderTree(
       node.child,
       group,
-      rectX + childMargin.left,
-      rectY + childMargin.top,
+      rectX + node.padding.left + childMargin.left,
+      rectY + node.padding.top + childMargin.top,
       { width: childWidth, height: childHeight },
     );
     const border = group
       .append("rect")
-      .attr("class", "frame-border")
+      .attr("class", "wrapper-border")
       .attr("x", rectX)
       .attr("y", rectY)
-      .attr("width", childOuterWidth)
-      .attr("height", childOuterHeight)
+      .attr("width", width)
+      .attr("height", height)
       .attr("fill", "none")
       .attr("stroke", node.stroke)
       .attr("stroke-width", node.strokeWidth);
@@ -273,8 +273,8 @@ export class LayoutRenderer {
       return this.renderStack(node, container, x, y);
     }
 
-    if (isFrameNode(node)) {
-      return this.renderFrame(node, container, x, y, renderSize);
+    if (isWrapperNode(node)) {
+      return this.renderWrapper(node, container, x, y);
     }
 
     if (isRepeatXNode(node) || isRepeatYNode(node)) {
@@ -365,7 +365,7 @@ export class LayoutRenderer {
           const childRect = child.bbox.contentRect();
           renderBBox(child, contentX + childRect.x, contentY + childRect.y);
         });
-      } else if (isFrameNode(current)) {
+      } else if (isWrapperNode(current)) {
         const childMargin = current.child.bbox.getMargin();
         renderBBox(
           current.child,
@@ -447,10 +447,7 @@ export class LayoutRenderer {
     }
 
     const target = d3.select(container);
-    this.renderTree(root, target, -outer.x, -outer.y, {
-      width: options.width,
-      height: options.height,
-    });
+    this.renderTree(root, target, -outer.x, -outer.y);
 
     if (debugBBox) {
       this.renderTreeBBoxOnly(root, target, -outer.x, -outer.y);

@@ -1,15 +1,15 @@
 export {
   chart,
   custom,
-  frame,
   image,
   repeatX,
   repeatY,
   stackX,
   stackY,
   text,
+  wrapper,
 } from "./layout/factory.js";
-export { Frame } from "./layout/frame.js";
+export { Wrapper } from "./layout/wrapper.js";
 export { LayoutCalculator } from "./layout/calculator.js";
 export {
   Composition,

@@ -3,7 +3,7 @@ import { Chart } from "../../src/chart.js";
 import {
   chart,
   custom,
-  frame,
+  wrapper,
   isLayoutNode,
   repeatX,
   repeatY,
@@ -67,10 +67,10 @@ import {
 }
 
 {
-  const node = frame(text({ text: "Label", width: 80, height: 20 }));
+  const node = wrapper(text({ text: "Label", width: 80, height: 20 }));
 
   assert.ok(isLayoutNode(node));
-  assert.equal(node.classTag, "frame");
+  assert.equal(node.classTag, "wrapper");
 }
 
 {

@@ -2,6 +2,7 @@ import { BBox } from "../utils/bbox.js";
 import { isSvgContainer } from "../utils/dom.js";
 import { LayoutEngine } from "./engine.js";
 import { Node, assertLayoutNode, replaceLayoutChildren } from "./node.js";
+import { contentSizedPolicy } from "./size-policy.js";
 
 function normalizePadding(padding = 0) {
   if (typeof padding === "number") {
@@ -16,13 +17,18 @@ function normalizePadding(padding = 0) {
   };
 }
 
-export class Frame extends Node {
+/**
+ * Decorates a layout subtree with padding, a background, and a border.
+ */
+export class Wrapper extends Node {
   constructor(child, options = {}) {
     super();
-    assertLayoutNode(child, "frame child");
+    assertLayoutNode(child, "wrapper child");
     this.child = child;
-    this.classTag = "frame";
-    this.type = "frame";
+    this.classTag = "wrapper";
+    this.type = "wrapper";
+    this.sizePolicy = contentSizedPolicy;
+    this.sizePolicy.validateOptions(this, options);
     this.padding = normalizePadding(options.padding);
     this.stroke = options.stroke || "black";
     this.fill = options.fill || "none";
@@ -33,7 +39,7 @@ export class Frame extends Node {
       ...options,
       margin: options.margin || { top: 0, right: 0, bottom: 0, left: 0 },
     };
-    replaceLayoutChildren(this, [], [child], "frame children");
+    replaceLayoutChildren(this, [], [child], "wrapper children");
   }
 
   updateBBoxFromChild() {
@@ -50,12 +56,13 @@ export class Frame extends Node {
   }
 
   render(container, renderOptions = {}) {
+    this.sizePolicy.validateRenderOptions(this, renderOptions);
     return isSvgContainer(container)
       ? LayoutEngine.renderInto(this, container, renderOptions)
       : LayoutEngine.layout(this, container, renderOptions);
   }
 }
 
-export function frame(child, options = {}) {
-  return new Frame(child, options);
+export function wrapper(child, options = {}) {
+  return new Wrapper(child, options);
 }

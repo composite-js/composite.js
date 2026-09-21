@@ -20,7 +20,7 @@ const helpers = {
   custom: composite.custom,
   customContainer: composite.customContainer,
   embed: composite.embed,
-  frame: composite.frame,
+  wrapper: composite.wrapper,
   gridContainer: composite.gridContainer,
   image: composite.image,
   loadCsvText: composite.loadCsvText,

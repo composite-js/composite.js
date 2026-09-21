@@ -113,7 +113,7 @@ export function assertLayoutNode(value, label = "node") {
 
   const actual = value?.constructor?.name || typeof value;
   throw new TypeError(
-    `${label} must be a layout node created by chart(), custom(), text(), image(), frame(), stackX(), stackY(), repeatX(), repeatY(), or embed(); received ${actual}.`,
+    `${label} must be a layout node created by chart(), custom(), text(), image(), wrapper(), stackX(), stackY(), repeatX(), repeatY(), or embed(); received ${actual}.`,
   );
 }
 

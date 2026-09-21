@@ -74,7 +74,7 @@ const flag = image({
   height: 28,
 });
 
-const boxed = frame(stackY([label, matrix]), {
+const boxed = wrapper(stackY([label, matrix]), {
   padding: 8,
   stroke: "#94a3b8",
 });`;
@@ -208,7 +208,7 @@ assertLayoutNode(value, "value");`;
     <section class="docs-section">
       <h2>
         <code>text(config)</code>, <code>image(config)</code>,
-        <code>custom(renderable, options)</code>, and <code>frame(node, options)</code>
+        <code>custom(renderable, options)</code>, and <code>wrapper(node, options)</code>
       </h2>
       <p>
         <code>text()</code> creates SVG text that participates in layout.
@@ -217,8 +217,9 @@ assertLayoutNode(value, "value");`;
         <code>custom()</code> wraps your own renderable object when an example
         needs a specialized D3 or SVG drawing while still participating in
         composition.
-        <code>frame()</code> wraps an existing layout node with padding and a
-        border, which is useful for grouping or highlighting a composed region.
+        <code>wrapper()</code> decorates an existing layout subtree with
+        padding, a background, or a border. Its dimensions are derived from
+        the wrapped node.
       </p>
       <pre class="docs-code"><code>{annotationCode}</code></pre>
       <pre class="docs-code"><code>{customCode}</code></pre>
@@ -229,8 +230,10 @@ assertLayoutNode(value, "value");`;
       <p>
         Render any layout node into a browser DOM element with
         <code>.render()</code>. The library creates an SVG subtree inside the
-        container and computes layout from the composed node tree. Optional
-        render dimensions can override the computed size when necessary.
+        container and computes layout from the composed node tree. Leaf nodes,
+        repeats, and embedded layouts accept optional render dimensions.
+        Stacks and wrappers are sized by their children and reject
+        <code>width</code> or <code>height</code> render overrides.
       </p>
       <pre class="docs-code"><code>{renderCode}</code></pre>
     </section>

@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { custom, frame, image, text } from "../../src/index.js";
+import { custom, wrapper, image, text } from "../../src/index.js";
 import { withFakeSvgDocument } from "../helpers/fake-svg.mjs";
 
 const SVG_NAMESPACE = "http://www.w3.org/2000/svg";
@@ -56,7 +56,7 @@ await withFakeSvgDocument(async (document) => {
 
 await withFakeSvgDocument(async (document) => {
   const container = document.createElement("div");
-  frame(text({ text: "Framed", width: 50, height: 20 }), {
+  wrapper(text({ text: "Wrapped", width: 50, height: 20 }), {
     padding: 4,
   }).render(container);
 

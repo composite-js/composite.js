@@ -70,7 +70,8 @@ options)` method as a custom leaf layout node.
   rotated labels.
 - `image(config)` creates an SVG image leaf with fitting, clipping, and
   transform options.
-- `frame(node, options)` wraps a layout node with a rectangular SVG border.
+- `wrapper(node, options)` decorates a layout subtree with padding, a
+  background, and a border. Its size is derived from the wrapped node.
 - `stackX(nodes, options)` arranges layout nodes horizontally. For two direct
   chart nodes, `link: true` draws connector lines between matching
   `encoding.y` values when both marks support link anchors.
@@ -78,7 +79,7 @@ options)` method as a custom leaf layout node.
   chart nodes, `link: true` draws connector lines between matching
   `encoding.x` values when both marks support link anchors.
 - `repeatX(domain, fn, options)` creates a horizontal repeated layout from a domain and node factory.
-- `repeatY(domain, fn, options)` creates a vertical repeated layout from a domain and node factory.
+- `repeatY(domain, fn, options)` creates a vertical repeated layout from a domain and node factory. Repeat dimensions may be explicit or inferred from the largest child and the configured band padding.
 - `repeat(domain, fn, options)` creates a directionless repeated layout that can be embedded into a compatible container.
 - `embed(container, repeated, mapping)` places repeated children into slots produced by a container.
 - `sequenceContainer(options)` creates a container abstraction for sequence-style embedded layouts.
@@ -143,10 +144,11 @@ the same categorical field.
 The shortest valid composition should be the normal starting point. Chart
 dimensions and margins have built-in defaults, layout measurement accounts for
 rendered content, stack positions are derived from child bounds, and repeats
-provide default sizing and padding. Options such as `width`, `height`,
-`margin`, `paddingInner`, `paddingOuter`, and `align` are escape hatches for
-intentional refinement. User-facing examples should introduce those options
-only when the example has a concrete reason to override the automatic result.
+infer their viewport from all repeated children. Leaf nodes, repeats, and
+embedded layouts accept explicit dimensions. Stacks and wrappers are
+content-sized and reject render-time `width` or `height`. User-facing examples
+should introduce explicit sizing only when the example has a concrete reason
+to override the automatic result.
 
 ## Architecture
 
@@ -185,7 +187,7 @@ Supported chart marks include bars, grouped bars, stacked bars, area charts, lin
 - `src/mark/` contains D3-backed renderers for supported chart marks.
 - `src/layout/text.js` contains the renderable element behind the `text()`
   layout factory.
-- `src/layout/frame.js` contains the wrapper element behind the `frame()`
+- `src/layout/wrapper.js` contains the wrapper element behind the `wrapper()`
   layout factory.
 - `src/container/` contains reusable container abstractions for embedded layouts.
 - `src/utils/` contains shared utilities such as bounding boxes.

@@ -6,7 +6,6 @@ export {
   custom,
   customContainer,
   embed,
-  frame,
   gridContainer,
   image,
   isLayoutNode,
@@ -17,6 +16,7 @@ export {
   stackX,
   stackY,
   text,
+  wrapper,
 } from "./layout.js";
 export {
   crossJoin,

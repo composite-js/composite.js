@@ -32,29 +32,33 @@ function buildView(samples) {
       columnDomain: variables.map((variable) => variable.key),
       stroke: "#94a3b8",
     }),
-    repeat(matrixCells, (cell) => {
-      if (cell.row === cell.column) {
-        return text({
-          text: cell.label,
-          fill: "#334155",
-          fontSize: 18,
-        });
-      }
+    repeat(
+      matrixCells,
+      (cell) => {
+        if (cell.row === cell.column) {
+          return text({
+            text: cell.label,
+            fill: "#334155",
+            fontSize: 18,
+          });
+        }
 
-      return chart({
-        mark: "scatter",
-        margin: { top: 10, right: 10, bottom: 10, left: 10 },
-        data: samples,
-        encoding: {
-          x: cell.column,
-          y: cell.row,
-        },
-        radius: 2.5,
-        color: "#2563eb",
-        showXAxis: false,
-        showYAxis: false,
-      });
-    }),
+        return chart({
+          mark: "scatter",
+          margin: { top: 10, right: 10, bottom: 10, left: 10 },
+          data: samples,
+          encoding: {
+            x: cell.column,
+            y: cell.row,
+          },
+          radius: 2.5,
+          color: "#2563eb",
+          showXAxis: false,
+          showYAxis: false,
+        });
+      },
+      { shareDomains: false },
+    ),
     { row: "row", column: "column", key: "id" },
   );
 

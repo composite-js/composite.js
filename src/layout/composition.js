@@ -6,6 +6,7 @@ import { isSvgContainer } from "../utils/dom.js";
 import { LayoutEngine } from "./engine.js";
 import { Node, assertLayoutNode, replaceLayoutChildren } from "./node.js";
 import { applySharedChartDomains } from "./shared-domain.js";
+import { contentSizedPolicy, viewportSizedPolicy } from "./size-policy.js";
 
 function assertNodeArray(nodes, label) {
   if (!Array.isArray(nodes)) {
@@ -22,6 +23,7 @@ function isFiniteNumber(value) {
 }
 
 function renderComposition(node, container, renderOptions) {
+  node.sizePolicy.validateRenderOptions(node, renderOptions);
   return isSvgContainer(container)
     ? LayoutEngine.renderInto(node, container, renderOptions)
     : LayoutEngine.layout(node, container, renderOptions);
@@ -336,6 +338,8 @@ export class Stack extends Composition {
     this.align = options.align || [];
     this.alignedNodes = [];
     this.link = options.link === true;
+    this.sizePolicy = contentSizedPolicy;
+    this.sizePolicy.validateOptions(this, options);
 
     if (options.link !== undefined && typeof options.link !== "boolean") {
       throw new TypeError("stack link option must be a boolean.");
@@ -384,6 +388,7 @@ export class Repeat extends Composition {
     this.height = options.height;
     this.shareDomains =
       options.shareDomains !== undefined ? options.shareDomains : true;
+    this.sizePolicy = viewportSizedPolicy;
 
     this.options = {
       width: this.width,
@@ -424,7 +429,7 @@ export class DirectionlessRepeat {
   }
 }
 
-export class Embedded extends Node {
+export class Embedded extends Composition {
   constructor(container, repeated, mapping = {}) {
     super();
     validateContainer(container);
@@ -433,6 +438,7 @@ export class Embedded extends Node {
     this.mapping = mapping;
     this.classTag = "embed";
     this.type = "embed";
+    this.sizePolicy = viewportSizedPolicy;
     this.options = {
       width: container.width,
       height: container.height,

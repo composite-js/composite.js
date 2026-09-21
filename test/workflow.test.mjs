@@ -21,6 +21,16 @@ assert.equal(
   "pnpm run site:build",
   "package scripts should include a site build check",
 );
+assert.match(
+  packageJson.scripts["site:dev"],
+  /^pnpm run site:export-examples && /,
+  "site development should export current example snippets first",
+);
+assert.match(
+  packageJson.scripts["site:build"],
+  /^pnpm run site:export-examples && /,
+  "site builds should export current example snippets first",
+);
 
 const ciPath = path.join(process.cwd(), ".github", "workflows", "ci.yml");
 assert.ok(existsSync(ciPath), "GitHub Actions CI workflow should exist");

@@ -1,3 +1,4 @@
+import * as d3 from "d3";
 import { BBox } from "../utils/bbox.js";
 import { LayoutCalculator } from "./calculator.js";
 import { renderComputedLayout, renderComputedLayoutInto } from "./renderer.js";
@@ -7,22 +8,31 @@ function isEmbeddedNode(node) {
   return node?.type === "embed";
 }
 
-function isFrameNode(node) {
-  return node?.type === "frame";
+function isWrapperNode(node) {
+  return node?.type === "wrapper";
 }
 
 function isRepeatXNode(node) {
   return node?.classTag === "repeatX";
 }
 
-function isRepeatYNode(node) {
-  return node?.classTag === "repeatY";
-}
-
 function stackGapBefore(node, childIndex) {
   if (childIndex <= 0) return 0;
   if (Array.isArray(node.margin)) return node.margin[childIndex - 1];
   return typeof node.margin === "number" ? node.margin : 0;
+}
+
+function repeatIntrinsicRange(node, cellSize) {
+  if (node.domain.length === 0 || cellSize === 0) return 0;
+
+  const scale = d3
+    .scaleBand()
+    .domain(node.domain)
+    .range([0, 1])
+    .paddingInner(node.paddingInner)
+    .paddingOuter(node.paddingOuter);
+  const unitBandwidth = scale.bandwidth();
+  return unitBandwidth > 0 ? cellSize / unitBandwidth : cellSize;
 }
 
 /**
@@ -126,7 +136,7 @@ export class LayoutEngine {
         children = node.instantiateChildren(node.classTag);
       } else if (isEmbeddedNode(node)) {
         children = node.instantiateChildren();
-      } else if (isFrameNode(node)) {
+      } else if (isWrapperNode(node)) {
         children = [node.child];
       }
 
@@ -136,12 +146,12 @@ export class LayoutEngine {
     }
   }
 
-  static computeLayout(node, context = {}) {
+  static computeLayout(node, context = {}, renderSize = {}) {
     this.validateLayoutTree(node);
-    this.computeLayoutNode(node, context);
+    this.computeLayoutNode(node, context, renderSize);
   }
 
-  static computeLayoutNode(node, context) {
+  static computeLayoutNode(node, context, renderSize = {}) {
     if (Node.isStack(node)) {
       node.children.forEach((child) => {
         this.computeLayoutNode(child, context);
@@ -158,17 +168,17 @@ export class LayoutEngine {
     }
 
     if (Node.isRepeat(node)) {
-      this.computeRepeat(node, context);
+      this.computeRepeat(node, context, renderSize);
       return;
     }
 
     if (isEmbeddedNode(node)) {
-      this.computeEmbedded(node, context);
+      this.computeEmbedded(node, context, renderSize);
       return;
     }
 
-    if (isFrameNode(node)) {
-      this.computeFrame(node, context);
+    if (isWrapperNode(node)) {
+      this.computeWrapper(node, context);
       return;
     }
 
@@ -225,55 +235,56 @@ export class LayoutEngine {
     node.updateBBox();
   }
 
-  static computeRepeat(node, context = {}) {
-    const hasExplicitWidth = node.options.width !== undefined;
-    const hasExplicitHeight = node.options.height !== undefined;
-    let width = node.options.width;
-    let height = node.options.height;
-
-    if (!hasExplicitWidth || !hasExplicitHeight) {
-      const suggested = LayoutCalculator.suggestWidthHeight(node);
-      if (!hasExplicitWidth) width = suggested.width;
-      if (!hasExplicitHeight) height = suggested.height;
-    }
-
+  static computeRepeat(node, context = {}, renderSize = {}) {
     const children = node.children;
     children.forEach((child) => this.computeLayoutNode(child, context));
 
-    if (
-      children.length > 0 &&
-      ((isRepeatXNode(node) && !hasExplicitHeight) ||
-        (isRepeatYNode(node) && !hasExplicitWidth))
-    ) {
-      const sampleChild = children[0];
-
-      if (isRepeatXNode(node) && !hasExplicitHeight) {
-        height = sampleChild.bbox.totalHeight();
-      }
-
-      if (isRepeatYNode(node) && !hasExplicitWidth) {
-        width = sampleChild.bbox.totalWidth();
-      }
-    }
+    const fallback = LayoutCalculator.suggestWidthHeight(node);
+    const maxChildWidth = children.length
+      ? Math.max(...children.map((child) => child.bbox.totalWidth()))
+      : 0;
+    const maxChildHeight = children.length
+      ? Math.max(...children.map((child) => child.bbox.totalHeight()))
+      : 0;
+    const intrinsicSize = !children.length
+      ? fallback
+      : isRepeatXNode(node)
+        ? {
+            width: repeatIntrinsicRange(node, maxChildWidth),
+            height: maxChildHeight,
+          }
+        : {
+            width: maxChildWidth,
+            height: repeatIntrinsicRange(node, maxChildHeight),
+          };
+    const { width, height } = node.sizePolicy.resolve(
+      node,
+      renderSize,
+      intrinsicSize,
+    );
 
     const bbox = new BBox(0, 0, width, height);
     bbox.setMargin(node.options.margin);
     node.bbox = bbox;
   }
 
-  static computeEmbedded(node, context = {}) {
+  static computeEmbedded(node, context = {}, renderSize = {}) {
     node.embeddedChildren.forEach((child) => {
       this.computeLayoutNode(child, context);
     });
 
-    const bbox = new BBox(0, 0, node.container.width, node.container.height);
+    const { width, height } = node.sizePolicy.resolve(node, renderSize, {
+      width: node.container.width,
+      height: node.container.height,
+    });
+    const bbox = new BBox(0, 0, width, height);
     bbox.setMargin(
       node.container.margin || { top: 0, right: 0, bottom: 0, left: 0 },
     );
     node.bbox = bbox;
   }
 
-  static computeFrame(node, context = {}) {
+  static computeWrapper(node, context = {}) {
     this.computeLayoutNode(node.child, context);
     node.updateBBoxFromChild();
   }
@@ -300,12 +311,14 @@ export class LayoutEngine {
   }
 
   static layout(root, container, options = {}) {
-    this.computeLayout(root, { document: container?.ownerDocument });
+    root.sizePolicy?.validateRenderOptions(root, options);
+    this.computeLayout(root, { document: container?.ownerDocument }, options);
     return renderComputedLayout(root, container, options);
   }
 
   static renderInto(root, container, options = {}) {
-    this.computeLayout(root, { document: container?.ownerDocument });
+    root.sizePolicy?.validateRenderOptions(root, options);
+    this.computeLayout(root, { document: container?.ownerDocument }, options);
     return renderComputedLayoutInto(root, container, options);
   }
 }

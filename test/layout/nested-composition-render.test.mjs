@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import {
   customContainer,
   embed,
-  frame,
+  wrapper,
   repeat,
   repeatX,
   stackX,
@@ -42,7 +42,7 @@ try {
 
   await withFakeSvgDocument(async (document) => {
     const container = document.createElement("div");
-    const view = frame(stackX([leaf("frame-a"), leaf("frame-b")]), {
+    const view = wrapper(stackX([leaf("wrapper-a"), leaf("wrapper-b")]), {
       fill: "white",
     });
 
@@ -59,10 +59,10 @@ try {
     const debugLayer = container.querySelectorAll(".debug-bbox")[0];
     assert.ok(debugLayer);
     assert.equal(debugLayer.querySelectorAll("rect").length, 8);
-    const frameGroup = container.querySelectorAll(".frame")[0];
+    const frameGroup = container.querySelectorAll(".wrapper")[0];
     assert.deepEqual(
       frameGroup.children.map((child) => child.getAttribute("class")),
-      ["frame-background", "stackX", "frame-border"],
+      ["wrapper-background", "stackX", "wrapper-border"],
     );
   });
 
@@ -112,7 +112,7 @@ try {
 
   {
     const svg = createFakeSvg();
-    frame(stackX([leaf("direct-a"), leaf("direct-b")])).render(svg);
+    wrapper(stackX([leaf("direct-a"), leaf("direct-b")])).render(svg);
 
     assert.equal(svg.querySelectorAll("svg").length, 0);
     assert.equal(svg.querySelectorAll(".stackX").length, 1);

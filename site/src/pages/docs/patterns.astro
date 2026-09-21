@@ -62,10 +62,10 @@ const sequence = embed(
 const view = stackY([heading, bars]);`,
   },
   {
-    title: "Framed groups",
+    title: "Wrapped groups",
     description:
-      "Wrap any node with frame when a composed region needs visual grouping or emphasis.",
-    code: `const framedMatrix = frame(matrix, {
+      "Wrap any node with wrapper when a composed region needs visual grouping or emphasis.",
+    code: `const wrappedMatrix = wrapper(matrix, {
   padding: 8,
   stroke: "#94a3b8",
   strokeDasharray: "4 3",

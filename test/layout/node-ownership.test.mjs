@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import {
   LayoutEngine,
   Node,
-  frame,
+  wrapper,
   repeatX,
   stackX,
   stackY,
@@ -31,7 +31,7 @@ function leaf() {
   const child = leaf();
   stackX([child]);
   assert.throws(() => stackY([child]), /multiple parents/i);
-  assert.throws(() => frame(child), /multiple parents/i);
+  assert.throws(() => wrapper(child), /multiple parents/i);
 }
 
 {

@@ -120,14 +120,26 @@ assert.match(
 
 assert.match(
   declarations,
-  /export function image\(config: ImageOptions\): LayoutNode;/,
+  /export function image\(config: ImageOptions\): LeafLayoutNode;/,
   "image() should return a layout Node in type declarations",
 );
 
 assert.match(
   declarations,
-  /export function custom\(\s*renderable: CustomRenderable,\s*options\?: CustomOptions,\s*\): LayoutNode;/,
+  /export function custom\(\s*renderable: CustomRenderable,\s*options\?: CustomOptions,\s*\): LeafLayoutNode;/,
   "custom() should wrap a custom renderable and return a LayoutNode",
+);
+
+assert.match(
+  declarations,
+  /export interface ViewportLayoutNode/,
+  "Declarations should distinguish viewport-sized layout nodes",
+);
+
+assert.match(
+  declarations,
+  /export function wrapper\(\s*node: LayoutNode,\s*options\?: WrapperOptions,?\s*\): LayoutNode;/,
+  "wrapper() should return a content-sized LayoutNode",
 );
 
 assert.match(

@@ -141,19 +141,40 @@ export interface ChartConfig<T extends Datum = Datum> {
   [option: string]: unknown;
 }
 
-export interface RenderOptions {
+export interface BaseRenderOptions {
+  debugBBox?: boolean;
+}
+
+export interface ViewportRenderOptions extends BaseRenderOptions {
   width?: number;
   height?: number;
-  margin?: Margin;
-  debugBBox?: boolean;
-  [option: string]: unknown;
 }
+
+export interface LeafRenderOptions extends ViewportRenderOptions {
+  margin?: Margin;
+}
+
+export type RenderOptions = LeafRenderOptions;
 
 export interface LayoutNode {
   readonly classTag?: string;
   render(
     container: HTMLElement | SVGElement,
-    renderOptions?: RenderOptions,
+    renderOptions?: BaseRenderOptions,
+  ): void;
+}
+
+export interface LeafLayoutNode extends LayoutNode {
+  render(
+    container: HTMLElement | SVGElement,
+    renderOptions?: LeafRenderOptions,
+  ): void;
+}
+
+export interface ViewportLayoutNode extends LayoutNode {
+  render(
+    container: HTMLElement | SVGElement,
+    renderOptions?: ViewportRenderOptions,
   ): void;
 }
 
@@ -168,7 +189,7 @@ export interface CustomRenderable {
   };
   render(
     container: HTMLElement | SVGElement,
-    renderOptions?: RenderOptions,
+    renderOptions?: LeafRenderOptions,
   ): void;
 }
 
@@ -227,21 +248,19 @@ export interface ImageOptions {
   [option: string]: unknown;
 }
 
-export interface FrameOptions {
+export interface WrapperOptions {
   padding?: number | Margin;
   stroke?: string;
   fill?: string;
   strokeWidth?: number;
   strokeDasharray?: string;
   margin?: Margin;
-  [option: string]: unknown;
 }
 
 export interface StackOptions {
   margin?: number | ReadonlyArray<number>;
   align?: Array<LayoutNode | null | undefined>;
   link?: boolean;
-  [option: string]: unknown;
 }
 
 export interface RepeatOptions {
@@ -370,26 +389,26 @@ export function isLayoutNode(value: unknown): value is LayoutNode;
 
 export function chart<T extends Datum = Datum>(
   config: ChartConfig<T>,
-): LayoutNode;
+): LeafLayoutNode;
 export function custom(
   renderable: CustomRenderable,
   options?: CustomOptions,
-): LayoutNode;
-export function text(config?: TextOptions): LayoutNode;
-export function image(config: ImageOptions): LayoutNode;
-export function frame(node: LayoutNode, options?: FrameOptions): LayoutNode;
+): LeafLayoutNode;
+export function text(config?: TextOptions): LeafLayoutNode;
+export function image(config: ImageOptions): LeafLayoutNode;
+export function wrapper(node: LayoutNode, options?: WrapperOptions): LayoutNode;
 export function stackX(nodes: LayoutNode[], options?: StackOptions): LayoutNode;
 export function stackY(nodes: LayoutNode[], options?: StackOptions): LayoutNode;
 export function repeatX<T = unknown>(
   domain: T[],
   func: (value: T, index: number) => LayoutNode,
   options?: RepeatOptions,
-): LayoutNode;
+): ViewportLayoutNode;
 export function repeatY<T = unknown>(
   domain: T[],
   func: (value: T, index: number) => LayoutNode,
   options?: RepeatOptions,
-): LayoutNode;
+): ViewportLayoutNode;
 export function repeat<T = unknown>(
   domain: T[],
   func: (value: T, index: number) => LayoutNode,
@@ -399,7 +418,7 @@ export function embed<T = unknown>(
   container: Container<T>,
   repeated: DirectionlessRepeat<T>,
   mapping?: EmbedMapping<T>,
-): LayoutNode;
+): ViewportLayoutNode;
 export function customContainer<T = unknown>(
   options: CustomContainerOptions<T>,
 ): Container<T>;

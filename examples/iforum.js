@@ -5,7 +5,7 @@
 
 import {
   chart,
-  frame,
+  wrapper,
   loadCsvText,
   parseCsv,
   repeatX,
@@ -98,7 +98,7 @@ function buildView({ streams, bars, boxes }) {
   const boxplotGroups = repeatY(
     dates,
     (date) =>
-      frame(
+      wrapper(
         repeatY(
           boxTypes.map((type) => type.key),
           (key) => {

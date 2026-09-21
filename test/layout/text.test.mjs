@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { frame, text, stackX, Node } from "../../src/layout.js";
+import { wrapper, text, stackX, Node } from "../../src/layout.js";
 import { createFakeSvg } from "../helpers/fake-svg.mjs";
 
 {
@@ -59,28 +59,27 @@ import { createFakeSvg } from "../helpers/fake-svg.mjs";
 
 {
   const child = text({ text: "boxed", width: 50, height: 20 });
-  const node = frame(child, {
+  const node = wrapper(child, {
     stroke: "black",
     fill: "none",
     padding: { top: 2, right: 3, bottom: 4, left: 5 },
   });
 
   assert.ok(node instanceof Node);
-  assert.equal(node.classTag, "frame");
+  assert.equal(node.classTag, "wrapper");
 
   const svg = createFakeSvg();
-  node.render(svg, {
-    width: 58,
-    height: 26,
-    margin: { top: 0, right: 0, bottom: 0, left: 0 },
-  });
+  node.render(svg);
 
   const rect = svg.querySelectorAll("rect")[0];
   assert.equal(rect.getAttribute("stroke"), "black");
   assert.equal(rect.getAttribute("fill"), "none");
-  assert.equal(rect.getAttribute("x"), "5");
-  assert.equal(rect.getAttribute("y"), "2");
-  assert.equal(rect.getAttribute("width"), "50");
-  assert.equal(rect.getAttribute("height"), "20");
+  assert.equal(rect.getAttribute("x"), "0");
+  assert.equal(rect.getAttribute("y"), "0");
+  assert.equal(Number(rect.getAttribute("width")), child.bbox.totalWidth() + 8);
+  assert.equal(
+    Number(rect.getAttribute("height")),
+    child.bbox.totalHeight() + 6,
+  );
   assert.equal(svg.querySelectorAll("text").length, 1);
 }

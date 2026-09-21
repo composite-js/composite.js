@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { frame } from "../../src/index.js";
+import { wrapper } from "../../src/index.js";
 import {
   LayoutCalculator,
   LayoutEngine,
@@ -41,16 +41,16 @@ try {
     },
   });
 
-  const framed = frame(childNode(), {
+  const wrapped = wrapper(childNode(), {
     padding: { top: 1, right: 4, bottom: 2, left: 3 },
   });
 
-  LayoutEngine.computeLayout(framed);
-  assert.equal(framed.bbox.contentRect().width, 127);
-  assert.equal(framed.bbox.contentRect().height, 69);
+  LayoutEngine.computeLayout(wrapped);
+  assert.equal(wrapped.bbox.contentRect().width, 127);
+  assert.equal(wrapped.bbox.contentRect().height, 69);
 
   const root = createFakeSvg();
-  LayoutRenderer.render(framed, root);
+  LayoutRenderer.render(wrapped, root);
 
   assert.deepEqual(childRenderOptions, {
     width: 100,
@@ -59,23 +59,15 @@ try {
   });
 
   const border = root.querySelectorAll("rect").at(-1);
-  assert.equal(border.getAttribute("x"), "3");
-  assert.equal(border.getAttribute("y"), "1");
-  assert.equal(border.getAttribute("width"), "120");
-  assert.equal(border.getAttribute("height"), "66");
+  assert.equal(border.getAttribute("x"), "0");
+  assert.equal(border.getAttribute("y"), "0");
+  assert.equal(border.getAttribute("width"), "127");
+  assert.equal(border.getAttribute("height"), "69");
 
-  const resizedRoot = createFakeSvg();
-  framed.render(resizedRoot, { width: 157, height: 89 });
-
-  assert.deepEqual(childRenderOptions, {
-    width: 130,
-    height: 70,
-    margin: childMargin,
-  });
-
-  const resizedBorder = resizedRoot.querySelectorAll("rect").at(-1);
-  assert.equal(resizedBorder.getAttribute("width"), "150");
-  assert.equal(resizedBorder.getAttribute("height"), "86");
+  assert.throws(
+    () => wrapped.render(createFakeSvg(), { width: 157, height: 89 }),
+    /size is derived from its content/i,
+  );
 } finally {
   LayoutCalculator.setMeasurementAdapter(originalAdapter);
 }

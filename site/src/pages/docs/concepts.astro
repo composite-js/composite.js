@@ -95,7 +95,7 @@ const sequence = embed(
       <p>
         Internally, charts and compositions share one layout-node contract.
         Chart leaves come from <code>chart()</code>, annotations come from
-        <code>text()</code>, framed groups come from <code>frame()</code>, and
+        <code>text()</code>, decorated subtrees come from <code>wrapper()</code>, and
         composition nodes come from stack, repeat, and embed helpers. This
         shared contract is what makes recursive composition possible.
       </p>

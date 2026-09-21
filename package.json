@@ -22,8 +22,8 @@
   "scripts": {
     "dev": "node scripts/dev-example.mjs",
     "build": "vite build",
-    "site:dev": "astro dev --root site",
-    "site:build": "astro build --root site",
+    "site:dev": "pnpm run site:export-examples && astro dev --root site",
+    "site:build": "pnpm run site:export-examples && astro build --root site",
     "site:preview": "astro preview --root site",
     "site:export-examples": "node scripts/export-site-examples.mjs",
     "test": "node test/run.mjs",

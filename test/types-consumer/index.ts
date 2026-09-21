@@ -5,7 +5,7 @@ import {
   customContainer,
   custom,
   embed,
-  frame,
+  wrapper,
   gridContainer,
   image,
   isLayoutNode,
@@ -142,7 +142,7 @@ const customNode = custom(renderable, { classTag: "sparkline" });
 const row = stackX([label, bars, flag, customNode], { margin: [4, 12, 0] });
 const linkedRow = stackX([bars, bars], { link: true });
 const linkedColumn = stackY([bars, bars], { link: true });
-const framed = frame(row, { padding: 8, stroke: "#94a3b8" });
+const wrapped = wrapper(row, { padding: 8, stroke: "#94a3b8" });
 const repeatedX = repeatX(["A", "B"], (category) =>
   chart<Row>({
     ...config,
@@ -200,12 +200,18 @@ const embeddedGrid = embed(grid, repeated, {
 const embeddedCustom = embed(customGrid, repeated, { key: "category" });
 
 const view = stackY(
-  [framed, repeatedX, repeatedY, embedded, embeddedGrid, embeddedCustom],
+  [wrapped, repeatedX, repeatedY, embedded, embeddedGrid, embeddedCustom],
   { margin: 12 },
 );
 
 const mount = document.createElement("div");
+// @ts-expect-error Stack sizes are derived from their children.
 view.render(mount, { width: 720, height: 420 });
+// @ts-expect-error Wrapper sizes are derived from their child.
+wrapped.render(mount, { width: 720 });
+repeatedX.render(mount, { width: 720, height: 420 });
+embedded.render(mount, { width: 720, height: 420 });
+bars.render(mount, { width: 720, height: 420, margin: { left: 20 } });
 
 let unknownValue: unknown = view;
 if (isLayoutNode(unknownValue)) {

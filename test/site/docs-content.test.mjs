@@ -88,7 +88,7 @@ const readPage = (name) => readFileSync(pagePath(name), "utf8");
     "custom(",
     "text(",
     "image(",
-    "frame(",
+    "wrapper(",
     ".render(",
   ].forEach((apiName) => {
     assert.ok(api.includes(apiName), `API docs should mention ${apiName}`);

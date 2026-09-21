@@ -1,9 +1,9 @@
 import { Chart } from "../chart.js";
-import { frame as createFrame } from "./frame.js";
 import { ImageElement } from "./image.js";
 import { TextElement } from "./text.js";
 import { Node } from "./node.js";
 import { RepeatX, RepeatY, Stack } from "./composition.js";
+import { wrapper as createWrapper } from "./wrapper.js";
 
 export function chart(config) {
   const node = new Node();
@@ -37,8 +37,8 @@ export function custom(renderable, options = {}) {
   return node;
 }
 
-export function frame(node, options) {
-  return createFrame(node, options);
+export function wrapper(node, options) {
+  return createWrapper(node, options);
 }
 
 export function stackX(nodes, options) {
