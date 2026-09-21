@@ -1,4 +1,37 @@
 import { BBox } from "../utils/bbox.js";
+import { createSvgElement, isHtmlContainer } from "../utils/dom.js";
+
+const ZERO_MARGIN = { top: 0, right: 0, bottom: 0, left: 0 };
+
+function resolvedMargin(element, renderMargin) {
+  const configuredMargin = element.margin || element.options?.margin || {};
+  return {
+    ...ZERO_MARGIN,
+    ...configuredMargin,
+    ...renderMargin,
+  };
+}
+
+function intrinsicSize(element, dimension, fallback) {
+  return element.options?.[dimension] ?? element[dimension] ?? fallback;
+}
+
+function createRootSvg(container, width, height, margin) {
+  const document = container?.ownerDocument || globalThis.document;
+  if (!document || typeof document.createElementNS !== "function") {
+    throw new TypeError(
+      "A layout node requires an HTML or SVG container with an owner document.",
+    );
+  }
+
+  if (container.innerHTML !== undefined) container.innerHTML = "";
+
+  const svg = createSvgElement(document);
+  svg.setAttribute("width", width + margin.left + margin.right);
+  svg.setAttribute("height", height + margin.top + margin.bottom);
+  container.appendChild(svg);
+  return svg;
+}
 
 /**
  * Base class for layout nodes.
@@ -24,8 +57,29 @@ export class Node {
   render(container, renderOptions = {}) {
     if (!this.element) return;
 
+    if (isHtmlContainer(container)) {
+      const width =
+        renderOptions.width !== undefined
+          ? renderOptions.width
+          : intrinsicSize(this.element, "width", 400);
+      const height =
+        renderOptions.height !== undefined
+          ? renderOptions.height
+          : intrinsicSize(this.element, "height", 300);
+      const margin = resolvedMargin(this.element, renderOptions.margin);
+      const svg = createRootSvg(container, width, height, margin);
+
+      return this.element.render(svg, {
+        ...renderOptions,
+        width,
+        height,
+        margin,
+      });
+    }
+
     const content = this.bbox.contentRect();
     return this.element.render(container, {
+      ...renderOptions,
       width:
         renderOptions.width !== undefined ? renderOptions.width : content.width,
       height:

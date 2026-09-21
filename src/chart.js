@@ -16,6 +16,7 @@ import { FlowDiagramRenderer } from "./mark/flow.js";
 import { StreamGraphRenderer } from "./mark/stream.js";
 import { AxisRenderer } from "./axis.js";
 import { validateChartConfig } from "./mark/validation.js";
+import { isSvgContainer } from "./utils/dom.js";
 import * as d3 from "d3";
 
 /**
@@ -32,11 +33,12 @@ export class Chart {
     this.encoding = options.encoding || {};
     this.width = options.width || 400;
     this.height = options.height || 300;
-    this.margin = options.margin || {
+    this.margin = {
       top: 40,
       right: 40,
       bottom: 40,
       left: 40,
+      ...options.margin,
     };
     this.bbox = { x: 0, y: 0, width: 0, height: 0 };
     this.options = options;
@@ -185,10 +187,7 @@ export class Chart {
       renderOptions.height !== undefined ? renderOptions.height : this.height;
 
     let svg;
-    const isSvgContainer =
-      typeof SVGElement !== "undefined" && container instanceof SVGElement;
-
-    if (isSvgContainer) {
+    if (isSvgContainer(container)) {
       svg = container;
     } else {
       svg = d3

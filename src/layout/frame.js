@@ -1,5 +1,7 @@
 import * as d3 from "d3";
 import { BBox } from "../utils/bbox.js";
+import { isHtmlContainer } from "../utils/dom.js";
+import { LayoutEngine } from "./engine.js";
 import { Node, assertLayoutNode } from "./node.js";
 
 function normalizePadding(padding = 0) {
@@ -48,6 +50,10 @@ export class Frame extends Node {
   }
 
   render(container, renderOptions = {}) {
+    if (isHtmlContainer(container)) {
+      return LayoutEngine.layout(this, container, renderOptions);
+    }
+
     const width =
       renderOptions.width !== undefined
         ? renderOptions.width
@@ -56,13 +62,27 @@ export class Frame extends Node {
       renderOptions.height !== undefined
         ? renderOptions.height
         : this.bbox.contentRect().height;
-    const innerWidth = Math.max(
+    const childOuterWidth = Math.max(
       0,
       width - this.padding.left - this.padding.right,
     );
-    const innerHeight = Math.max(
+    const childOuterHeight = Math.max(
       0,
       height - this.padding.top - this.padding.bottom,
+    );
+    const childMargin = this.child.bbox?.getMargin?.() || {
+      top: 0,
+      right: 0,
+      bottom: 0,
+      left: 0,
+    };
+    const childWidth = Math.max(
+      0,
+      childOuterWidth - childMargin.left - childMargin.right,
+    );
+    const childHeight = Math.max(
+      0,
+      childOuterHeight - childMargin.top - childMargin.bottom,
     );
     const parent = d3.select(container);
 
@@ -76,22 +96,17 @@ export class Frame extends Node {
       );
 
     this.child.render(childGroup.node(), {
-      width: innerWidth,
-      height: innerHeight,
-      margin: this.child.bbox?.getMargin?.() || {
-        top: 0,
-        right: 0,
-        bottom: 0,
-        left: 0,
-      },
+      width: childWidth,
+      height: childHeight,
+      margin: childMargin,
     });
 
     const rect = parent
       .append("rect")
       .attr("x", this.padding.left)
       .attr("y", this.padding.top)
-      .attr("width", innerWidth)
-      .attr("height", innerHeight)
+      .attr("width", childOuterWidth)
+      .attr("height", childOuterHeight)
       .attr("fill", this.fill)
       .attr("stroke", this.stroke)
       .attr("stroke-width", this.strokeWidth);

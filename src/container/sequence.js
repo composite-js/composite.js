@@ -34,25 +34,33 @@ export class SequenceContainer {
     const height = size.height ?? this.height;
     const x = this.xScale(width);
     const y = this.yScale(height);
-    const xAccessor = mapping.x || this.xField;
-    const yAccessor = mapping.y || this.yField;
+    const xAccessor = mapping.x ?? this.xField;
+    const yAccessor = mapping.y ?? this.yField;
     const keyAccessor = mapping.key;
+    const slots = [];
 
-    return data.map((datum, index) => {
+    data.forEach((datum, index) => {
       const xValue = valueOf(xAccessor, datum, index);
       const yValue = valueOf(yAccessor, datum, index);
+      const xPosition = x(xValue);
+      const yPosition = y(yValue);
+
+      if (xPosition === undefined || yPosition === undefined) return;
+
       const key =
         keyAccessor !== undefined ? valueOf(keyAccessor, datum, index) : index;
 
-      return {
+      slots.push({
         datum,
         key,
-        x: x(xValue) + x.bandwidth() / 2,
-        y: y(yValue) + y.bandwidth() / 2,
+        x: xPosition + x.bandwidth() / 2,
+        y: yPosition + y.bandwidth() / 2,
         width: mapping.width,
         height: mapping.height,
-      };
+      });
     });
+
+    return slots;
   }
 
   render(svg, renderOptions = {}) {
@@ -86,6 +94,8 @@ export class SequenceContainer {
         key: (_d) => `missing-${index}`,
       })[0];
 
+      if (!slot) return;
+
       container
         .append("circle")
         .attr("cx", margin.left + slot.x)
@@ -100,6 +110,8 @@ export class SequenceContainer {
         y: this.yField,
         key: (_d) => `event-${index}`,
       })[0];
+
+      if (!slot) return;
 
       container
         .append("circle")

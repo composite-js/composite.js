@@ -1,7 +1,8 @@
 import * as d3 from "d3";
-import { validateContainer } from "../container/base.js";
+import { validateContainer, valueOf } from "../container/base.js";
 import { inferXYOrientation } from "../mark/orientation.js";
 import { BBox } from "../utils/bbox.js";
+import { isSvgContainer } from "../utils/dom.js";
 import { LayoutEngine } from "./engine.js";
 import { Node, assertLayoutNode } from "./node.js";
 import { applySharedChartDomains } from "./shared-domain.js";
@@ -16,12 +17,77 @@ function assertNodeArray(nodes, label) {
   });
 }
 
-function isSvgContainer(container) {
-  return container?.namespaceURI === "http://www.w3.org/2000/svg";
-}
-
 function isFiniteNumber(value) {
   return typeof value === "number" && Number.isFinite(value);
+}
+
+function embedChildMap(repeated, mapping, children) {
+  const childrenByKey = new Map();
+
+  repeated.domain.forEach((datum, index) => {
+    const key =
+      mapping.key !== undefined ? valueOf(mapping.key, datum, index) : index;
+
+    if (childrenByKey.has(key)) {
+      throw new Error(`embed child key "${String(key)}" is duplicated.`);
+    }
+
+    childrenByKey.set(key, children[index]);
+  });
+
+  return childrenByKey;
+}
+
+function assertSlotNumber(slot, index, field, options = {}) {
+  const value = slot[field];
+  if (!isFiniteNumber(value)) {
+    throw new TypeError(
+      `embed slot ${index}.${field} must be a finite number.`,
+    );
+  }
+
+  if (options.nonNegative && value < 0) {
+    throw new RangeError(`embed slot ${index}.${field} must not be negative.`);
+  }
+}
+
+function matchEmbedSlots(slots, childrenByKey) {
+  if (!Array.isArray(slots)) {
+    throw new TypeError("embed container slots() must return an array.");
+  }
+
+  const seenKeys = new Set();
+  return slots.map((slot, index) => {
+    if (!slot || typeof slot !== "object" || Array.isArray(slot)) {
+      throw new TypeError(`embed slot ${index} must be an object.`);
+    }
+
+    if (!Object.prototype.hasOwnProperty.call(slot, "key")) {
+      throw new TypeError(`embed slot ${index} must provide a key.`);
+    }
+
+    if (seenKeys.has(slot.key)) {
+      throw new Error(`embed slot key "${String(slot.key)}" is duplicated.`);
+    }
+    seenKeys.add(slot.key);
+
+    assertSlotNumber(slot, index, "x");
+    assertSlotNumber(slot, index, "y");
+    if (slot.width !== undefined) {
+      assertSlotNumber(slot, index, "width", { nonNegative: true });
+    }
+    if (slot.height !== undefined) {
+      assertSlotNumber(slot, index, "height", { nonNegative: true });
+    }
+
+    if (!childrenByKey.has(slot.key)) {
+      throw new Error(
+        `embed slot ${index} has unknown key "${String(slot.key)}".`,
+      );
+    }
+
+    return { slot, child: childrenByKey.get(slot.key) };
+  });
 }
 
 function normalizeStackMargin(margin, childCount) {
@@ -391,22 +457,25 @@ export class Embedded extends Node {
       width,
       height,
     });
+    const childrenByKey = embedChildMap(this.repeated, this.mapping, children);
+    const matchedSlots = matchEmbedSlots(slots, childrenByKey);
 
     if (typeof this.container.render === "function") {
       this.container.render(container, { width, height, margin });
     }
 
     const parent = d3.select(container);
-    children.forEach((child, index) => {
-      const slot = slots[index];
+    const marginLeft = margin?.left ?? 0;
+    const marginTop = margin?.top ?? 0;
+    matchedSlots.forEach(({ slot, child }) => {
       const childRect = child.bbox.contentRect();
-      const childWidth = slot.width || childRect.width;
-      const childHeight = slot.height || childRect.height;
+      const childWidth = slot.width ?? childRect.width;
+      const childHeight = slot.height ?? childRect.height;
       const group = parent
         .append("g")
         .attr(
           "transform",
-          `translate(${slot.x - childWidth / 2}, ${slot.y - childHeight / 2})`,
+          `translate(${marginLeft + slot.x - childWidth / 2}, ${marginTop + slot.y - childHeight / 2})`,
         );
 
       child.render(group.node(), {
