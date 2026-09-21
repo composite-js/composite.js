@@ -15,6 +15,7 @@ import { ProportionalAreaChartRenderer } from "./mark/pac.js";
 import { FlowDiagramRenderer } from "./mark/flow.js";
 import { StreamGraphRenderer } from "./mark/stream.js";
 import { AxisRenderer } from "./axis.js";
+import { normalizePadding } from "./mark/padding.js";
 import { validateChartConfig } from "./mark/validation.js";
 import { isSvgContainer } from "./utils/dom.js";
 import * as d3 from "d3";
@@ -43,21 +44,8 @@ export class Chart {
     this.bbox = { x: 0, y: 0, width: 0, height: 0 };
     this.options = options;
 
-    // Resolve padding
-    const padding = options.padding || {};
     const defaultPaddingValue = this.mark === "matrix" ? 0 : 0.1;
-    const defaultInner =
-      padding.inner !== undefined ? padding.inner : defaultPaddingValue;
-    const defaultOuter =
-      padding.outer !== undefined ? padding.outer : defaultPaddingValue;
-
-    this.padding = {
-      ...padding,
-      xInner: padding.xInner !== undefined ? padding.xInner : defaultInner,
-      xOuter: padding.xOuter !== undefined ? padding.xOuter : defaultOuter,
-      yInner: padding.yInner !== undefined ? padding.yInner : defaultInner,
-      yOuter: padding.yOuter !== undefined ? padding.yOuter : defaultOuter,
-    };
+    this.padding = normalizePadding(options.padding, defaultPaddingValue);
 
     this.validate();
     this._createRenderer();

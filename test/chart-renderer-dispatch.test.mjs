@@ -121,3 +121,37 @@ Object.entries(rendererByMark).forEach(([mark, rendererName]) => {
     `${mark} should dispatch to ${rendererName}`,
   );
 });
+
+for (const padding of [0.25, 0]) {
+  const chart = new Chart({
+    ...configByMark.bar,
+    padding,
+  });
+  const expected = {
+    inner: padding,
+    outer: padding,
+    xInner: padding,
+    xOuter: padding,
+    yInner: padding,
+    yOuter: padding,
+  };
+
+  assert.deepEqual(chart.padding, expected);
+  assert.deepEqual(chart.renderer.padding, expected);
+}
+
+{
+  const chart = new Chart({
+    ...configByMark.bar,
+    padding: { inner: 0.2, outer: 0.05, xInner: 0.3 },
+  });
+
+  assert.deepEqual(chart.padding, {
+    inner: 0.2,
+    outer: 0.05,
+    xInner: 0.3,
+    xOuter: 0.05,
+    yInner: 0.2,
+    yOuter: 0.05,
+  });
+}

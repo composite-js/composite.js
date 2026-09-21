@@ -85,6 +85,22 @@ function horizontalPac(overrides = {}) {
 }
 
 {
+  const bars = horizontalBars({ padding: 0 });
+  const pac = verticalPac();
+
+  stackX([bars, pac]);
+
+  assert.equal(bars.element.padding.yInner, 0);
+  assert.equal(bars.element.padding.yOuter, 0);
+  assert.equal(pac.element.padding.yInner, 0);
+  assert.equal(pac.element.padding.yOuter, 0);
+  assert.equal(pac.element.renderer.padding.yInner, 0);
+  assert.equal(pac.element.renderer.padding.yOuter, 0);
+  assert.equal(bars.element.options.padding, 0);
+  assert.equal(pac.element.options.padding, undefined);
+}
+
+{
   const bars = verticalBars();
   const pac = horizontalPac();
 

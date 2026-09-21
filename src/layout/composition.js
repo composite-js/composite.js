@@ -1,6 +1,7 @@
 import * as d3 from "d3";
 import { validateContainer, valueOf } from "../container/base.js";
 import { inferXYOrientation } from "../mark/orientation.js";
+import { normalizePadding } from "../mark/padding.js";
 import { BBox } from "../utils/bbox.js";
 import { isSvgContainer } from "../utils/dom.js";
 import { LayoutEngine } from "./engine.js";
@@ -149,26 +150,22 @@ function stackPaddingKeys(direction) {
     : ["xInner", "xOuter"];
 }
 
-function paddingFallbackKey(key) {
-  return key.endsWith("Inner") ? "inner" : "outer";
-}
-
-function objectPaddingOption(chart) {
+function normalizedPaddingOption(chart) {
   const padding = chart?.options?.padding;
-  if (!padding || typeof padding !== "object" || Array.isArray(padding)) {
+  if (
+    typeof padding !== "number" &&
+    (!padding || typeof padding !== "object" || Array.isArray(padding))
+  ) {
     return null;
   }
-  return padding;
+  return normalizePadding(padding);
 }
 
 function explicitPaddingValue(chart, key) {
-  const padding = objectPaddingOption(chart);
+  const padding = normalizedPaddingOption(chart);
   if (!padding) return undefined;
 
-  if (padding[key] !== undefined) return padding[key];
-
-  const fallback = paddingFallbackKey(key);
-  return padding[fallback];
+  return padding[key];
 }
 
 function hasExplicitPaddingValue(chart, key) {
