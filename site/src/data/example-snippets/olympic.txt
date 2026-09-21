@@ -1,47 +1,8 @@
 // Inspired by: https://www.pinterest.com/pin/1026820783836058995/
-const years = [
-  "1896",
-  "1900",
-  "1904",
-  "1908",
-  "1912",
-  "1920",
-  "1924",
-  "1928",
-  "1932",
-  "1936",
-  "1948",
-  "1952",
-  "1956",
-  "1960",
-  "1964",
-  "1968",
-  "1972",
-  "1976",
-  "1980",
-  "1984",
-  "1988",
-  "1992",
-  "1996",
-  "2000",
-  "2004",
-  "2008",
-  "2012",
-  "2016",
-];
-
-const sports = [
-  "Athletics",
-  "Swimming",
-  "Gymnastics",
-  "Cycling",
-  "Rowing",
-  "Fencing",
-  "Boxing",
-  "Wrestling",
-  "Sailing",
-  "Basketball",
-];
+const datasetUrls = {
+  games: exampleAssetUrl("dataset/olympic/games.csv"),
+  sports: exampleAssetUrl("dataset/olympic/sports.csv"),
+};
 
 const sportColors = [
   "#27a6c9",
@@ -56,107 +17,91 @@ const sportColors = [
   "#ef9f5a",
 ];
 
-const participation = years.flatMap((year, index) => {
-  const total = Math.round(
-    260 +
-      index * 310 +
-      Math.sin(index * 0.82) * 320 +
-      (index > 18 ? (index - 18) * 120 : 0),
-  );
-  const femaleShare = Math.min(0.46, 0.025 + index * 0.015);
-  const female = Math.round(total * femaleShare);
-  const male = total - female;
+function unique(rows, key) {
+  return [...new Set(rows.map((row) => row[key]))];
+}
 
-  return [
-    { year, athletes: male, gender: "Male" },
-    { year, athletes: female, gender: "Female" },
-  ];
-});
+function buildView({ games, sports: sportRows }) {
+  const years = games.map((game) => String(game.year));
+  const flowData = sportRows.map((row) => ({
+    ...row,
+    year: String(row.year),
+  }));
+  const sports = unique(flowData, "sport");
+  const participation = games.flatMap((game) => [
+    { year: String(game.year), athletes: game.male, gender: "Male" },
+    { year: String(game.year), athletes: game.female, gender: "Female" },
+  ]);
+  const pacData = games.map((game) => ({
+    year: String(game.year),
+    count: game.pac,
+  }));
+  const rowHeight = 22;
+  const bodyHeight = years.length * rowHeight;
 
-const pacData = years.map((year, index) => ({
-  year,
-  count: Math.round(12 + index * 6 + Math.sin(index * 0.65) * 12),
-}));
-
-const flowData = [];
-years.forEach((year, yearIndex) => {
-  sports.forEach((sport, sportIndex) => {
-    const introduced = Math.max(0, sportIndex - 5);
-    if (yearIndex < introduced) {
-      return;
-    }
-
-    const rhythm =
-      Math.sin(yearIndex * 0.64 + sportIndex * 0.91) +
-      Math.cos(yearIndex * 0.31 + sportIndex * 0.37);
-    const count = Math.max(
-      1,
-      Math.round(2 + sportIndex * 0.35 + yearIndex * 0.16 + rhythm * 2.2),
-    );
-
-    flowData.push({ year, sport, count });
+  const dumbbell = chart({
+    mark: "dumbbell",
+    data: participation,
+    width: 330,
+    height: bodyHeight,
+    margin: { top: 38, right: 18, bottom: 28, left: 54 },
+    encoding: { x: "athletes", y: "year", xDomain: [0, 9000], yDomain: years },
+    colors: ["#1aa7c9", "#ff5d67"],
+    lineColor: "rgba(230, 230, 230, 0.48)",
+    lineWidth: 1.6,
+    radius: 4,
+    xAxisName: "Number of participants and gender gap",
+    showYAxis: true,
+    xAxisPos: "top",
+    padding: { yInner: 0.22, yOuter: 0.05 },
   });
-});
 
-const rowHeight = 22;
-const bodyHeight = years.length * rowHeight;
+  const pac = chart({
+    mark: "pac",
+    data: pacData,
+    width: 50,
+    height: bodyHeight,
+    margin: { top: 38, right: 10, bottom: 28, left: 12 },
+    encoding: { x: "count", y: "year", yDomain: years },
+    color: "#8ecae6",
+    opacity: 0.54,
+    showYAxis: false,
+    showXAxis: false,
+    padding: { yInner: 0.22, yOuter: 0.05 },
+  });
 
-const dumbbell = chart({
-  mark: "dumbbell",
-  data: participation,
-  width: 330,
-  height: bodyHeight,
-  margin: { top: 38, right: 18, bottom: 28, left: 54 },
-  encoding: { x: "athletes", y: "year", xDomain: [0, 9000], yDomain: years },
-  colors: ["#1aa7c9", "#ff5d67"],
-  lineColor: "rgba(230, 230, 230, 0.48)",
-  lineWidth: 1.6,
-  radius: 4,
-  xAxisName: "Number of participants and gender gap",
-  showYAxis: true,
-  xAxisPos: "top",
-  padding: { yInner: 0.22, yOuter: 0.05 },
-});
+  const flow = chart({
+    mark: "flow",
+    data: flowData,
+    width: 430,
+    height: bodyHeight,
+    margin: { top: 38, right: 100, bottom: 28, left: 22 },
+    encoding: {
+      x: "year",
+      group: "sport",
+      y: "count",
+      xDomain: years,
+      groupDomain: sports,
+    },
+    colors: sportColors,
+    colorBy: "group",
+    opacity: 0.18,
+    minStrokeWidth: 0.25,
+    maxStrokeWidth: 4.8,
+    xLabelName: "HOST CITY",
+    groupLabelName: "SPORT",
+    showGroupLabels: true,
+    labelFill: "rgba(255, 255, 255, 0.78)",
+    labelFontSize: 10,
+  });
 
-const pac = chart({
-  mark: "pac",
-  data: pacData,
-  width: 50,
-  height: bodyHeight,
-  margin: { top: 38, right: 10, bottom: 28, left: 12 },
-  encoding: { x: "count", y: "year", yDomain: years },
-  color: "#8ecae6",
-  opacity: 0.54,
-  showYAxis: false,
-  showXAxis: false,
-  padding: { yInner: 0.22, yOuter: 0.05 },
-});
+  return stackX([dumbbell, pac, flow]);
+}
 
-const flow = chart({
-  mark: "flow",
-  data: flowData,
-  width: 430,
-  height: bodyHeight,
-  margin: { top: 38, right: 100, bottom: 28, left: 22 },
-  encoding: {
-    x: "year",
-    group: "sport",
-    y: "count",
-    xDomain: years,
-    groupDomain: sports,
-  },
-  colors: sportColors,
-  colorBy: "group",
-  opacity: 0.18,
-  minStrokeWidth: 0.25,
-  maxStrokeWidth: 4.8,
-  xLabelName: "HOST CITY",
-  groupLabelName: "SPORT",
-  showGroupLabels: true,
-  labelFill: "rgba(255, 255, 255, 0.78)",
-  labelFontSize: 10,
-});
+const [games, sports] = await Promise.all(
+  Object.values(datasetUrls).map(async (url) =>
+    parseCsv(await loadCsvText(url)),
+  ),
+);
 
-const composite = stackX([dumbbell, pac, flow]);
-
-return composite;
+return buildView({ games, sports });

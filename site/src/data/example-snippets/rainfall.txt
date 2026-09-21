@@ -1,17 +1,8 @@
 // Link: https://insights.datylon.com/workspace/designs/new?publication=jVPwg1Q_CeguvLAxY4VJKw
-const years = [
-  "2008",
-  "2009",
-  "2010",
-  "2011",
-  "2012",
-  "2013",
-  "2014",
-  "2015",
-  "2016",
-  "2017",
-  "2018",
-];
+const datasetUrls = {
+  monthly: exampleAssetUrl("dataset/rainfall/monthly.csv"),
+  yearly: exampleAssetUrl("dataset/rainfall/yearly.csv"),
+};
 
 const months = [
   { key: "Jan", label: "J" },
@@ -28,38 +19,6 @@ const months = [
   { key: "Dec", label: "D" },
 ];
 
-const monthlyRainfallByYear = {
-  2008: [0.05, 1.18, 0.44, 3.48, 7.2, 0.82, 2.86, 2.18, 0.36, 0.08, 0, 0],
-  2009: [0.04, 1.35, 4.8, 3.4, 3.85, 5.55, 3.05, 0.42, 2.95, 0.22, 0, 0],
-  2010: [1.9, 1.58, 0.74, 5.8, 5.05, 1.42, 4.85, 2.72, 1.55, 0.02, 0, 0],
-  2011: [0.26, 0.02, 3.9, 6.15, 1.12, 3.25, 0.28, 1.65, 1.12, 0, 0.05, 0.18],
-  2012: [0.34, 0.04, 1.18, 1.05, 0.95, 0.55, 5.2, 3.85, 1.35, 0, 0, 0.02],
-  2013: [0.01, 0.02, 1.58, 3.55, 5.92, 0.04, 0.48, 1.22, 0, 0.32, 0.02, 0],
-  2014: [0.22, 0.08, 1.22, 0.12, 1.72, 8.35, 2.35, 0.55, 0.28, 0.52, 0, 0.08],
-  2015: [0, 0.22, 1.44, 5.98, 1.02, 5.65, 3.9, 0.9, 0, 0.06, 0, 0.08],
-  2016: [0.16, 0, 1.88, 3.85, 6.95, 8.9, 2.45, 0.98, 1.95, 0, 0, 0.03],
-  2017: [0.01, 0.04, 4.95, 5.05, 0.32, 4.25, 0.22, 1.65, 0.18, 0.06, 0, 0],
-  2018: [0, 0, 0, 0, 5.85, 4.45, 1.6, 3.28, 0.14, 0, 0, 0],
-};
-
-const yearlyTotals = [
-  17.55, 17.53, 32.34, 23.26, 18.19, 12.54, 16.61, 15.64, 28.87, 24.09, 18.11,
-];
-
-const rainyDayShares = {
-  2008: 0.12,
-  2009: 0.18,
-  2010: 0.28,
-  2011: 0.2,
-  2012: 0.16,
-  2013: 0.1,
-  2014: 0.18,
-  2015: 0.14,
-  2016: 0.24,
-  2017: 0.2,
-  2018: 0.16,
-};
-
 const gridWidth = 900;
 const gridHeight = 560;
 const accent = "#1787d4";
@@ -69,25 +28,6 @@ const colors = {
   high: "#9fbf82",
   extreme: "#69b8cf",
 };
-
-const rainfallData = years.flatMap((year) =>
-  months.map((month, index) => ({
-    year,
-    month: month.key,
-    value: monthlyRainfallByYear[year][index],
-  })),
-);
-
-const rainyDayData = years.map((year) => ({
-  year,
-  rainy: rainyDayShares[year],
-  dry: 1 - rainyDayShares[year],
-}));
-
-const yearlyRainfallData = years.map((year, index) => ({
-  year,
-  rainfall: yearlyTotals[index],
-}));
 
 class RainfallBubbleGrid {
   constructor(options = {}) {
@@ -204,62 +144,78 @@ function rainfallBubbleGrid(options) {
   });
 }
 
-const bubbleGrid = rainfallBubbleGrid({
-  data: rainfallData,
-  years,
-  months,
-  width: gridWidth,
-  height: gridHeight,
-});
-
-const rainyDayPies = repeatX(
-  years,
-  (year) => {
-    const datum = rainyDayData.find((item) => item.year === year);
-
-    return chart({
-      data: [
-        { category: "rainy", value: datum.rainy },
-        { category: "dry", value: datum.dry },
-      ],
-      mark: "pie",
-      encoding: { x: "category", y: "value" },
-      width: 46,
-      height: 46,
-      margin: { top: 0, right: 0, bottom: 0, left: 0 },
-      colorScheme: [colors.extreme, "#e5e5e5"],
-      showLabels: false,
-    });
-  },
-  {
+function buildView({ monthly, yearly }) {
+  const years = monthly.map((row) => String(row.year));
+  const rainfallData = monthly.flatMap((row) =>
+    months.map((month) => ({
+      year: String(row.year),
+      month: month.key,
+      value: row[month.key],
+    })),
+  );
+  const yearlyData = yearly.map((row) => ({
+    ...row,
+    year: String(row.year),
+  }));
+  const bubbleGrid = rainfallBubbleGrid({
+    data: rainfallData,
+    years,
+    months,
     width: gridWidth,
-    height: 48,
-    paddingInner: 0.34,
-    paddingOuter: 0.5,
-  },
+    height: gridHeight,
+  });
+  const rainyDayPies = repeatX(
+    years,
+    (year) => {
+      const datum = yearlyData.find((item) => item.year === year);
+
+      return chart({
+        data: [
+          { category: "rainy", value: datum.rainyDayShare },
+          { category: "dry", value: 1 - datum.rainyDayShare },
+        ],
+        mark: "pie",
+        encoding: { x: "category", y: "value" },
+        width: 46,
+        height: 46,
+        margin: { top: 0, right: 0, bottom: 0, left: 0 },
+        colorScheme: [colors.extreme, "#e5e5e5"],
+        showLabels: false,
+      });
+    },
+    {
+      width: gridWidth,
+      height: 48,
+      paddingInner: 0.34,
+      paddingOuter: 0.5,
+    },
+  );
+  const yearlyBars = chart({
+    data: yearlyData,
+    mark: "bar",
+    encoding: {
+      x: "year",
+      y: "rainfall",
+      xDomain: years,
+      yDomain: [0, 36],
+    },
+    width: gridWidth,
+    height: 230,
+    margin: { top: 10, right: 0, bottom: 36, left: 0 },
+    color: colors.extreme,
+    showLabels: true,
+    showXAxis: false,
+    showYAxis: false,
+    padding: { xInner: 0.34, xOuter: 0.5 },
+  });
+
+  return stackY([bubbleGrid, rainyDayPies, yearlyBars], { margin: 8 });
+}
+
+const [monthly, yearly] = await Promise.all(
+  Object.values(datasetUrls).map(async (url) =>
+    parseCsv(await loadCsvText(url)),
+  ),
 );
 
-const yearlyBars = chart({
-  data: yearlyRainfallData,
-  mark: "bar",
-  encoding: {
-    x: "year",
-    y: "rainfall",
-    xDomain: years,
-    yDomain: [0, 36],
-  },
-  width: gridWidth,
-  height: 230,
-  margin: { top: 10, right: 0, bottom: 36, left: 0 },
-  color: colors.extreme,
-  showLabels: true,
-  showXAxis: false,
-  showYAxis: false,
-  padding: { xInner: 0.34, xOuter: 0.5 },
-});
-
-const rainfall = stackY([bubbleGrid, rainyDayPies, yearlyBars], {
-  margin: 8,
-});
-
-return rainfall;
+return buildView({ monthly, yearly });

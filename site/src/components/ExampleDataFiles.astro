@@ -1,0 +1,139 @@
+---
+const { files = [] } = Astro.props;
+const base = import.meta.env.BASE_URL;
+const dataFiles = files.map((file) => ({
+  name: file.split("/").at(-1),
+  path: `dataset/${file}`,
+  url: `${base}examples/dataset/${file}`,
+}));
+---
+
+<div class="example-data-files" data-example-data-files>
+  <div class="example-data-files__tabs" role="tablist" aria-label="Data files">
+    {
+      dataFiles.map((file, index) => (
+        <a
+          class="example-data-files__tab"
+          href={file.url}
+          id={`data-file-tab-${index}`}
+          role="tab"
+          aria-selected={index === 0 ? "true" : "false"}
+          tabindex={index === 0 ? "0" : "-1"}
+          data-data-file-link
+          data-data-file-path={file.path}
+          data-data-file-url={file.url}
+        >
+          {file.name}
+        </a>
+      ))
+    }
+  </div>
+  <div class="example-data-files__header">
+    <code data-data-file-path>{dataFiles[0]?.path}</code>
+    <span data-data-file-status>Loading</span>
+  </div>
+  <pre
+    class="example-data-files__preview"
+    role="tabpanel"
+    aria-live="polite"
+    aria-labelledby="data-file-tab-0"
+    tabindex="0"
+    data-data-file-preview>Loading data…</pre>
+</div>
+
+<script>
+  const dataFileCache = new Map();
+
+  async function loadDataFile(url) {
+    if (!dataFileCache.has(url)) {
+      const request = fetch(url).then(async (response) => {
+        if (!response.ok) {
+          throw new Error(`Unable to load data file (${response.status})`);
+        }
+
+        return response.text();
+      });
+      dataFileCache.set(url, request);
+    }
+
+    try {
+      return await dataFileCache.get(url);
+    } catch (error) {
+      dataFileCache.delete(url);
+      throw error;
+    }
+  }
+
+  async function showDataFile(viewer, link) {
+    const links = viewer.querySelectorAll("[data-data-file-link]");
+    const preview = viewer.querySelector("[data-data-file-preview]");
+    const path = viewer.querySelector("[data-data-file-path]:not([data-data-file-link])");
+    const status = viewer.querySelector("[data-data-file-status]");
+    const url = link.dataset.dataFileUrl;
+
+    links.forEach((candidate) => {
+      const selected = candidate === link;
+      candidate.setAttribute(
+        "aria-selected",
+        selected ? "true" : "false",
+      );
+      candidate.setAttribute("tabindex", selected ? "0" : "-1");
+    });
+    viewer.dataset.activeDataFile = url;
+    preview.setAttribute("aria-labelledby", link.id);
+    path.textContent = link.dataset.dataFilePath;
+    status.textContent = "Loading";
+    preview.textContent = "Loading data…";
+
+    try {
+      const contents = await loadDataFile(url);
+      if (viewer.dataset.activeDataFile !== url) return;
+
+      preview.textContent = contents;
+      status.textContent = "Loaded";
+    } catch (error) {
+      if (viewer.dataset.activeDataFile !== url) return;
+
+      preview.textContent = error.message || "Unable to load data file";
+      status.textContent = "Error";
+    }
+  }
+
+  document.querySelectorAll("[data-example-data-files]").forEach((viewer) => {
+    const links = [...viewer.querySelectorAll("[data-data-file-link]")];
+
+    links.forEach((link) => {
+      link.addEventListener("click", (event) => {
+        if (
+          event.button !== 0 ||
+          event.metaKey ||
+          event.ctrlKey ||
+          event.shiftKey ||
+          event.altKey
+        ) {
+          return;
+        }
+
+        event.preventDefault();
+        showDataFile(viewer, link);
+      });
+      link.addEventListener("keydown", (event) => {
+        const index = links.indexOf(link);
+        const destinations = {
+          ArrowLeft: (index - 1 + links.length) % links.length,
+          ArrowRight: (index + 1) % links.length,
+          Home: 0,
+          End: links.length - 1,
+        };
+        const nextIndex = destinations[event.key];
+        if (nextIndex === undefined) return;
+
+        event.preventDefault();
+        links[nextIndex].focus();
+        showDataFile(viewer, links[nextIndex]);
+      });
+    });
+
+    if (links[0]) showDataFile(viewer, links[0]);
+  });
+</script>

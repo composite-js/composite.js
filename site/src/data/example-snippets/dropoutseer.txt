@@ -2,159 +2,110 @@
 // Title: DropoutSeer: Visualizing learning patterns in Massive Open Online Courses for dropout reasoning and prediction
 // Authors: Yuanzhe Chen, Qing Chen, Mingqian Zhao, Sebastien Boyer, Kalyan Veeramachaneni, and Huamin Qu
 // Link: https://ieeexplore.ieee.org/document/7883517
-const weeks = Array.from({ length: 10 }, (_, index) => index);
-const groups = [
-  { id: "steady", size: 4, dropoutStart: 10 },
-  { id: "early-risk", size: 4, dropoutStart: 5 },
-  { id: "mid-risk", size: 4, dropoutStart: 3 },
-  { id: "recovering", size: 4, dropoutStart: 7 },
-];
+const datasetUrls = {
+  learners: exampleAssetUrl("dataset/dropoutseer/learners.csv"),
+  sequence: exampleAssetUrl("dataset/dropoutseer/sequence.csv"),
+  flow: exampleAssetUrl("dataset/dropoutseer/flow.csv"),
+  bars: exampleAssetUrl("dataset/dropoutseer/bars.csv"),
+};
+
 const activityTypes = ["video", "quiz", "forum", "assignment"];
 const colors = ["#89d4c9", "#f7ea57", "#f47f6b", "#2f77b4"];
 
-const rows = groups.flatMap((group, groupIndex) =>
-  Array.from({ length: group.size }, (_, rowIndex) => {
-    const absoluteIndex = groupIndex * group.size + rowIndex;
-    return {
-      id: `${group.id}-${rowIndex + 1}`,
-      group: group.id,
-      dropoutWeek:
-        group.dropoutStart === 10
-          ? 10
-          : Math.min(9, group.dropoutStart + ((rowIndex + groupIndex) % 3)),
-      index: absoluteIndex,
-    };
-  }),
-);
-
-function activityMix(row, week) {
-  return activityTypes.map((type, typeIndex) => ({
-    category: type,
-    value: 2 + (((row.index + 1) * (week + 2) * (typeIndex + 3)) % 9),
-  }));
+function unique(rows, key) {
+  return [...new Set(rows.map((row) => row[key]))];
 }
 
-const sequenceRecords = rows.flatMap((row) =>
-  weeks
-    .filter((week) => week <= row.dropoutWeek)
-    .map((week) => ({
-      id: `${row.id}-${week}`,
-      learner: row.id,
-      week,
-      mix: activityMix(row, week),
+function buildView({ learners, sequence: sequenceRows, flowData, barData }) {
+  const weeks = unique(sequenceRows, "week");
+  const dates = unique(flowData, "date");
+  const sequenceRecords = sequenceRows.map((row) => ({
+    ...row,
+    mix: activityTypes.map((category) => ({
+      category,
+      value: row[category],
     })),
-);
+  }));
+  const missing = learners.flatMap((learner) =>
+    weeks
+      .filter((week) => week > learner.dropoutWeek)
+      .map((week) => ({ learner: learner.id, week })),
+  );
+  const events = learners
+    .filter((learner) => learner.dropoutWeek < weeks.at(-1))
+    .map((learner) => ({
+      learner: learner.id,
+      week: learner.dropoutWeek,
+      type: "dropout",
+    }));
+  const learnerDomain = learners.map((learner) => learner.id);
 
-const missing = rows.flatMap((row) =>
-  weeks
-    .filter((week) => week > row.dropoutWeek)
-    .map((week) => ({ learner: row.id, week })),
-);
-
-const events = rows
-  .filter((row) => row.dropoutWeek < 9)
-  .map((row) => ({ learner: row.id, week: row.dropoutWeek, type: "dropout" }));
-
-const dates = [
-  "Jun 22",
-  "Jun 29",
-  "Jul 06",
-  "Jul 13",
-  "Jul 20",
-  "Jul 27",
-  "Aug 03",
-  "Aug 10",
-  "Aug 17",
-  "Aug 24",
-  "Aug 31",
-  "Sep 07",
-  "Sep 14",
-  "Sep 21",
-  "Sep 28",
-];
-
-const flowData = rows.flatMap((row) =>
-  dates.map((date, dateIndex) => ({
-    learner: row.id,
-    date,
-    count:
-      row.dropoutWeek <= dateIndex % weeks.length
-        ? 1 + ((row.index + dateIndex) % 4)
-        : 0.6 + (((row.index + 1) * (dateIndex + 2)) % 5),
-  })),
-);
-
-const barSegments = ["active", "at-risk", "dropout"];
-const barData = dates.flatMap((date, dateIndex) =>
-  barSegments.map((segment, segmentIndex) => ({
-    date,
-    segment,
-    count:
-      segment === "active"
-        ? Math.max(2, 38 - dateIndex * 2 + (dateIndex % 3) * 8)
-        : segment === "at-risk"
-          ? 10 + (((dateIndex + 2) * 7) % 24)
-          : 4 + (((dateIndex + segmentIndex) * 5) % 18),
-  })),
-);
-
-const sequence = embed(
-  sequenceContainer({
-    width: 700,
-    height: 640,
-    xDomain: weeks,
-    yDomain: rows.map((row) => row.id),
-    tracks: rows.map((row) => row.id),
-    missing,
-    events,
-    trackColor: "#a9a9a9",
-    missingColor: "#8b8b8b",
-  }),
-  repeat(sequenceRecords, (record) =>
-    chart({
-      mark: "pie",
-      width: 28,
-      height: 28,
-      margin: { top: 0, right: 0, bottom: 0, left: 0 },
-      data: record.mix,
-      encoding: { x: "category", y: "value" },
-      colorScheme: colors,
-      innerRadius: 8,
+  const sequence = embed(
+    sequenceContainer({
+      width: 700,
+      height: 640,
+      xDomain: weeks,
+      yDomain: learnerDomain,
+      tracks: learnerDomain,
+      missing,
+      events,
+      trackColor: "#a9a9a9",
+      missingColor: "#8b8b8b",
     }),
+    repeat(sequenceRecords, (record) =>
+      chart({
+        mark: "pie",
+        width: 28,
+        height: 28,
+        margin: { top: 0, right: 0, bottom: 0, left: 0 },
+        data: record.mix,
+        encoding: { x: "category", y: "value" },
+        colorScheme: colors,
+        innerRadius: 8,
+      }),
+    ),
+    { x: "week", y: "learner", key: "id", width: 28, height: 28 },
+  );
+
+  const flow = chart({
+    mark: "flow",
+    width: 280,
+    height: 640,
+    margin: { top: 0, right: 0, bottom: 0, left: 0 },
+    data: flowData,
+    encoding: {
+      x: "learner",
+      group: "date",
+      y: "count",
+      xDomain: learnerDomain,
+      groupDomain: dates,
+    },
+    color: "#f2ad73",
+    opacity: 0.12,
+    minStrokeWidth: 0.35,
+    maxStrokeWidth: 5,
+  });
+
+  const bars = chart({
+    mark: "stackbar",
+    width: 230,
+    height: 640,
+    margin: { top: 26, right: 20, bottom: 20, left: 58 },
+    data: barData,
+    encoding: { x: "count", y: "date", group: "segment" },
+    colorScheme: ["#2d6fa8", "#2fb5c4", "#cdebdc"],
+    xAxisPos: "top",
+    xAxisName: "",
+    showLabels: false,
+  });
+
+  return stackX([sequence, flow, bars], { margin: 10 });
+}
+
+const [learners, sequence, flowData, barData] = await Promise.all(
+  Object.values(datasetUrls).map(async (url) =>
+    parseCsv(await loadCsvText(url)),
   ),
-  { x: "week", y: "learner", key: "id", width: 28, height: 28 },
 );
 
-const flow = chart({
-  mark: "flow",
-  width: 280,
-  height: 640,
-  margin: { top: 0, right: 0, bottom: 0, left: 0 },
-  data: flowData,
-  encoding: {
-    x: "learner",
-    group: "date",
-    y: "count",
-    xDomain: rows.map((row) => row.id),
-    groupDomain: dates,
-  },
-  color: "#f2ad73",
-  opacity: 0.12,
-  minStrokeWidth: 0.35,
-  maxStrokeWidth: 5,
-});
-
-const bars = chart({
-  mark: "stackbar",
-  width: 230,
-  height: 640,
-  margin: { top: 26, right: 20, bottom: 20, left: 58 },
-  data: barData,
-  encoding: { x: "count", y: "date", group: "segment" },
-  colorScheme: ["#2d6fa8", "#2fb5c4", "#cdebdc"],
-  xAxisPos: "top",
-  xAxisName: "",
-  showLabels: false,
-});
-
-return stackX([sequence, flow, bars], { margin: 10 });
+return buildView({ learners, sequence, flowData, barData });

@@ -1,0 +1,17 @@
+id,group,dropoutWeek,index
+steady-1,steady,10,0
+steady-2,steady,10,1
+steady-3,steady,10,2
+steady-4,steady,10,3
+early-risk-1,early-risk,6,4
+early-risk-2,early-risk,7,5
+early-risk-3,early-risk,5,6
+early-risk-4,early-risk,6,7
+mid-risk-1,mid-risk,5,8
+mid-risk-2,mid-risk,3,9
+mid-risk-3,mid-risk,4,10
+mid-risk-4,mid-risk,5,11
+recovering-1,recovering,7,12
+recovering-2,recovering,8,13
+recovering-3,recovering,9,14
+recovering-4,recovering,7,15

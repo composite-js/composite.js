@@ -1,88 +1,92 @@
-import { chart, image, repeatY, stackX } from "../src/index.js";
+import {
+  chart,
+  image,
+  loadCsvText,
+  parseCsv,
+  repeatY,
+  stackX,
+} from "../src/index.js";
 
 const flagBaseUrl = "https://kapowaz.github.io/circle-flags/flags";
+const countriesCsvUrl = new URL("./dataset/country.csv", import.meta.url);
 
-const countries = [
-  { country: "United States", code: "us", score: 88, pac: 42 },
-  { country: "Japan", code: "jp", score: 81, pac: 36 },
-  { country: "Germany", code: "de", score: 76, pac: 31 },
-  { country: "Brazil", code: "br", score: 69, pac: 27 },
-  { country: "India", code: "in", score: 64, pac: 22 },
-  { country: "South Africa", code: "za", score: 58, pac: 18 },
-];
-
-const countryDomain = countries.map((d) => d.country);
-const bodyHeight = countryDomain.length * 42;
 const rowPadding = { yInner: 0.22, yOuter: 0.08 };
 
-const flags = repeatY(
-  countryDomain,
-  (countryName) => {
-    const country = countries.find((d) => d.country === countryName);
+function buildView(countries) {
+  const countryDomain = countries.map((d) => d.country);
+  const bodyHeight = countryDomain.length * 42;
+  const flags = repeatY(
+    countryDomain,
+    (countryName) => {
+      const country = countries.find((d) => d.country === countryName);
 
-    return image({
-      url: `${flagBaseUrl}/${country.code}.svg`,
-      width: 32,
-      height: 32,
-      title: `${country.country} flag`,
-    });
-  },
-  {
+      return image({
+        url: `${flagBaseUrl}/${country.code}.svg`,
+        width: 32,
+        height: 32,
+        title: `${country.country} flag`,
+      });
+    },
+    {
+      height: bodyHeight,
+      paddingInner: rowPadding.yInner,
+      paddingOuter: rowPadding.yOuter,
+    },
+  );
+
+  const bars = chart({
+    mark: "bar",
+    data: countries,
+    width: 200,
     height: bodyHeight,
-    paddingInner: rowPadding.yInner,
-    paddingOuter: rowPadding.yOuter,
-  },
-);
+    encoding: {
+      x: "score",
+      y: "country",
+      xDomain: [0, 100],
+      yDomain: countryDomain,
+    },
+    color: "#2a9d8f",
+    showLabels: true,
+    showXAxis: false,
+    showYAxis: false,
+    padding: rowPadding,
+  });
 
-const bars = chart({
-  mark: "bar",
-  data: countries,
-  width: 200,
-  height: bodyHeight,
-  encoding: {
-    x: "score",
-    y: "country",
-    xDomain: [0, 100],
-    yDomain: countryDomain,
-  },
-  color: "#2a9d8f",
-  showLabels: true,
-  showXAxis: false,
-  showYAxis: false,
-  padding: rowPadding,
-});
+  const pac = chart({
+    mark: "pac",
+    data: countries,
+    width: 40,
+    height: bodyHeight,
+    encoding: {
+      x: "pac",
+      y: "country",
+      yDomain: countryDomain,
+    },
+    color: "#e76f51",
+    opacity: 0.68,
+    showXAxis: false,
+    showYAxis: false,
+  });
 
-const pac = chart({
-  mark: "pac",
-  data: countries,
-  width: 40,
-  height: bodyHeight,
-  encoding: {
-    x: "pac",
-    y: "country",
-    yDomain: countryDomain,
-  },
-  color: "#e76f51",
-  opacity: 0.68,
-  showXAxis: false,
-  showYAxis: false,
-});
+  const linkedMeasures = stackX([bars, pac], {
+    margin: 5,
+    align: [bars, pac],
+    link: true,
+  });
 
-const linkedMeasures = stackX([bars, pac], {
-  margin: 5,
-  align: [bars, pac],
-  link: true,
-});
+  return stackX([flags, linkedMeasures], {
+    margin: 15,
+    align: [flags, linkedMeasures],
+  });
+}
 
-const composite = stackX([flags, linkedMeasures], {
-  margin: 15,
-  align: [flags, linkedMeasures],
-});
-
-export function createExample() {
-  return composite;
+export async function createExample() {
+  const csvText = await loadCsvText(countriesCsvUrl);
+  return buildView(parseCsv(csvText));
 }
 
 if (typeof document !== "undefined") {
-  createExample().render(document.getElementById("app"));
+  createExample().then((view) => {
+    view.render(document.getElementById("app"));
+  });
 }

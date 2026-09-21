@@ -42,6 +42,14 @@ import {
       !source.includes("../src/layout.js"),
       `${file} should import public APIs from ../src/index.js`,
     );
+    assert.ok(
+      source.includes("./dataset/"),
+      `${file} should load data from examples/dataset`,
+    );
+    assert.ok(
+      source.includes("loadCsvText") && source.includes("parseCsv"),
+      `${file} should use the shared CSV loading APIs`,
+    );
   });
 }
 

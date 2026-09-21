@@ -9,6 +9,10 @@ const editorPath = path.resolve(
   root,
   "site/src/components/ExampleEditor.astro",
 );
+const dataFilesPath = path.resolve(
+  root,
+  "site/src/components/ExampleDataFiles.astro",
+);
 const packagePath = path.resolve(root, "package.json");
 const stylesheetPath = path.resolve(root, "site/src/styles/global.css");
 const runnerPath = path.resolve(
@@ -31,6 +35,15 @@ const snippetDir = path.resolve(root, "site/src/data/example-snippets");
   assert.ok(
     detailSource.includes("getExampleSnippet"),
     "Example detail page should resolve an editable snippet for the example",
+  );
+  assert.ok(
+    detailSource.includes("ExampleDataFiles"),
+    "Example detail page should render the data file viewer",
+  );
+  assert.ok(
+    detailSource.indexOf("<ExampleDataFiles") <
+      detailSource.indexOf('<SectionShell title="Example metadata">'),
+    "Example detail page should render data files above example metadata",
   );
   assert.ok(
     !detailSource.includes("example-detail-preview"),
@@ -69,7 +82,42 @@ const snippetDir = path.resolve(root, "site/src/data/example-snippets");
       /\bimport\.meta\b/,
       `${example.slug} snippet should not contain module-only import.meta`,
     );
+    assert.ok(
+      example.dataFiles?.length > 0,
+      `${example.slug} should declare at least one data file`,
+    );
+    example.dataFiles.forEach((file) => {
+      assert.ok(
+        existsSync(path.resolve(root, "site/public/examples/dataset", file)),
+        `${example.slug} data file should be exported: ${file}`,
+      );
+    });
   });
+}
+
+{
+  const dataFilesSource = readFileSync(dataFilesPath, "utf8");
+
+  assert.ok(
+    dataFilesSource.includes("data-example-data-files"),
+    "ExampleDataFiles should expose a client-side viewer root",
+  );
+  assert.ok(
+    dataFilesSource.includes('role="tablist"'),
+    "ExampleDataFiles should expose data file tabs",
+  );
+  assert.ok(
+    dataFilesSource.includes("data-data-file-preview"),
+    "ExampleDataFiles should provide a data preview panel",
+  );
+  assert.ok(
+    dataFilesSource.includes("fetch(url)"),
+    "ExampleDataFiles should load selected CSV files on demand",
+  );
+  assert.ok(
+    dataFilesSource.includes("dataFileCache"),
+    "ExampleDataFiles should cache loaded CSV files",
+  );
 }
 
 {
@@ -181,6 +229,9 @@ const snippetDir = path.resolve(root, "site/src/data/example-snippets");
   const previewRule = stylesheetSource.match(
     /\.example-editor__preview\s*\{(?<body>[^}]*)\}/,
   );
+  const dataPreviewRule = stylesheetSource.match(
+    /\.example-data-files__preview\s*\{(?<body>[^}]*)\}/,
+  );
 
   assert.ok(
     workspaceRule?.groups?.body,
@@ -246,6 +297,16 @@ const snippetDir = path.resolve(root, "site/src/data/example-snippets");
     previewRule?.groups?.body || "",
     /height:\s*min\(58vh,\s*620px\);/,
     "Preview should have a stable top-panel height",
+  );
+  assert.match(
+    dataPreviewRule?.groups?.body || "",
+    /max-height:\s*420px;/,
+    "Data file preview should scroll within a bounded height",
+  );
+  assert.match(
+    dataPreviewRule?.groups?.body || "",
+    /overflow:\s*auto;/,
+    "Data file preview should support large CSV files",
   );
 }
 

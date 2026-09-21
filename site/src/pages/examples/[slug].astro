@@ -2,6 +2,7 @@
 import SiteLayout from "../../layouts/SiteLayout.astro";
 import SectionShell from "../../components/SectionShell.astro";
 import ExampleEditor from "../../components/ExampleEditor.astro";
+import ExampleDataFiles from "../../components/ExampleDataFiles.astro";
 import { examples } from "../../data/examples.js";
 import { getExampleSnippet } from "../../data/example-snippets.js";
 
@@ -21,6 +22,9 @@ const runnerSrc = `${base}examples/editor-runner/`;
 <SiteLayout title={`${example.title} | composite.js`}>
   <SectionShell title={example.title}>
     <ExampleEditor example={example} snippet={snippet} runnerSrc={runnerSrc} />
+  </SectionShell>
+  <SectionShell title="Data files">
+    <ExampleDataFiles files={example.dataFiles} />
   </SectionShell>
   <SectionShell title="Example metadata">
     <div class="feature-card">

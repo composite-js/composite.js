@@ -433,6 +433,88 @@ a {
   line-height: 1.45;
 }
 
+.example-data-files {
+  border: 1px solid #d8dee9;
+  background: #ffffff;
+}
+
+.example-data-files__tabs {
+  display: flex;
+  gap: 4px;
+  overflow-x: auto;
+  border-bottom: 1px solid #d8dee9;
+  padding: 8px;
+}
+
+.example-data-files__tab {
+  flex: 0 0 auto;
+  border: 1px solid transparent;
+  color: #475569;
+  padding: 7px 10px;
+  font-family:
+    "SFMono-Regular", Consolas, "Liberation Mono", Menlo, ui-monospace,
+    monospace;
+  font-size: 0.84rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.example-data-files__tab:hover {
+  border-color: #cbd5e1;
+  color: #0f172a;
+}
+
+.example-data-files__tab[aria-selected="true"] {
+  border-color: #93c5fd;
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.example-data-files__tab:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 1px;
+}
+
+.example-data-files__header {
+  min-height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  border-bottom: 1px solid #e2e8f0;
+  padding: 8px 14px;
+  color: #64748b;
+  font-size: 0.82rem;
+}
+
+.example-data-files__header code {
+  color: #334155;
+  overflow-wrap: anywhere;
+}
+
+.example-data-files__preview {
+  width: 100%;
+  min-height: 220px;
+  max-height: 420px;
+  margin: 0;
+  overflow: auto;
+  background: #ffffff;
+  color: #172033;
+  padding: 16px;
+  font-family:
+    "SFMono-Regular", Consolas, "Liberation Mono", Menlo, ui-monospace,
+    monospace;
+  font-size: 0.84rem;
+  line-height: 1.55;
+  tab-size: 2;
+  white-space: pre;
+}
+
+.example-data-files__preview:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: -2px;
+}
+
 .example-card__title {
   margin: 0;
   font-size: 0.95rem;
@@ -719,6 +801,17 @@ a {
   .example-editor__preview {
     height: min(52vh, 460px);
     min-height: 360px;
+  }
+
+  .example-data-files__header {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .example-data-files__preview {
+    min-height: 180px;
+    max-height: 360px;
   }
 
   .api-list div {

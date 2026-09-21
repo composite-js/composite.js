@@ -1,0 +1,16 @@
+id,sets,intersectionSize,setSize
+I0,Drama,20,45
+I1,Comedy,15,35
+I2,Thriller,12,25
+I3,Crime,10,30
+I4,Action,8,28
+I5,Romance,6,20
+I6,Adventure,5,18
+I7,Sci-Fi,4,15
+I8,Fantasy,3,12
+I9,Drama|Romance,10,0
+I10,Action|Adventure,8,0
+I11,Crime|Drama,7,0
+I12,Comedy|Romance,6,0
+I13,Action|Thriller,5,0
+I14,Crime|Thriller,4,0
