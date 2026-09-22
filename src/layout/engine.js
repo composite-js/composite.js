@@ -2,7 +2,11 @@ import * as d3 from "d3";
 import { BBox } from "../utils/bbox.js";
 import { LayoutCalculator } from "./calculator.js";
 import { renderComputedLayout, renderComputedLayoutInto } from "./renderer.js";
-import { Node, assertLayoutNode, assertLayoutParent } from "./node.js";
+import { Node, assertLayoutNode, setLayoutRenderer } from "./node.js";
+import { isSvgContainer } from "../utils/dom.js";
+import { expandLayout, finishLayout } from "./computed.js";
+import { embedChildMap, matchEmbedSlots } from "./composition.js";
+import { resolveRenderSize, viewportSizedPolicy } from "./size-policy.js";
 
 function stackGapBefore(node, childIndex) {
   if (childIndex <= 0) return 0;
@@ -27,18 +31,12 @@ function repeatIntrinsicRange(node, cellSize) {
  * Layout engine for computing and rendering layout trees.
  */
 export class LayoutEngine {
-  static containsNode(container, target) {
-    if (container === target) return true;
-    if (!Node.isStack(container)) return false;
-    return container.children.some((child) => this.containsNode(child, target));
-  }
-
   static findTargetRectWithin(container, target) {
     if (container === target) {
       return { ...container.bbox.contentRect() };
     }
 
-    if (!Node.isStack(container)) return null;
+    if (!container.children) return null;
 
     const search = (node, offsetX = 0, offsetY = 0) => {
       const rect = node.bbox.contentRect();
@@ -52,7 +50,7 @@ export class LayoutEngine {
         };
       }
 
-      if (!Node.isStack(node)) return null;
+      if (!node.children) return null;
 
       for (const child of node.children) {
         const found = search(child, offsetX + rect.x, offsetY + rect.y);
@@ -70,73 +68,41 @@ export class LayoutEngine {
     return null;
   }
 
-  static alignmentTargetForChild(child, alignedNode) {
-    return this.containsNode(child, alignedNode) ? alignedNode : child;
-  }
-
   static findReferenceAlignment(node) {
-    for (const alignedNode of node.align) {
-      if (!alignedNode) continue;
-
-      for (const child of node.children) {
-        if (!this.containsNode(child, alignedNode)) continue;
-
-        const rect = this.findTargetRectWithin(child, alignedNode);
-        if (rect) return rect;
-      }
+    for (let i = 0; i < node.align.length; i++) {
+      if (node.align[i] === undefined || node.align[i] === null) continue;
+      const target = node.alignedNodes[i];
+      const reference = node.align[i];
+      if (
+        !target ||
+        !(typeof reference === "string"
+          ? target.anchors.includes(reference)
+          : target.sources.includes(reference))
+      )
+        continue;
+      return this.findTargetRectWithin(node.children[i], target);
     }
-
     return { ...node.children[0].bbox.contentRect() };
   }
 
-  static validateLayoutTree(
-    node,
-    parent = null,
-    state = { active: new Set(), visitedParents: new Map() },
-  ) {
-    assertLayoutNode(node);
-
-    if (state.active.has(node)) {
-      throw new Error("Layout tree contains a circular reference.");
+  static computeLayout(spec, context = {}, renderSize = {}) {
+    assertLayoutNode(spec);
+    (spec?.sizePolicy || viewportSizedPolicy).validateRenderOptions(
+      spec,
+      renderSize,
+    );
+    if (
+      context.measurementAdapter &&
+      typeof context.measurementAdapter.measureMargin !== "function"
+    ) {
+      throw new TypeError(
+        "measurement adapter must provide measureMargin(element, size).",
+      );
     }
-    if (state.visitedParents.has(node)) {
-      const firstParent = state.visitedParents.get(node);
-      if (firstParent === parent) {
-        throw new Error(
-          "Duplicate layout node: a node cannot appear more than once under the same parent.",
-        );
-      }
-      throw new Error("A layout node cannot have multiple parents.");
-    }
-    if (parent) assertLayoutParent(parent, node);
-
-    state.active.add(node);
-    state.visitedParents.set(node, parent);
-
-    try {
-      let children = [];
-      if (Node.isStack(node)) {
-        if (node.children.length === 0) {
-          throw new Error("Invalid: composition node has no children.");
-        }
-        children = node.children;
-      } else if (Node.isRepeat(node)) {
-        children = node.instantiateChildren(node.classTag);
-      } else if (Node.isEmbedded(node)) {
-        children = node.instantiateChildren();
-      } else if (Node.isWrapper(node)) {
-        children = [node.child];
-      }
-
-      children.forEach((child) => this.validateLayoutTree(child, node, state));
-    } finally {
-      state.active.delete(node);
-    }
-  }
-
-  static computeLayout(node, context = {}, renderSize = {}) {
-    this.validateLayoutTree(node);
-    this.computeLayoutNode(node, context, renderSize);
+    const root = expandLayout(spec);
+    this.computeLayoutNode(root, { ...context, root }, renderSize);
+    this.arrange(root, renderSize);
+    return finishLayout(root);
   }
 
   static computeLayoutNode(node, context, renderSize = {}) {
@@ -157,11 +123,13 @@ export class LayoutEngine {
 
     if (Node.isRepeat(node)) {
       this.computeRepeat(node, context, renderSize);
+      this.arrange(node);
       return;
     }
 
     if (Node.isEmbedded(node)) {
       this.computeEmbedded(node, context, renderSize);
+      this.arrange(node);
       return;
     }
 
@@ -183,19 +151,19 @@ export class LayoutEngine {
       const child = node.children[i];
       const bbox = child.bbox;
       const margin = bbox.getMargin();
-      const target = this.alignmentTargetForChild(child, node.alignedNodes[i]);
+      const target = node.alignedNodes[i];
       const targetRect = this.findTargetRectWithin(child, target);
 
       currentX += stackGapBefore(node, i);
       currentX += margin.left;
       bbox.translateTo(currentX, sharedY - targetRect.y);
       if (target === child) {
-        bbox.setSize(-1, sharedHeight);
+        bbox.content.height = sharedHeight;
       }
       currentX += bbox.contentRect().width + margin.right;
     }
 
-    node.updateBBox();
+    this.updateBBox(node);
   }
 
   static computeVerticalStack(node) {
@@ -208,19 +176,19 @@ export class LayoutEngine {
       const child = node.children[i];
       const bbox = child.bbox;
       const margin = bbox.getMargin();
-      const target = this.alignmentTargetForChild(child, node.alignedNodes[i]);
+      const target = node.alignedNodes[i];
       const targetRect = this.findTargetRectWithin(child, target);
 
       currentY += stackGapBefore(node, i);
       currentY += margin.top;
       bbox.translateTo(sharedX - targetRect.x, currentY);
       if (target === child) {
-        bbox.setSize(sharedWidth, -1);
+        bbox.content.width = sharedWidth;
       }
       currentY += bbox.contentRect().height + margin.bottom;
     }
 
-    node.updateBBox();
+    this.updateBBox(node);
   }
 
   static computeRepeat(node, context = {}, renderSize = {}) {
@@ -274,7 +242,15 @@ export class LayoutEngine {
 
   static computeWrapper(node, context = {}) {
     this.computeLayoutNode(node.child, context);
-    node.updateBBoxFromChild();
+    const child = node.child.bbox;
+    node.bbox = new BBox(
+      0,
+      0,
+      child.totalWidth() + node.padding.left + node.padding.right,
+      child.totalHeight() + node.padding.top + node.padding.bottom,
+    );
+    node.bbox.setMargin(node.options.margin);
+    this.arrange(node);
   }
 
   static computeLeaf(node, context = {}) {
@@ -283,7 +259,17 @@ export class LayoutEngine {
       throw new Error("Invalid layout node: missing renderable element.");
     }
 
-    const margin = LayoutCalculator.estimateMargin(element, context);
+    const margin =
+      context.root === node
+        ? {
+            top: 0,
+            right: 0,
+            bottom: 0,
+            left: 0,
+            ...(element.margin || element.options?.margin),
+            ...node.options?.margin,
+          }
+        : LayoutCalculator.estimateMargin(element, context);
     let width = element.options?.width ?? element.width;
     let height = element.options?.height ?? element.height;
 
@@ -298,15 +284,161 @@ export class LayoutEngine {
     node.bbox = bbox;
   }
 
+  static updateBBox(node) {
+    let combined = node.children[0].bbox;
+    for (const child of node.children.slice(1))
+      combined = combined.union(child.bbox);
+    const content = combined.contentRect();
+    node.children.forEach((child) =>
+      child.bbox.translateBy(-content.x, -content.y),
+    );
+    node.bbox = new BBox(0, 0, content.width, content.height);
+    node.bbox.setMargin(combined.getMargin());
+  }
+
+  /** Assign all final geometry before rendering; no declaration is touched. */
+  static arrange(node, requested = {}) {
+    node.viewport =
+      requested.width !== undefined || requested.height !== undefined
+        ? {
+            ...(requested.width !== undefined
+              ? { width: requested.width }
+              : {}),
+            ...(requested.height !== undefined
+              ? { height: requested.height }
+              : {}),
+          }
+        : null;
+    const size = resolveRenderSize(node, requested, node.bbox.contentRect());
+    node.bbox.content.width = size.width;
+    node.bbox.content.height = size.height;
+    if (requested.margin)
+      node.bbox.setMargin({ ...node.bbox.getMargin(), ...requested.margin });
+    const signature = JSON.stringify([
+      size.width,
+      size.height,
+      node.bbox.getMargin(),
+    ]);
+    if (node.arrangedSignature === signature) return;
+    node.arrangedSignature = signature;
+    const { width, height } = node.bbox.contentRect();
+    if (Node.isStack(node)) {
+      node.children.forEach((child) => this.arrange(child));
+    } else if (Node.isWrapper(node)) {
+      const child = node.child;
+      const margin = child.bbox.getMargin();
+      this.arrange(child, {
+        width: Math.max(
+          0,
+          width -
+            node.padding.left -
+            node.padding.right -
+            margin.left -
+            margin.right,
+        ),
+        height: Math.max(
+          0,
+          height -
+            node.padding.top -
+            node.padding.bottom -
+            margin.top -
+            margin.bottom,
+        ),
+      });
+      child.bbox.translateTo(
+        node.padding.left + margin.left,
+        node.padding.top + margin.top,
+      );
+    } else if (Node.isRepeat(node)) {
+      const horizontal = Node.isRepeatX(node);
+      const scale = d3
+        .scaleBand()
+        .domain(node.domain)
+        .range([0, horizontal ? width : height])
+        .paddingInner(node.paddingInner)
+        .paddingOuter(node.paddingOuter);
+      const bandwidth = scale.bandwidth();
+      node.children.forEach((child, index) => {
+        const margin = child.element
+          ? { top: 0, right: 0, bottom: 0, left: 0 }
+          : child.bbox.getMargin();
+        this.arrange(child, {
+          width: Math.max(
+            0,
+            (horizontal ? bandwidth : width) - margin.left - margin.right,
+          ),
+          height: Math.max(
+            0,
+            (horizontal ? height : bandwidth) - margin.top - margin.bottom,
+          ),
+          ...(child.element ? { margin } : {}),
+        });
+        child.bbox.translateTo(
+          (horizontal ? scale(node.domain[index]) : 0) + margin.left,
+          (horizontal ? 0 : scale(node.domain[index])) + margin.top,
+        );
+      });
+    } else if (Node.isEmbedded(node)) {
+      const slots = node.container.slots(node.repeated.domain, node.mapping, {
+        width,
+        height,
+      });
+      const matched = matchEmbedSlots(
+        slots,
+        embedChildMap(node.repeated, node.mapping, node.embeddedChildren),
+      );
+      node.children = matched.map(({ slot, child }) => {
+        this.arrange(child, {
+          ...(slot.width !== undefined ? { width: slot.width } : {}),
+          ...(slot.height !== undefined ? { height: slot.height } : {}),
+        });
+        const rect = child.bbox.contentRect();
+        child.bbox.translateTo(
+          slot.x - rect.width / 2,
+          slot.y - rect.height / 2,
+        );
+        return child;
+      });
+    }
+  }
+
   static layout(root, container, options = {}) {
-    root.sizePolicy?.validateRenderOptions(root, options);
-    this.computeLayout(root, { document: container?.ownerDocument }, options);
-    return renderComputedLayout(root, container, options);
+    const computed = this.computeLayout(
+      root,
+      { document: container?.ownerDocument },
+      options,
+    );
+    return renderComputedLayout(computed, container, {
+      debugBBox: options.debugBBox,
+    });
   }
 
   static renderInto(root, container, options = {}) {
-    root.sizePolicy?.validateRenderOptions(root, options);
-    this.computeLayout(root, { document: container?.ownerDocument }, options);
-    return renderComputedLayoutInto(root, container, options);
+    const computed = this.computeLayout(
+      root,
+      { document: container?.ownerDocument },
+      options,
+    );
+    return renderComputedLayoutInto(computed, container, {
+      debugBBox: options.debugBBox,
+    });
   }
 }
+
+/** Compute a reusable declaration without retaining state on it. */
+export function computeLayout(
+  spec,
+  { document, measurementAdapter, ...size } = {},
+) {
+  return LayoutEngine.computeLayout(
+    spec,
+    { document, measurementAdapter },
+    size,
+  );
+}
+
+setLayoutRenderer((spec, container, options) =>
+  isSvgContainer(container)
+    ? LayoutEngine.renderInto(spec, container, options)
+    : LayoutEngine.layout(spec, container, options),
+);

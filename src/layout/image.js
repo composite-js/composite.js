@@ -1,7 +1,7 @@
 import * as d3 from "d3";
+import { createRenderContext } from "./render-context.js";
 
 const zeroMargin = { top: 0, right: 0, bottom: 0, left: 0 };
-let clipPathCounter = 0;
 
 function resolveUrl(options) {
   const url = options.url ?? options.src ?? options.href;
@@ -45,11 +45,6 @@ function clipType(options) {
   return null;
 }
 
-function nextClipPathId() {
-  clipPathCounter += 1;
-  return `composite-image-clip-${clipPathCounter}`;
-}
-
 function appendRoundedRect(selection, x, y, width, height, radius) {
   return selection
     .append("rect")
@@ -86,7 +81,7 @@ export class ImageElement {
     this.height = this.options.height;
   }
 
-  render(container, renderOptions = {}) {
+  render(container, renderOptions = {}, context = createRenderContext()) {
     const svg = d3.select(container);
     svg.selectAll("*").remove();
 
@@ -107,7 +102,7 @@ export class ImageElement {
     let clipPathId = null;
 
     if (type) {
-      clipPathId = options.clipPathId || nextClipPathId();
+      clipPathId = options.clipPathId || context.nextId("image-clip");
       const clipPath = svg
         .append("defs")
         .append("clipPath")

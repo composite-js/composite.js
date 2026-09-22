@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { computeLayout, renderComputedLayout } from "../../src/index.js";
 import { wrapper, text, stackX, Node } from "../../src/layout.js";
 import { createFakeSvg } from "../helpers/fake-svg.mjs";
 
@@ -69,17 +70,21 @@ import { createFakeSvg } from "../helpers/fake-svg.mjs";
   assert.equal(node.classTag, "wrapper");
 
   const svg = createFakeSvg();
-  node.render(svg);
+  const computed = computeLayout(node, { document: svg.ownerDocument });
+  renderComputedLayout(computed, svg);
 
   const rect = svg.querySelectorAll("rect")[0];
   assert.equal(rect.getAttribute("stroke"), "black");
   assert.equal(rect.getAttribute("fill"), "none");
   assert.equal(rect.getAttribute("x"), "0");
   assert.equal(rect.getAttribute("y"), "0");
-  assert.equal(Number(rect.getAttribute("width")), child.bbox.totalWidth() + 8);
+  assert.equal(
+    Number(rect.getAttribute("width")),
+    computed.children[0].bbox.totalWidth() + 8,
+  );
   assert.equal(
     Number(rect.getAttribute("height")),
-    child.bbox.totalHeight() + 6,
+    computed.children[0].bbox.totalHeight() + 6,
   );
   assert.equal(svg.querySelectorAll("text").length, 1);
 }

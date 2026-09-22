@@ -2,17 +2,15 @@ import { validateContainer, valueOf } from "../container/base.js";
 import { inferXYOrientation } from "../chart/orientation.js";
 import { normalizePadding } from "../chart/padding.js";
 import { getChartTypeDefinition } from "../chart/registry.js";
-import { BBox } from "../utils/bbox.js";
 import { isSvgContainer } from "../utils/dom.js";
 import { LayoutEngine } from "./engine.js";
 import {
   Node,
   NodeKind,
   assertLayoutNode,
-  replaceLayoutChildren,
+  copyOptions,
   setNodeKind,
 } from "./node.js";
-import { applySharedChartDomains } from "./shared-domain.js";
 import { contentSizedPolicy, viewportSizedPolicy } from "./size-policy.js";
 
 function assertNodeArray(nodes, label) {
@@ -36,7 +34,7 @@ function renderComposition(node, container, renderOptions) {
     : LayoutEngine.layout(node, container, renderOptions);
 }
 
-function embedChildMap(repeated, mapping, children) {
+export function embedChildMap(repeated, mapping, children) {
   const childrenByKey = new Map();
 
   repeated.domain.forEach((datum, index) => {
@@ -66,7 +64,7 @@ function assertSlotNumber(slot, index, field, options = {}) {
   }
 }
 
-function matchEmbedSlots(slots, childrenByKey) {
+export function matchEmbedSlots(slots, childrenByKey) {
   if (!Array.isArray(slots)) {
     throw new TypeError("embed container slots() must return an array.");
   }
@@ -212,13 +210,9 @@ function applyInferredPadding(chart, key, value) {
   if (chart.padding && typeof chart.padding === "object") {
     chart.padding[key] = value;
   }
-
-  if (chart.renderer?.padding && typeof chart.renderer.padding === "object") {
-    chart.renderer.padding[key] = value;
-  }
 }
 
-function inferStackPadding(nodes, direction) {
+export function inferStackPadding(nodes, direction) {
   const axis = stackSharedAxis(direction);
   const paddingKeys = stackPaddingKeys(direction);
   const entriesByField = new Map();
@@ -248,6 +242,10 @@ function inferStackPadding(nodes, direction) {
 }
 
 function validateStackLink(nodes, direction) {
+  nodes = nodes.map((node) => {
+    while (Node.isAnchor(node)) node = node.child;
+    return node;
+  });
   if (nodes.length !== 2) {
     throw new RangeError("stack link requires exactly two direct chart nodes.");
   }
@@ -285,28 +283,6 @@ export class Composition extends Node {
     super();
     setNodeKind(this, NodeKind.COMPOSITION);
     this.classTag = "composition";
-    this.children = [];
-  }
-
-  /**
-   * Updates this composition bbox from its children.
-   */
-  updateBBox() {
-    if (!this.children?.length) return;
-
-    let combinedBBox = this.children[0].bbox;
-    for (let i = 1; i < this.children.length; i++) {
-      combinedBBox = combinedBBox.union(this.children[i].bbox);
-    }
-
-    const content = combinedBBox.contentRect();
-    this.children.forEach((child) => {
-      child.bbox.translateBy(-content.x, -content.y);
-    });
-
-    const normalizedBBox = new BBox(0, 0, content.width, content.height);
-    normalizedBBox.setMargin(combinedBBox.getMargin());
-    this.bbox = normalizedBBox;
   }
 }
 
@@ -319,14 +295,13 @@ export class Stack extends Composition {
     setNodeKind(this, NodeKind.STACK);
     assertNodeArray(nodes, "nodes");
 
-    this.children = nodes;
+    this.children = Object.freeze([...nodes]);
     this.direction = direction;
     this.isStack = true;
     this.type = "stack";
     this.classTag = direction === "horizontal" ? "stackX" : "stackY";
     this.margin = normalizeStackMargin(options.margin, nodes.length);
-    this.align = options.align || [];
-    this.alignedNodes = [];
+    this.align = Object.freeze([...(options.align || [])]);
     this.link = options.link === true;
     this.sizePolicy = contentSizedPolicy;
     this.sizePolicy.validateOptions(this, options);
@@ -345,14 +320,17 @@ export class Stack extends Composition {
           ? this.align[i]
           : nodes[i];
 
-      if (alignedNode !== null && alignedNode !== undefined) {
+      if (
+        alignedNode !== null &&
+        alignedNode !== undefined &&
+        typeof alignedNode !== "string"
+      ) {
         assertLayoutNode(alignedNode, `align[${i}]`);
       }
-      this.alignedNodes.push(alignedNode);
     }
 
-    replaceLayoutChildren(this, [], nodes, "nodes");
-    inferStackPadding(nodes, direction);
+    this.margin = copyOptions(this.margin);
+    Object.freeze(this);
   }
 
   render(container, renderOptions = {}) {
@@ -368,7 +346,7 @@ export class Repeat extends Composition {
     super();
     this.isRepeat = true;
     this.type = "repeat";
-    this.domain = domain || [];
+    this.domain = Object.freeze([...(domain || [])]);
     this.func = func;
     this.paddingInner =
       options.paddingInner !== undefined ? options.paddingInner : 0.1;
@@ -389,33 +367,17 @@ export class Repeat extends Composition {
       margin: options.margin || { top: 0, right: 0, bottom: 0, left: 0 },
     };
   }
-
-  instantiateChildren(label = "repeat") {
-    const children = this.domain.map((value, index) => {
-      const node = this.func(value, index);
-      assertLayoutNode(node, `${label} child ${index}`);
-      return node;
-    });
-
-    replaceLayoutChildren(this, this.children, children, `${label} children`);
-    this.children = children;
-
-    if (this.shareDomains) {
-      applySharedChartDomains(this.children);
-    }
-
-    return this.children;
-  }
 }
 
 export class DirectionlessRepeat {
   constructor(domain, func, options = {}) {
-    this.domain = domain || [];
+    this.domain = Object.freeze([...(domain || [])]);
     this.func = func;
-    this.options = options;
+    this.options = copyOptions(options);
     this.shareDomains =
       options.shareDomains !== undefined ? options.shareDomains : true;
     this.type = "repeat";
+    Object.freeze(this);
   }
 }
 
@@ -435,42 +397,9 @@ export class Embedded extends Composition {
       height: container.height,
       margin: container.margin || { top: 0, right: 0, bottom: 0, left: 0 },
     };
-    this.embeddedChildren = [];
-  }
-
-  instantiateChildren() {
-    const children = this.repeated.domain.map((datum, index) => {
-      const child = this.repeated.func(datum, index);
-      assertLayoutNode(child, `repeat child ${index}`);
-      return child;
-    });
-
-    replaceLayoutChildren(
-      this,
-      this.embeddedChildren,
-      children,
-      "repeat children",
-    );
-    this.embeddedChildren = children;
-
-    if (this.repeated.shareDomains) {
-      applySharedChartDomains(this.embeddedChildren);
-    }
-
-    return this.embeddedChildren;
-  }
-
-  resolveSlots(size) {
-    const children = this.embeddedChildren.length
-      ? this.embeddedChildren
-      : this.instantiateChildren();
-    const slots = this.container.slots(
-      this.repeated.domain,
-      this.mapping,
-      size,
-    );
-    const childrenByKey = embedChildMap(this.repeated, this.mapping, children);
-    return matchEmbedSlots(slots, childrenByKey);
+    this.options = copyOptions(this.options);
+    this.mapping = copyOptions(mapping);
+    Object.freeze(this);
   }
 
   render(container, renderOptions = {}) {
@@ -497,6 +426,8 @@ export class RepeatX extends Repeat {
     super(domain, func, options);
     setNodeKind(this, NodeKind.REPEAT_X);
     this.classTag = "repeatX";
+    this.options = copyOptions(this.options);
+    Object.freeze(this);
   }
 
   render(container, renderOptions = {}) {
@@ -509,6 +440,8 @@ export class RepeatY extends Repeat {
     super(domain, func, options);
     setNodeKind(this, NodeKind.REPEAT_Y);
     this.classTag = "repeatY";
+    this.options = copyOptions(this.options);
+    Object.freeze(this);
   }
 
   render(container, renderOptions = {}) {

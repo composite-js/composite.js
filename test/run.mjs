@@ -13,7 +13,7 @@ const tests = [
   "./layout/wrapper-box-model.test.mjs",
   "./layout/sizing-policy.test.mjs",
   "./layout/nested-composition-render.test.mjs",
-  "./layout/node-ownership.test.mjs",
+  "./layout/computed-layout.test.mjs",
   "./layout/embed-slot.test.mjs",
   "./layout/repeat-embed.test.mjs",
   "./layout/repeat-edge.test.mjs",

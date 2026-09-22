@@ -29,7 +29,7 @@ export {
   SequenceContainer,
   sequenceContainer,
 } from "./container/index.js";
-export { LayoutEngine } from "./layout/engine.js";
+export { LayoutEngine, computeLayout } from "./layout/engine.js";
 export { DomMeasurementAdapter } from "./layout/measurement.js";
-export { Node, assertLayoutNode, isLayoutNode } from "./layout/node.js";
+export { Node, anchor, assertLayoutNode, isLayoutNode } from "./layout/node.js";
 export { LayoutRenderer, renderComputedLayout } from "./layout/renderer.js";

@@ -1,5 +1,10 @@
 import assert from "node:assert/strict";
-import { LayoutCalculator, LayoutEngine, Node } from "../../src/layout.js";
+import {
+  LayoutCalculator,
+  LayoutEngine,
+  Node,
+  wrapper,
+} from "../../src/layout.js";
 
 const originalAdapter = LayoutCalculator.getMeasurementAdapter();
 
@@ -28,11 +33,11 @@ try {
     render() {},
   };
 
-  LayoutEngine.computeLayout(node);
+  const computed = LayoutEngine.computeLayout(wrapper(node)).children[0];
 
   assert.equal(measuredElement, node.element);
   assert.deepEqual(measuredSize, { width: 120, height: 80 });
-  assert.deepEqual(node.bbox.getMargin(), {
+  assert.deepEqual(computed.bbox.getMargin(), {
     top: 1,
     right: 2,
     bottom: 3,

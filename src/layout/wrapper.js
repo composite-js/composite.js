@@ -1,11 +1,10 @@
-import { BBox } from "../utils/bbox.js";
 import { isSvgContainer } from "../utils/dom.js";
 import { LayoutEngine } from "./engine.js";
 import {
   Node,
   NodeKind,
   assertLayoutNode,
-  replaceLayoutChildren,
+  copyOptions,
   setNodeKind,
 } from "./node.js";
 import { contentSizedPolicy } from "./size-policy.js";
@@ -46,20 +45,9 @@ export class Wrapper extends Node {
       ...options,
       margin: options.margin || { top: 0, right: 0, bottom: 0, left: 0 },
     };
-    replaceLayoutChildren(this, [], [child], "wrapper children");
-  }
-
-  updateBBoxFromChild() {
-    const childWidth = this.child.bbox.totalWidth();
-    const childHeight = this.child.bbox.totalHeight();
-    const bbox = new BBox(
-      0,
-      0,
-      childWidth + this.padding.left + this.padding.right,
-      childHeight + this.padding.top + this.padding.bottom,
-    );
-    bbox.setMargin(this.options.margin);
-    this.bbox = bbox;
+    this.options = copyOptions(this.options);
+    this.padding = copyOptions(this.padding);
+    Object.freeze(this);
   }
 
   render(container, renderOptions = {}) {

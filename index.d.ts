@@ -178,6 +178,56 @@ export interface ViewportLayoutNode extends LayoutNode {
   ): void;
 }
 
+/** A read-only result for one occurrence of a reusable declaration. */
+export interface LayoutRect {
+  readonly x: number;
+  readonly y: number;
+  readonly width: number;
+  readonly height: number;
+}
+
+export interface ComputedBBox {
+  contentRect(): LayoutRect;
+  outerRect(): LayoutRect;
+  getMargin(): Readonly<Required<Margin>>;
+  totalWidth(): number;
+  totalHeight(): number;
+}
+
+export interface ComputedLayout {
+  readonly occurrenceId: string;
+  readonly spec: LayoutNode;
+  readonly classTag?: string;
+  readonly bbox: ComputedBBox;
+  readonly viewport: Readonly<ViewportRenderOptions> | null;
+  readonly children: ReadonlyArray<ComputedLayout>;
+}
+
+export interface MeasurementAdapter {
+  measureMargin(
+    element: CustomRenderable,
+    size: { width: number; height: number },
+    context: { document?: Document },
+  ): Required<Margin>;
+}
+
+export interface ComputeLayoutOptions extends LeafRenderOptions {
+  document?: Document;
+  measurementAdapter?: MeasurementAdapter;
+}
+
+/** Names one use of a node; it preserves the node's sizing capabilities. */
+export function anchor<T extends LayoutNode>(name: string, node: T): T;
+export function computeLayout(
+  spec: LayoutNode,
+  options?: ComputeLayoutOptions,
+): ComputedLayout;
+export function renderComputedLayout(
+  layout: ComputedLayout,
+  container: HTMLElement | SVGElement,
+  options?: BaseRenderOptions,
+): SVGElement;
+
 export interface CustomRenderable {
   width?: number;
   height?: number;
@@ -259,7 +309,7 @@ export interface WrapperOptions {
 
 export interface StackOptions {
   margin?: number | ReadonlyArray<number>;
-  align?: Array<LayoutNode | null | undefined>;
+  align?: Array<LayoutNode | string | null | undefined>;
   link?: boolean;
 }
 
@@ -392,6 +442,11 @@ export function chart<T extends Datum = Datum>(
 ): LeafLayoutNode;
 export function custom(
   renderable: CustomRenderable,
+  options?: CustomOptions,
+): LeafLayoutNode;
+/** Use a fresh instance for each measurement and each render. */
+export function custom(
+  createRenderable: () => CustomRenderable,
   options?: CustomOptions,
 ): LeafLayoutNode;
 export function text(config?: TextOptions): LeafLayoutNode;

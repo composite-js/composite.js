@@ -60,12 +60,12 @@ try {
       { x: "week", y: "learner", key: "id", width: 10, height: 10 },
     );
 
-    LayoutEngine.computeLayout(embedded);
-    assert.equal(embedded.bbox.contentRect().width, 120);
-    assert.equal(embedded.bbox.contentRect().height, 80);
+    const computed = LayoutEngine.computeLayout(embedded);
+    assert.equal(computed.bbox.contentRect().width, 120);
+    assert.equal(computed.bbox.contentRect().height, 80);
 
     const root = createFakeSvg();
-    LayoutRenderer.render(embedded, root);
+    LayoutRenderer.render(computed, root);
 
     const rects = root.querySelectorAll("rect");
     const groups = root.querySelectorAll("g");

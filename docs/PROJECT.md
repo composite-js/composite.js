@@ -54,7 +54,8 @@ The project is designed for browser rendering. Tests run through a Node-based ru
 
 The stable public exports are available through `src/index.js`. Implementation
 classes for charts, renderers, layout engines, and bounding boxes remain
-internal modules.
+internal modules. Public `computeLayout` and `renderComputedLayout` functions
+allow separate computation and drawing; see [Layout computation and reuse](LAYOUT.md).
 
 The composition factories describe abstract relationships. For example,
 `stackY([overview, details])` says that one view follows another vertically; it
@@ -63,7 +64,10 @@ option is supplied, the layout system uses built-in sizing, margin, padding,
 and alignment behavior. Callers can override those decisions when a specific
 design requires it.
 
-- `chart(config)` creates a leaf layout node around a chart configuration.
+- `chart(config)` creates a reusable leaf declaration around a chart configuration.
+- `computeLayout(spec, options)` returns a separate read-only tree of occurrences.
+- `renderComputedLayout(layout, container, options)` draws an existing result.
+- `anchor(name, spec)` names one use for unambiguous alignment without adding a box.
 - `custom(renderable, options)` wraps an object with a `render(container,
 options)` method as a custom leaf layout node.
 - `text(config)` creates a leaf layout node for SVG text annotations, including
@@ -154,23 +158,29 @@ to override the automatic result.
 
 ## Architecture
 
-The library is organized around a layout tree.
+The library separates reusable layout declarations, computed occurrence trees,
+and render-local state. A declaration may occur in multiple positions or views;
+each computation assigns independent geometry and inferred chart settings.
 
 Leaf nodes are created by factories in `src/layout/factory.js`. Internally,
 `chart(config)` wraps a `Chart` instance from `src/chart/chart.js`, while
-`custom(renderable)` wraps a caller-provided renderable object. The chart
+`custom(renderable)` wraps a caller-provided renderable object and
+`custom(factory)` creates isolated measurement/render instances. The chart
 resolves its chart type and delegates rendering to a chart renderer in
 `src/chart/type/`.
 
-Composition nodes live in `src/layout/composition.js`. `Stack` arranges children horizontally or vertically, `RepeatX` and `RepeatY` generate repeated children along one axis, and `Embedded` renders repeated children into slots produced by a container. All of these are layout nodes, so they can be nested.
+Composition nodes live in `src/layout/composition.js`. `Stack` arranges children horizontally or vertically, `RepeatX` and `RepeatY` describe repeated children along one axis, and `Embedded` renders repeated children into slots produced by a container. All of these are layout nodes, so they can be nested.
 
 Containers are data-driven spatial organizers for embedded layout nodes. A container provides `width`, `height`, `margin`, and `slots(data, mapping, size)`, and may render a structural background layer with `render(svg, options)`. Each slot must have a unique key matching the repeated datum key plus finite `x` and `y` coordinates relative to the container content box; optional slot dimensions must be finite and non-negative. Containers may omit data that have no valid slot, and may return slots in any order. Containers should organize repeated children rather than encode quantitative values as primary marks; use embedded `chart(...)` or `custom(...)` nodes for the visual encoding itself. Built-in containers include `sequenceContainer()` and `gridContainer()`, while `customContainer()` is the recommended extension point for user-defined slot logic.
 
 The internal layout pipeline has three main parts:
 
 - `LayoutCalculator` estimates dimensions and margins for charts and compositions.
-- `LayoutEngine` computes bounding boxes, alignment, stack positions, repeat dimensions, and embedded child layouts.
-- `LayoutRenderer` renders the computed layout tree into SVG groups and delegates leaf rendering back to each node.
+- `computed.js` expands each occurrence and resolves per-occurrence configuration.
+- `LayoutEngine` computes independent bounding boxes, alignment, stack positions,
+  repeat cell dimensions, and embedded child positions.
+- `LayoutRenderer` renders the read-only computed tree into SVG groups. Chart
+  renderers and link anchors belong to the current render, not the declaration.
 
 Rendering is D3-backed. `src/chart/chart.js` selects an internal chart renderer
 for the configured chart type through `src/chart/registry.js`, and chart renderers

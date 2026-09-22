@@ -1,4 +1,7 @@
 import {
+  anchor,
+  computeLayout,
+  renderComputedLayout,
   assertLayoutNode,
   chart,
   crossJoin,
@@ -233,3 +236,38 @@ void Chart;
 void LayoutEngine;
 void CHART_TYPE_DEFINITIONS;
 void Node;
+
+const reusable = chart(config);
+const repeatedSpec = repeatX(["a", "b"], () => reusable);
+const computed = computeLayout(repeatedSpec, {
+  width: 600,
+  height: 200,
+  measurementAdapter: {
+    measureMargin(_element, size) {
+      const width: number = size.width;
+      void width;
+      return { top: 0, right: 0, bottom: 0, left: 0 };
+    },
+  },
+});
+renderComputedLayout(computed, document.createElement("div"), {
+  debugBBox: true,
+});
+stackY(
+  [stackX([reusable, anchor("main", reusable)]), anchor("main", reusable)],
+  { align: ["main", "main"] },
+);
+anchor("repeated", repeatedSpec).render(document.createElement("div"), {
+  width: 100,
+});
+custom(() => ({ render() {} })).render(document.createElement("div"));
+const computedWidth: number = computed.children[0].bbox.contentRect().width;
+void computedWidth;
+// @ts-expect-error Computed occurrences cannot be used as declarations.
+stackX([computed]);
+// @ts-expect-error Geometry belongs to a computed occurrence.
+reusable.bbox;
+// @ts-expect-error Computed geometry is read-only.
+computed.children[0].bbox.contentRect().width = 10;
+// @ts-expect-error Resizing requires a new computation.
+renderComputedLayout(computed, document.createElement("div"), { width: 10 });

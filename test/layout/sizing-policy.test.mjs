@@ -1,5 +1,7 @@
 import assert from "node:assert/strict";
 import {
+  computeLayout,
+  renderComputedLayout,
   customContainer,
   embed,
   repeat,
@@ -72,8 +74,8 @@ try {
       { paddingInner: 0, paddingOuter: 0 },
     );
 
-    LayoutEngine.computeLayout(repeated);
-    assert.deepEqual(repeated.bbox.contentRect(), {
+    const computed = LayoutEngine.computeLayout(repeated);
+    assert.deepEqual(computed.bbox.contentRect(), {
       x: 0,
       y: 0,
       width: 60,
@@ -90,13 +92,14 @@ try {
       { width: 80, height: 40, paddingInner: 0, paddingOuter: 0 },
     );
 
-    repeated.render(container, { width: 120, height: 50 });
+    const computed = computeLayout(repeated, { width: 120, height: 50 });
+    renderComputedLayout(computed, container);
 
     const svg = container.firstElementChild;
     assert.equal(svg.getAttribute("width"), "120");
     assert.equal(svg.getAttribute("height"), "50");
-    assert.equal(repeated.bbox.contentRect().width, 120);
-    assert.equal(repeated.bbox.contentRect().height, 50);
+    assert.equal(computed.bbox.contentRect().width, 120);
+    assert.equal(computed.bbox.contentRect().height, 50);
     assert.deepEqual(
       renders.map(({ width, height }) => ({ width, height })),
       [
@@ -130,14 +133,15 @@ try {
       { key: "id" },
     );
 
-    embedded.render(container, { width: 200, height: 100 });
+    const computed = computeLayout(embedded, { width: 200, height: 100 });
+    renderComputedLayout(computed, container);
 
     const svg = container.firstElementChild;
     assert.equal(svg.getAttribute("width"), "200");
     assert.equal(svg.getAttribute("height"), "100");
     assert.deepEqual(resolvedSize, { width: 200, height: 100 });
-    assert.equal(embedded.bbox.contentRect().width, 200);
-    assert.equal(embedded.bbox.contentRect().height, 100);
+    assert.equal(computed.bbox.contentRect().width, 200);
+    assert.equal(computed.bbox.contentRect().height, 100);
   });
 } finally {
   LayoutCalculator.setMeasurementAdapter(originalAdapter);

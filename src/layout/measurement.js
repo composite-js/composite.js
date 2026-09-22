@@ -1,3 +1,5 @@
+import { createRenderContext } from "./render-context.js";
+
 /**
  * DOM-backed measurement adapter for SVG margin estimation.
  */
@@ -31,11 +33,15 @@ export class DomMeasurementAdapter {
     document.body.appendChild(tempSvg);
 
     try {
-      element.render(tempSvg, {
-        width,
-        height,
-        margin: zeroMargin,
-      });
+      element.render(
+        tempSvg,
+        {
+          width,
+          height,
+          margin: zeroMargin,
+        },
+        createRenderContext(),
+      );
 
       if (typeof tempSvg.getBBox !== "function") {
         throw new Error(

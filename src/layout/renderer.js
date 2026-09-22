@@ -1,21 +1,8 @@
 import * as d3 from "d3";
+import { isSvgContainer } from "../utils/dom.js";
 import { Node } from "./node.js";
-import { resolveRenderSize } from "./size-policy.js";
-
-const ZERO_MARGIN = { top: 0, right: 0, bottom: 0, left: 0 };
-
-function renderedSize(node, renderSize = {}) {
-  return resolveRenderSize(node, renderSize, node.bbox.contentRect());
-}
-
-function embeddedChildPlacement(slot, child) {
-  const renderSize = resolveRenderSize(child, slot, child.bbox.contentRect());
-  return {
-    x: slot.x - renderSize.width / 2,
-    y: slot.y - renderSize.height / 2,
-    renderSize,
-  };
-}
+import { createRenderContext } from "./render-context.js";
+import { assertComputedLayout } from "./computed.js";
 
 function offsetPoint(point, x, y) {
   return { x: point.x + x, y: point.y + y };
@@ -68,211 +55,89 @@ function linkAnchorMap(chartNode, linkAnchors, channel) {
 }
 
 export class LayoutRenderer {
-  static renderLeaf(node, container, x, y, renderSize) {
-    const margin = renderSize.margin || node.bbox.getMargin();
-    const { width, height } = renderedSize(node, renderSize);
-    const group = container
-      .append("g")
-      .attr("class", node.classTag)
-      .attr("transform", `translate(${x - margin.left}, ${y - margin.top})`);
-    const renderResult = node.render(group.node(), {
-      width,
-      height,
-      margin,
-    });
-
-    return {
-      node,
-      linkAnchors: offsetLinkAnchors(
-        renderResult?.linkAnchors,
-        x - margin.left,
-        y - margin.top,
-      ),
-    };
-  }
-
-  static renderStack(node, container, x, y) {
-    const group = container
-      .append("g")
-      .attr("class", node.classTag)
-      .attr("transform", `translate(${x}, ${y})`);
-    const childMetadata = node.children.map((child) =>
-      this.renderTree(
-        child,
-        group,
-        child.bbox.contentRect().x,
-        child.bbox.contentRect().y,
-      ),
-    );
-
-    if (node.link) {
-      this.renderStackLinks(node, group, childMetadata);
-    }
-
-    return { node, children: childMetadata };
-  }
-
-  static renderWrapper(node, container, x, y) {
+  static renderLeaf(node, container, x, y, context) {
     const margin = node.bbox.getMargin();
     const { width, height } = node.bbox.contentRect();
     const group = container
       .append("g")
       .attr("class", node.classTag)
       .attr("transform", `translate(${x - margin.left}, ${y - margin.top})`);
-    const childOuterWidth = Math.max(
-      0,
-      width - node.padding.left - node.padding.right,
+    const element = node.createElement ? node.createElement() : node.element;
+    if (!element || typeof element.render !== "function") {
+      throw new TypeError(
+        "custom factory must return an object with a render method.",
+      );
+    }
+    const result = element.render(
+      group.node(),
+      { width, height, margin },
+      context,
     );
-    const childOuterHeight = Math.max(
-      0,
-      height - node.padding.top - node.padding.bottom,
-    );
-    const childMargin = node.child.bbox.getMargin();
-    const childWidth = Math.max(
-      0,
-      childOuterWidth - childMargin.left - childMargin.right,
-    );
-    const childHeight = Math.max(
-      0,
-      childOuterHeight - childMargin.top - childMargin.bottom,
-    );
-    const rectX = margin.left;
-    const rectY = margin.top;
+    return {
+      node,
+      linkAnchors: offsetLinkAnchors(
+        result?.linkAnchors,
+        x - margin.left,
+        y - margin.top,
+      ),
+    };
+  }
 
-    if (node.fill !== "none") {
+  static renderTree(
+    node,
+    container,
+    x = 0,
+    y = 0,
+    context = createRenderContext(),
+  ) {
+    if (node.element) return this.renderLeaf(node, container, x, y, context);
+    if (Node.isRepeat(node) && !node.children.length)
+      return { node, children: [] };
+    const group = container
+      .append("g")
+      .attr("class", node.classTag)
+      .attr("transform", `translate(${x}, ${y})`);
+    const { width, height } = node.bbox.contentRect();
+
+    if (Node.isWrapper(node) && node.fill !== "none") {
       group
         .append("rect")
         .attr("class", "wrapper-background")
-        .attr("x", rectX)
-        .attr("y", rectY)
+        .attr("x", 0)
+        .attr("y", 0)
         .attr("width", width)
         .attr("height", height)
         .attr("fill", node.fill)
         .attr("stroke", "none");
     }
-
-    const childMetadata = this.renderTree(
-      node.child,
-      group,
-      rectX + node.padding.left + childMargin.left,
-      rectY + node.padding.top + childMargin.top,
-      { width: childWidth, height: childHeight },
-    );
-    const border = group
-      .append("rect")
-      .attr("class", "wrapper-border")
-      .attr("x", rectX)
-      .attr("y", rectY)
-      .attr("width", width)
-      .attr("height", height)
-      .attr("fill", "none")
-      .attr("stroke", node.stroke)
-      .attr("stroke-width", node.strokeWidth);
-
-    if (node.strokeDasharray !== undefined) {
-      border.attr("stroke-dasharray", node.strokeDasharray);
+    if (Node.isEmbedded(node) && typeof node.container.render === "function") {
+      node.container.render(
+        group.node(),
+        { width, height, margin: { top: 0, right: 0, bottom: 0, left: 0 } },
+        context,
+      );
     }
-
-    return { node, children: [childMetadata] };
-  }
-
-  static renderRepeat(node, container, x, y, renderSize) {
-    if (node.domain.length === 0) {
-      return { node, children: [] };
-    }
-
-    const margin = node.bbox.getMargin();
-    const { width, height } = renderedSize(node, renderSize);
-    const group = container
-      .append("g")
-      .attr("class", node.classTag)
-      .attr("transform", `translate(${x - margin.left}, ${y - margin.top})`);
-    const horizontal = Node.isRepeatX(node);
-    const scale = d3
-      .scaleBand()
-      .domain(node.domain)
-      .range([0, horizontal ? width : height])
-      .paddingInner(node.paddingInner)
-      .paddingOuter(node.paddingOuter);
-    const bandwidth = scale.bandwidth();
-    const children = [];
-
-    node.domain.forEach((value, index) => {
-      const child = node.children[index];
-      const childMargin = child.element ? ZERO_MARGIN : child.bbox.getMargin();
-      const cellWidth = horizontal ? bandwidth : width;
-      const cellHeight = horizontal ? height : bandwidth;
-      const childWidth = Math.max(
-        0,
-        cellWidth - childMargin.left - childMargin.right,
-      );
-      const childHeight = Math.max(
-        0,
-        cellHeight - childMargin.top - childMargin.bottom,
-      );
-      const childX =
-        margin.left + (horizontal ? scale(value) : 0) + childMargin.left;
-      const childY =
-        margin.top + (horizontal ? 0 : scale(value)) + childMargin.top;
-
-      children.push(
-        this.renderTree(child, group, childX, childY, {
-          width: childWidth,
-          height: childHeight,
-          ...(child.element ? { margin: ZERO_MARGIN } : {}),
-        }),
-      );
+    const children = node.children.map((child) => {
+      const rect = child.bbox.contentRect();
+      return this.renderTree(child, group, rect.x, rect.y, context);
     });
-
-    return { node, children };
-  }
-
-  static renderEmbedded(node, container, x, y, renderSize) {
-    const margin = node.bbox.getMargin();
-    const { width, height } = renderedSize(node, renderSize);
-    const group = container
-      .append("g")
-      .attr("class", node.classTag)
-      .attr("transform", `translate(${x - margin.left}, ${y - margin.top})`);
-
-    if (typeof node.container.render === "function") {
-      node.container.render(group.node(), { width, height, margin });
-    }
-
-    const children = node
-      .resolveSlots({ width, height })
-      .map(({ slot, child }) => {
-        const placement = embeddedChildPlacement(slot, child);
-        return this.renderTree(
-          child,
-          group,
-          margin.left + placement.x,
-          margin.top + placement.y,
-          placement.renderSize,
-        );
-      });
-
-    return { node, children };
-  }
-
-  static renderTree(node, container, x = 0, y = 0, renderSize = {}) {
-    if (Node.isStack(node)) {
-      return this.renderStack(node, container, x, y);
-    }
-
     if (Node.isWrapper(node)) {
-      return this.renderWrapper(node, container, x, y);
+      const border = group
+        .append("rect")
+        .attr("class", "wrapper-border")
+        .attr("x", 0)
+        .attr("y", 0)
+        .attr("width", width)
+        .attr("height", height)
+        .attr("fill", "none")
+        .attr("stroke", node.stroke)
+        .attr("stroke-width", node.strokeWidth);
+      if (node.strokeDasharray !== undefined)
+        border.attr("stroke-dasharray", node.strokeDasharray);
     }
-
-    if (Node.isRepeat(node)) {
-      return this.renderRepeat(node, container, x, y, renderSize);
-    }
-
-    if (Node.isEmbedded(node)) {
-      return this.renderEmbedded(node, container, x, y, renderSize);
-    }
-
-    return this.renderLeaf(node, container, x, y, renderSize);
+    if (Node.isStack(node) && node.link)
+      this.renderStackLinks(node, group, children);
+    return { node, children };
   }
 
   static renderStackLinks(stack, group, childMetadata) {
@@ -319,26 +184,20 @@ export class LayoutRenderer {
     });
   }
 
-  static renderTreeBBoxOnly(node, container, x = 0, y = 0, renderSize = {}) {
+  static renderTreeBBoxOnly(node, container, x = 0, y = 0) {
     const group = container
       .append("g")
       .attr("class", `${node.classTag} debug-bbox`)
       .attr("data-layout-debug", "bbox");
-
-    const renderBBox = (
-      current,
-      contentX,
-      contentY,
-      currentRenderSize = {},
-    ) => {
+    const visit = (current, contentX, contentY) => {
+      const { width, height } = current.bbox.contentRect();
       const margin = current.bbox.getMargin();
-      const effectiveSize = renderedSize(current, currentRenderSize);
       group
         .append("rect")
         .attr("x", contentX - margin.left)
         .attr("y", contentY - margin.top)
-        .attr("width", effectiveSize.width + margin.left + margin.right)
-        .attr("height", effectiveSize.height + margin.top + margin.bottom)
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
         .attr("fill", "none")
         .attr("stroke", "red")
         .attr("stroke-dasharray", "4 2");
@@ -346,61 +205,21 @@ export class LayoutRenderer {
         .append("rect")
         .attr("x", contentX)
         .attr("y", contentY)
-        .attr("width", effectiveSize.width)
-        .attr("height", effectiveSize.height)
+        .attr("width", width)
+        .attr("height", height)
         .attr("fill", "none")
         .attr("stroke", "blue")
         .attr("stroke-dasharray", "4 2");
-
-      if (Node.isStack(current)) {
-        current.children.forEach((child) => {
-          const childRect = child.bbox.contentRect();
-          renderBBox(child, contentX + childRect.x, contentY + childRect.y);
-        });
-      } else if (Node.isWrapper(current)) {
-        const childMargin = current.child.bbox.getMargin();
-        renderBBox(
-          current.child,
-          contentX + current.padding.left + childMargin.left,
-          contentY + current.padding.top + childMargin.top,
-        );
-      } else if (Node.isRepeat(current)) {
-        const horizontal = Node.isRepeatX(current);
-        const scale = d3
-          .scaleBand()
-          .domain(current.domain)
-          .range([0, horizontal ? effectiveSize.width : effectiveSize.height])
-          .paddingInner(current.paddingInner)
-          .paddingOuter(current.paddingOuter);
-
-        current.domain.forEach((value, index) => {
-          const child = current.children[index];
-          const childMargin = child.element
-            ? ZERO_MARGIN
-            : child.bbox.getMargin();
-          renderBBox(
-            child,
-            contentX + (horizontal ? scale(value) : 0) + childMargin.left,
-            contentY + (horizontal ? 0 : scale(value)) + childMargin.top,
-          );
-        });
-      } else if (Node.isEmbedded(current)) {
-        current.resolveSlots(effectiveSize).forEach(({ slot, child }) => {
-          const placement = embeddedChildPlacement(slot, child);
-          renderBBox(
-            child,
-            contentX + placement.x,
-            contentY + placement.y,
-            placement.renderSize,
-          );
-        });
-      }
+      current.children.forEach((child) => {
+        const rect = child.bbox.contentRect();
+        visit(child, contentX + rect.x, contentY + rect.y);
+      });
     };
-
-    renderBBox(node, x, y, renderSize);
+    visit(node, x, y);
   }
 
   static render(root, container, options = {}) {
+    assertComputedLayout(root);
     const outer = root.bbox.outerRect();
     const debugBBox = options.debugBBox === true;
 
@@ -426,6 +245,7 @@ export class LayoutRenderer {
   }
 
   static renderInto(root, container, options = {}) {
+    assertComputedLayout(root);
     const outer = root.bbox.outerRect();
     const debugBBox = options.debugBBox === true;
 
@@ -447,7 +267,18 @@ export class LayoutRenderer {
 }
 
 export function renderComputedLayout(root, container, options = {}) {
-  return LayoutRenderer.render(root, container, options);
+  if (
+    options.width !== undefined ||
+    options.height !== undefined ||
+    options.margin !== undefined
+  ) {
+    throw new TypeError(
+      "Layout dimensions are fixed; call computeLayout() again to resize.",
+    );
+  }
+  return isSvgContainer(container)
+    ? LayoutRenderer.renderInto(root, container, options)
+    : LayoutRenderer.render(root, container, options);
 }
 
 export function renderComputedLayoutInto(root, container, options = {}) {

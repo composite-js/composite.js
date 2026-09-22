@@ -131,7 +131,7 @@ Object.entries(rendererByMark).forEach(([mark, rendererName]) => {
   const chart = new Chart(configByMark[mark]);
 
   assert.equal(
-    chart.renderer.constructor.name,
+    chart._createRenderer().constructor.name,
     rendererName,
     `${mark} should dispatch to ${rendererName}`,
   );
@@ -152,7 +152,7 @@ for (const padding of [0.25, 0]) {
   };
 
   assert.deepEqual(chart.padding, expected);
-  assert.deepEqual(chart.renderer.padding, expected);
+  assert.deepEqual(chart._createRenderer().padding, expected);
 }
 
 {

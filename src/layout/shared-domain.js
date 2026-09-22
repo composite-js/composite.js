@@ -346,11 +346,7 @@ function mergeDescriptors(descriptors) {
 }
 
 function isChartNode(node) {
-  return (
-    Node.isChart(node) &&
-    node.element &&
-    typeof node.element._applySharedDomains === "function"
-  );
+  return Node.isChart(node) && node.element;
 }
 
 export function applySharedChartDomains(nodes) {
@@ -377,7 +373,11 @@ export function applySharedChartDomains(nodes) {
 
     descriptors.forEach(({ chart, explicit }) => {
       if (explicit) return;
-      chart._applySharedDomains({ [domainKey(channel)]: sharedDomain });
+      chart.encoding = {
+        ...chart.encoding,
+        [domainKey(channel)]: [...sharedDomain],
+      };
+      chart.options = { ...chart.options, encoding: chart.encoding };
     });
   });
 }

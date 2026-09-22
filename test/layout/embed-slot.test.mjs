@@ -41,9 +41,9 @@ function computeAndRender(container, data, mapping = { key: "id" }) {
     repeat(data, (datum) => fakeLeaf(datum.id)),
     mapping,
   );
-  LayoutEngine.computeLayout(embedded);
+  const computed = LayoutEngine.computeLayout(embedded);
   const root = createFakeSvg();
-  LayoutRenderer.render(embedded, root);
+  LayoutRenderer.render(computed, root);
   return root;
 }
 
@@ -102,14 +102,19 @@ try {
     const kept = findLeaf(root, "keep");
     assert.equal(
       kept.parentNode.getAttribute("transform"),
-      "translate(55, 55)",
+      "translate(45, 35)",
     );
 
+    // The embed group owns the margin; child positions are content-local.
+    assert.equal(
+      kept.parentNode.parentNode.getAttribute("transform"),
+      "translate(10, 20)",
+    );
     const gridCell = root
       .querySelectorAll("rect")
       .find((rect) => rect.getAttribute("data-id") === null);
-    assert.equal(gridCell.getAttribute("x"), "10");
-    assert.equal(gridCell.getAttribute("y"), "20");
+    assert.equal(gridCell.getAttribute("x"), "0");
+    assert.equal(gridCell.getAttribute("y"), "0");
   }
 
   {

@@ -5,10 +5,11 @@ import {
   Node,
   RepeatX,
   RepeatY,
-  Stack,
   stackX,
   stackY,
 } from "../../src/layout.js";
+
+import { createFakeSvg } from "../helpers/fake-svg.mjs";
 
 const originalEstimateMargin = LayoutCalculator.estimateMargin;
 const originalSuggestWidthHeight = LayoutCalculator.suggestWidthHeight;
@@ -35,7 +36,7 @@ function globalContentRect(node, target, offsetX = 0, offsetY = 0) {
   const x = offsetX + rect.x;
   const y = offsetY + rect.y;
 
-  if (node === target) {
+  if (node.spec === target) {
     return {
       x,
       y,
@@ -44,7 +45,7 @@ function globalContentRect(node, target, offsetX = 0, offsetY = 0) {
     };
   }
 
-  if (node instanceof Stack) {
+  if (node.children) {
     for (const child of node.children) {
       const result = globalContentRect(child, target, x, y);
       if (result) return result;
@@ -54,8 +55,8 @@ function globalContentRect(node, target, offsetX = 0, offsetY = 0) {
   return null;
 }
 
-function requireGlobalContentRect(root, target) {
-  const rect = globalContentRect(root, target);
+function requireGlobalContentRect(computed, target) {
+  const rect = globalContentRect(computed, target);
   assert.ok(rect, `Expected to find ${target.classTag}`);
   return rect;
 }
@@ -68,14 +69,11 @@ function requireGlobalContentRect(root, target) {
     renderOptions = options;
   };
 
-  node.render(
-    {},
-    {
-      width: 32,
-      height: 48,
-      margin: { top: 1, right: 2, bottom: 3, left: 4 },
-    },
-  );
+  node.render(createFakeSvg(), {
+    width: 32,
+    height: 48,
+    margin: { top: 1, right: 2, bottom: 3, left: 4 },
+  });
 
   assert.equal(renderOptions.width, 32);
   assert.equal(renderOptions.height, 48);
@@ -106,10 +104,10 @@ try {
 
     const root = stackY([first, second], { margin: 8 });
 
-    LayoutEngine.computeLayout(root);
+    const computed = LayoutEngine.computeLayout(root);
 
-    const firstRect = requireGlobalContentRect(root, first);
-    const secondRect = requireGlobalContentRect(root, second);
+    const firstRect = requireGlobalContentRect(computed, first);
+    const secondRect = requireGlobalContentRect(computed, second);
 
     assert.equal(secondRect.y - (firstRect.y + firstRect.height), 8);
   }
@@ -128,10 +126,10 @@ try {
 
     const root = stackX([first, second], { margin: 8 });
 
-    LayoutEngine.computeLayout(root);
+    const computed = LayoutEngine.computeLayout(root);
 
-    const firstRect = requireGlobalContentRect(root, first);
-    const secondRect = requireGlobalContentRect(root, second);
+    const firstRect = requireGlobalContentRect(computed, first);
+    const secondRect = requireGlobalContentRect(computed, second);
 
     assert.equal(secondRect.x - (firstRect.x + firstRect.width), 8);
   }
@@ -155,11 +153,11 @@ try {
 
     const root = stackY([first, second, third], { margin: [8, 20] });
 
-    LayoutEngine.computeLayout(root);
+    const computed = LayoutEngine.computeLayout(root);
 
-    const firstRect = requireGlobalContentRect(root, first);
-    const secondRect = requireGlobalContentRect(root, second);
-    const thirdRect = requireGlobalContentRect(root, third);
+    const firstRect = requireGlobalContentRect(computed, first);
+    const secondRect = requireGlobalContentRect(computed, second);
+    const thirdRect = requireGlobalContentRect(computed, third);
 
     assert.equal(secondRect.y - (firstRect.y + firstRect.height), 8);
     assert.equal(thirdRect.y - (secondRect.y + secondRect.height), 20);
@@ -190,12 +188,12 @@ try {
     const root = stackX([first, second, third, fourth], { margin: margins });
     margins[0] = 99;
 
-    LayoutEngine.computeLayout(root);
+    const computed = LayoutEngine.computeLayout(root);
 
-    const firstRect = requireGlobalContentRect(root, first);
-    const secondRect = requireGlobalContentRect(root, second);
-    const thirdRect = requireGlobalContentRect(root, third);
-    const fourthRect = requireGlobalContentRect(root, fourth);
+    const firstRect = requireGlobalContentRect(computed, first);
+    const secondRect = requireGlobalContentRect(computed, second);
+    const thirdRect = requireGlobalContentRect(computed, third);
+    const fourthRect = requireGlobalContentRect(computed, fourth);
 
     assert.equal(secondRect.x - (firstRect.x + firstRect.width), 4);
     assert.equal(thirdRect.x - (secondRect.x + secondRect.width), 12);
@@ -211,9 +209,9 @@ try {
 
     const root = stackX([only], { margin: [] });
 
-    LayoutEngine.computeLayout(root);
+    const computed = LayoutEngine.computeLayout(root);
 
-    const onlyRect = requireGlobalContentRect(root, only);
+    const onlyRect = requireGlobalContentRect(computed, only);
     assert.equal(onlyRect.width, 100);
     assert.equal(onlyRect.height, 50);
   }
@@ -270,12 +268,12 @@ try {
       align: [matrix, matrix],
     });
 
-    LayoutEngine.computeLayout(root);
+    const computed = LayoutEngine.computeLayout(root);
 
-    const topRect = requireGlobalContentRect(root, topBar);
-    const matrixRect = requireGlobalContentRect(root, matrix);
-    const compositeRect = requireGlobalContentRect(root, composite);
-    const rightRect = requireGlobalContentRect(root, rightChart);
+    const topRect = requireGlobalContentRect(computed, topBar);
+    const matrixRect = requireGlobalContentRect(computed, matrix);
+    const compositeRect = requireGlobalContentRect(computed, composite);
+    const rightRect = requireGlobalContentRect(computed, rightChart);
 
     assert.equal(topRect.x, matrixRect.x);
     assert.equal(topRect.width, matrixRect.width);
@@ -322,12 +320,12 @@ try {
       align: [matrix, matrix],
     });
 
-    LayoutEngine.computeLayout(root);
+    const computed = LayoutEngine.computeLayout(root);
 
-    const leftRect = requireGlobalContentRect(root, left);
-    const matrixRect = requireGlobalContentRect(root, matrix);
-    const nestedRect = requireGlobalContentRect(root, nested);
-    const bottomRect = requireGlobalContentRect(root, bottom);
+    const leftRect = requireGlobalContentRect(computed, left);
+    const matrixRect = requireGlobalContentRect(computed, matrix);
+    const nestedRect = requireGlobalContentRect(computed, nested);
+    const bottomRect = requireGlobalContentRect(computed, bottom);
 
     assert.equal(leftRect.y, matrixRect.y);
     assert.equal(leftRect.height, matrixRect.height);
@@ -360,10 +358,10 @@ try {
       align: [matrix, matrix, matrix],
     });
 
-    LayoutEngine.computeLayout(root);
+    const computed = LayoutEngine.computeLayout(root);
 
-    const matrixRect = requireGlobalContentRect(root, matrix);
-    const pieRowRect = requireGlobalContentRect(root, pieRow);
+    const matrixRect = requireGlobalContentRect(computed, matrix);
+    const pieRowRect = requireGlobalContentRect(computed, pieRow);
 
     assert.equal(pieRowRect.x, matrixRect.x);
     assert.equal(pieRowRect.width, matrixRect.width);
@@ -379,9 +377,9 @@ try {
       }),
     );
 
-    LayoutEngine.computeLayout(repeatColumn);
+    const computed = LayoutEngine.computeLayout(repeatColumn);
 
-    const repeatRect = repeatColumn.bbox.contentRect();
+    const repeatRect = computed.bbox.contentRect();
 
     assert.equal(repeatRect.width, 72);
     assert.ok(

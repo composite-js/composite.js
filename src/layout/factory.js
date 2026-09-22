@@ -1,41 +1,54 @@
 import { Chart } from "../chart/chart.js";
 import { ImageElement } from "./image.js";
 import { TextElement } from "./text.js";
-import { Node, NodeKind, setNodeKind } from "./node.js";
+import { Node, NodeKind, setNodeKind, copyOptions } from "./node.js";
 import { RepeatX, RepeatY, Stack } from "./composition.js";
 import { wrapper as createWrapper } from "./wrapper.js";
+
+function freezeLeaf(node) {
+  for (const key of ["options", "encoding", "padding", "margin"]) {
+    if (node.element[key]) node.element[key] = copyOptions(node.element[key]);
+  }
+  Object.freeze(node.element);
+  return Object.freeze(node);
+}
 
 export function chart(config) {
   const node = new Node();
   setNodeKind(node, NodeKind.CHART);
-  node.element = new Chart(config);
+  node.element = new Chart(copyOptions(config));
   node.classTag = "chart";
-  return node;
+  return freezeLeaf(node);
 }
 
 export function text(config = {}) {
   const node = new Node();
-  node.element = new TextElement(config);
+  node.element = new TextElement(copyOptions(config));
   node.classTag = "text";
-  return node;
+  return freezeLeaf(node);
 }
 
 export function image(config = {}) {
   const node = new Node();
-  node.element = new ImageElement(config);
+  node.element = new ImageElement(copyOptions(config));
   node.classTag = "image";
-  return node;
+  return freezeLeaf(node);
 }
 
 export function custom(renderable, options = {}) {
-  if (!renderable || typeof renderable.render !== "function") {
+  if (
+    typeof renderable !== "function" &&
+    (!renderable || typeof renderable.render !== "function")
+  ) {
     throw new TypeError("custom() requires a renderable with a render method.");
   }
 
   const node = new Node();
-  node.element = renderable;
+  if (typeof renderable === "function") node.createElement = renderable;
+  else node.element = renderable;
+  node.options = copyOptions(options);
   node.classTag = options.classTag || "custom";
-  return node;
+  return Object.freeze(node);
 }
 
 export function wrapper(node, options) {

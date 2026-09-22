@@ -1,5 +1,12 @@
 import assert from "node:assert/strict";
-import { chart, stackX, stackY } from "../../src/index.js";
+import { chart, stackX, stackY, computeLayout } from "../../src/index.js";
+
+const measurementAdapter = {
+  measureMargin: () => ({ top: 0, right: 0, bottom: 0, left: 0 }),
+};
+function resolved(layout, spec) {
+  return layout.children.find((child) => child.spec === spec).element;
+}
 
 const categories = ["A", "B"];
 const data = [
@@ -75,42 +82,42 @@ function horizontalPac(overrides = {}) {
   const bars = horizontalBars();
   const pac = verticalPac();
 
-  stackX([bars, pac]);
+  const computed = computeLayout(stackX([bars, pac]), { measurementAdapter });
 
-  assert.equal(pac.element.padding.yInner, 0.22);
-  assert.equal(pac.element.padding.yOuter, 0.08);
-  assert.equal(pac.element.renderer.padding.yInner, 0.22);
-  assert.equal(pac.element.renderer.padding.yOuter, 0.08);
-  assert.equal(pac.element.options.padding, undefined);
+  assert.equal(resolved(computed, pac).padding.yInner, 0.22);
+  assert.equal(resolved(computed, pac).padding.yOuter, 0.08);
+  assert.equal(resolved(computed, pac)._createRenderer().padding.yInner, 0.22);
+  assert.equal(resolved(computed, pac)._createRenderer().padding.yOuter, 0.08);
+  assert.equal(resolved(computed, pac).options.padding, undefined);
 }
 
 {
   const bars = horizontalBars({ padding: 0 });
   const pac = verticalPac();
 
-  stackX([bars, pac]);
+  const computed = computeLayout(stackX([bars, pac]), { measurementAdapter });
 
-  assert.equal(bars.element.padding.yInner, 0);
-  assert.equal(bars.element.padding.yOuter, 0);
-  assert.equal(pac.element.padding.yInner, 0);
-  assert.equal(pac.element.padding.yOuter, 0);
-  assert.equal(pac.element.renderer.padding.yInner, 0);
-  assert.equal(pac.element.renderer.padding.yOuter, 0);
-  assert.equal(bars.element.options.padding, 0);
-  assert.equal(pac.element.options.padding, undefined);
+  assert.equal(resolved(computed, bars).padding.yInner, 0);
+  assert.equal(resolved(computed, bars).padding.yOuter, 0);
+  assert.equal(resolved(computed, pac).padding.yInner, 0);
+  assert.equal(resolved(computed, pac).padding.yOuter, 0);
+  assert.equal(resolved(computed, pac)._createRenderer().padding.yInner, 0);
+  assert.equal(resolved(computed, pac)._createRenderer().padding.yOuter, 0);
+  assert.equal(resolved(computed, bars).options.padding, 0);
+  assert.equal(resolved(computed, pac).options.padding, undefined);
 }
 
 {
   const bars = verticalBars();
   const pac = horizontalPac();
 
-  stackY([bars, pac]);
+  const computed = computeLayout(stackY([bars, pac]), { measurementAdapter });
 
-  assert.equal(pac.element.padding.xInner, 0.31);
-  assert.equal(pac.element.padding.xOuter, 0.04);
-  assert.equal(pac.element.renderer.padding.xInner, 0.31);
-  assert.equal(pac.element.renderer.padding.xOuter, 0.04);
-  assert.equal(pac.element.options.padding, undefined);
+  assert.equal(resolved(computed, pac).padding.xInner, 0.31);
+  assert.equal(resolved(computed, pac).padding.xOuter, 0.04);
+  assert.equal(resolved(computed, pac)._createRenderer().padding.xInner, 0.31);
+  assert.equal(resolved(computed, pac)._createRenderer().padding.xOuter, 0.04);
+  assert.equal(resolved(computed, pac).options.padding, undefined);
 }
 
 {
@@ -119,13 +126,13 @@ function horizontalPac(overrides = {}) {
     padding: { yInner: 0.4 },
   });
 
-  stackX([bars, pac]);
+  const computed = computeLayout(stackX([bars, pac]), { measurementAdapter });
 
-  assert.equal(pac.element.padding.yInner, 0.4);
-  assert.equal(pac.element.padding.yOuter, 0.08);
-  assert.equal(pac.element.renderer.padding.yInner, 0.4);
-  assert.equal(pac.element.renderer.padding.yOuter, 0.08);
-  assert.deepEqual(pac.element.options.padding, { yInner: 0.4 });
+  assert.equal(resolved(computed, pac).padding.yInner, 0.4);
+  assert.equal(resolved(computed, pac).padding.yOuter, 0.08);
+  assert.equal(resolved(computed, pac)._createRenderer().padding.yInner, 0.4);
+  assert.equal(resolved(computed, pac)._createRenderer().padding.yOuter, 0.08);
+  assert.deepEqual(resolved(computed, pac).options.padding, { yInner: 0.4 });
 }
 
 {
@@ -150,12 +157,14 @@ function horizontalPac(overrides = {}) {
   });
   const pac = verticalPac();
 
-  stackX([bars, pac, box]);
+  const computed = computeLayout(stackX([bars, pac, box]), {
+    measurementAdapter,
+  });
 
-  assert.equal(pac.element.padding.yInner, 0.1);
-  assert.equal(pac.element.padding.yOuter, 0.08);
-  assert.equal(pac.element.renderer.padding.yInner, 0.1);
-  assert.equal(pac.element.renderer.padding.yOuter, 0.08);
+  assert.equal(resolved(computed, pac).padding.yInner, 0.1);
+  assert.equal(resolved(computed, pac).padding.yOuter, 0.08);
+  assert.equal(resolved(computed, pac)._createRenderer().padding.yInner, 0.1);
+  assert.equal(resolved(computed, pac)._createRenderer().padding.yOuter, 0.08);
 }
 
 {
@@ -182,12 +191,14 @@ function horizontalPac(overrides = {}) {
   });
   const pac = verticalPac();
 
-  stackX([bars, pac, box]);
+  const computed = computeLayout(stackX([bars, pac, box]), {
+    measurementAdapter,
+  });
 
-  assert.equal(pac.element.padding.yInner, 0.1);
-  assert.equal(pac.element.padding.yOuter, 0.08);
-  assert.equal(pac.element.renderer.padding.yInner, 0.1);
-  assert.equal(pac.element.renderer.padding.yOuter, 0.08);
+  assert.equal(resolved(computed, pac).padding.yInner, 0.1);
+  assert.equal(resolved(computed, pac).padding.yOuter, 0.08);
+  assert.equal(resolved(computed, pac)._createRenderer().padding.yInner, 0.1);
+  assert.equal(resolved(computed, pac)._createRenderer().padding.yOuter, 0.08);
 }
 
 {
@@ -205,12 +216,20 @@ function horizontalPac(overrides = {}) {
     },
   });
 
-  stackX([bars, bubble]);
+  const computed = computeLayout(stackX([bars, bubble]), {
+    measurementAdapter,
+  });
 
-  assert.equal(bubble.element.padding.yInner, 0.1);
-  assert.equal(bubble.element.padding.yOuter, 0.1);
-  assert.equal(bubble.element.renderer.padding.yInner, 0.1);
-  assert.equal(bubble.element.renderer.padding.yOuter, 0.1);
+  assert.equal(resolved(computed, bubble).padding.yInner, 0.1);
+  assert.equal(resolved(computed, bubble).padding.yOuter, 0.1);
+  assert.equal(
+    resolved(computed, bubble)._createRenderer().padding.yInner,
+    0.1,
+  );
+  assert.equal(
+    resolved(computed, bubble)._createRenderer().padding.yOuter,
+    0.1,
+  );
 }
 
 {
@@ -227,12 +246,12 @@ function horizontalPac(overrides = {}) {
     },
   });
 
-  stackX([bars, pac]);
+  const computed = computeLayout(stackX([bars, pac]), { measurementAdapter });
 
-  assert.equal(pac.element.padding.yInner, 0.1);
-  assert.equal(pac.element.padding.yOuter, 0.1);
-  assert.equal(pac.element.renderer.padding.yInner, 0.1);
-  assert.equal(pac.element.renderer.padding.yOuter, 0.1);
+  assert.equal(resolved(computed, pac).padding.yInner, 0.1);
+  assert.equal(resolved(computed, pac).padding.yOuter, 0.1);
+  assert.equal(resolved(computed, pac)._createRenderer().padding.yInner, 0.1);
+  assert.equal(resolved(computed, pac)._createRenderer().padding.yOuter, 0.1);
 }
 
 {
@@ -263,10 +282,18 @@ function horizontalPac(overrides = {}) {
     },
   });
 
-  stackX([bars, matrix]);
+  const computed = computeLayout(stackX([bars, matrix]), {
+    measurementAdapter,
+  });
 
-  assert.equal(matrix.element.padding.yInner, 0.22);
-  assert.equal(matrix.element.padding.yOuter, 0.08);
-  assert.equal(matrix.element.renderer.padding.yInner, 0.22);
-  assert.equal(matrix.element.renderer.padding.yOuter, 0.08);
+  assert.equal(resolved(computed, matrix).padding.yInner, 0.22);
+  assert.equal(resolved(computed, matrix).padding.yOuter, 0.08);
+  assert.equal(
+    resolved(computed, matrix)._createRenderer().padding.yInner,
+    0.22,
+  );
+  assert.equal(
+    resolved(computed, matrix)._createRenderer().padding.yOuter,
+    0.08,
+  );
 }

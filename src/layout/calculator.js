@@ -28,11 +28,9 @@ export class LayoutCalculator {
   static estimateMargin(element, context = {}) {
     const width = element.options?.width ?? element.width ?? 400;
     const height = element.options?.height ?? element.height ?? 300;
-    return LayoutCalculator.measurementAdapter.measureMargin(
-      element,
-      { width, height },
-      context,
-    );
+    return (
+      context.measurementAdapter || LayoutCalculator.measurementAdapter
+    ).measureMargin(element, { width, height }, context);
   }
 
   static suggestWidthHeight(node) {

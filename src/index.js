@@ -1,6 +1,9 @@
 export {
   GridContainer,
   SequenceContainer,
+  anchor,
+  computeLayout,
+  renderComputedLayout,
   assertLayoutNode,
   chart,
   custom,

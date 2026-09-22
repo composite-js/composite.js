@@ -1,16 +1,20 @@
 import assert from "node:assert/strict";
 import { LayoutRenderer } from "../../src/layout/renderer.js";
-import { Node, repeatY } from "../../src/layout.js";
-import { BBox } from "../../src/utils/bbox.js";
+import { Node, repeatY, computeLayout } from "../../src/layout.js";
 import { createFakeSvg, withFakeSvgDocument } from "../helpers/fake-svg.mjs";
 
 function createMeasuredLeaf() {
   const node = new Node();
   node.classTag = "chart";
-  node.bbox = new BBox(0, 0, 100, 50);
-  node.bbox.setMargin({ top: 5, right: 7, bottom: 11, left: 13 });
-  node.element = { render() {} };
-  return node;
+  node.element = {
+    options: {
+      width: 100,
+      height: 50,
+      margin: { top: 5, right: 7, bottom: 11, left: 13 },
+    },
+    render() {},
+  };
+  return computeLayout(node);
 }
 
 {

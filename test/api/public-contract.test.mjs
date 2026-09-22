@@ -4,6 +4,9 @@ import * as api from "../../src/index.js";
 const stableExports = [
   "GridContainer",
   "SequenceContainer",
+  "anchor",
+  "computeLayout",
+  "renderComputedLayout",
   "assertLayoutNode",
   "chart",
   "crossJoin",
@@ -66,7 +69,6 @@ assert.deepEqual(
   "Stack",
   "StackBarChartRenderer",
   "StreamGraphRenderer",
-  "renderComputedLayout",
 ].forEach((name) => {
   assert.ok(!(name in api), `src/index.js should not export ${name}`);
 });

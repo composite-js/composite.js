@@ -45,12 +45,12 @@ try {
     padding: { top: 1, right: 4, bottom: 2, left: 3 },
   });
 
-  LayoutEngine.computeLayout(wrapped);
-  assert.equal(wrapped.bbox.contentRect().width, 127);
-  assert.equal(wrapped.bbox.contentRect().height, 69);
+  const computed = LayoutEngine.computeLayout(wrapped);
+  assert.equal(computed.bbox.contentRect().width, 127);
+  assert.equal(computed.bbox.contentRect().height, 69);
 
   const root = createFakeSvg();
-  LayoutRenderer.render(wrapped, root);
+  LayoutRenderer.render(computed, root);
 
   assert.deepEqual(childRenderOptions, {
     width: 100,

@@ -94,12 +94,12 @@ try {
     { key: "id", width: 10, height: 10 },
   );
 
-  LayoutEngine.computeLayout(embedded);
-  assert.equal(embedded.bbox.contentRect().width, 80);
-  assert.equal(embedded.bbox.contentRect().height, 40);
+  const computed = LayoutEngine.computeLayout(embedded);
+  assert.equal(computed.bbox.contentRect().width, 80);
+  assert.equal(computed.bbox.contentRect().height, 40);
 
   const root = createFakeSvg();
-  LayoutRenderer.render(embedded, root);
+  LayoutRenderer.render(computed, root);
 
   assert.equal(root.querySelectorAll("line").length, 1);
   assert.equal(root.querySelectorAll("rect").length, 2);

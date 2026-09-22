@@ -27,7 +27,6 @@ export class Chart {
       left: 40,
       ...options.margin,
     };
-    this.bbox = { x: 0, y: 0, width: 0, height: 0 };
     this.options = options;
 
     const defaultPaddingValue =
@@ -35,7 +34,6 @@ export class Chart {
     this.padding = normalizePadding(options.padding, defaultPaddingValue);
 
     this.validate();
-    this._createRenderer();
   }
 
   validate() {
@@ -69,34 +67,7 @@ export class Chart {
       throw new Error(`Unsupported mark type: ${this.mark}`);
     }
 
-    this.renderer = new Renderer(rendererOptions);
-  }
-
-  _applySharedDomains(domains = {}) {
-    const nextEncoding = { ...this.encoding };
-    let changed = false;
-
-    Object.entries(domains).forEach(([key, domain]) => {
-      if (nextEncoding[key] !== undefined || !Array.isArray(domain)) return;
-      nextEncoding[key] = [...domain];
-      changed = true;
-    });
-
-    if (!changed) return;
-
-    this.encoding = nextEncoding;
-    this.options = {
-      ...this.options,
-      encoding: nextEncoding,
-    };
-
-    if (this.renderer) {
-      this.renderer.encoding = nextEncoding;
-      this.renderer.options = {
-        ...this.renderer.options,
-        encoding: nextEncoding,
-      };
-    }
+    return new Renderer(rendererOptions);
   }
 
   /**
@@ -138,13 +109,14 @@ export class Chart {
       container.appendChild(svg);
     }
 
-    // Update renderer with new options
-    this.renderer.width = currentWidth;
-    this.renderer.height = currentHeight;
-    this.renderer.margin = currentMargin;
+    // Renderer state belongs to this render call, including measurement renders.
+    const renderer = this._createRenderer();
+    renderer.width = currentWidth;
+    renderer.height = currentHeight;
+    renderer.margin = currentMargin;
 
     // Render the mark
-    const axisConfig = this.renderer.render(svg, this.data);
+    const axisConfig = renderer.render(svg, this.data);
 
     // Draw axes using the config returned by chart renderers
     if (axisConfig) {

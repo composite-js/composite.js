@@ -64,6 +64,12 @@ default dimensions and spacing, positions every node, and renders the complete
 SVG. Optional controls such as explicit sizes, margins, and alignment targets
 remain available when a design needs precise refinement.
 
+Layout declarations are reusable: `stackX([bars, bars])` creates two independent
+occurrences. Use `computeLayout(view, { document })` and
+`renderComputedLayout(layout, container)` to inspect or reuse a computed layout.
+See [layout computation and reuse](docs/LAYOUT.md) for alignment anchors and
+the declaration/computation boundary.
+
 ## Minimal Browser App
 
 Add a mount element to your page and load your application module through your
