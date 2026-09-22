@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import {
+  custom,
   customContainer,
   embed,
   wrapper,
@@ -84,6 +85,79 @@ try {
     assert.equal(container.querySelectorAll("svg").length, 1);
     assert.equal(container.querySelectorAll(".stackY").length, 2);
     assert.equal(container.querySelectorAll("rect").length, 4);
+  });
+
+  await withFakeSvgDocument(async (document) => {
+    const container = document.createElement("div");
+    const collidingLeaf = custom(
+      {
+        options: { width: 10, height: 10, margin: zeroMargin },
+        render(svg) {
+          const rect = svg.ownerDocument.createElementNS(
+            "http://www.w3.org/2000/svg",
+            "rect",
+          );
+          rect.setAttribute("data-id", "custom-repeat-name");
+          svg.appendChild(rect);
+        },
+      },
+      { classTag: "repeatX" },
+    );
+
+    stackX([collidingLeaf]).render(container);
+
+    assert.ok(container.querySelector('[data-id="custom-repeat-name"]'));
+  });
+
+  await withFakeSvgDocument(async (document) => {
+    const container = document.createElement("div");
+    const slots = customContainer({
+      width: 200,
+      height: 100,
+      margin: zeroMargin,
+      slots: () => [{ key: 0, x: 100, y: 50, width: 100, height: 60 }],
+    });
+    const view = embed(
+      slots,
+      repeat(["only"], () => stackX([leaf("left"), leaf("right")])),
+    );
+
+    view.render(container, { debugBBox: true });
+
+    const stack = container.querySelector(".stackX");
+    assert.equal(stack.getAttribute("transform"), "translate(90, 45)");
+    const matchingDebugRect = container
+      .querySelector(".debug-bbox")
+      .querySelectorAll("rect")
+      .find(
+        (rect) =>
+          rect.getAttribute("x") === "90" &&
+          rect.getAttribute("y") === "45" &&
+          rect.getAttribute("width") === "20" &&
+          rect.getAttribute("height") === "10",
+      );
+    assert.ok(matchingDebugRect);
+  });
+
+  await withFakeSvgDocument(async (document) => {
+    const container = document.createElement("div");
+    const slots = customContainer({
+      width: 200,
+      height: 100,
+      margin: zeroMargin,
+      slots: () => [{ key: 0, x: 100, y: 50, width: 100, height: 60 }],
+    });
+    const view = embed(
+      slots,
+      repeat(["only"], () => wrapper(leaf("wrapped"), { padding: 5 })),
+    );
+
+    view.render(container);
+
+    assert.equal(
+      container.querySelector(".wrapper").getAttribute("transform"),
+      "translate(90, 40)",
+    );
   });
 
   await withFakeSvgDocument(async (document) => {

@@ -1,7 +1,13 @@
 import { BBox } from "../utils/bbox.js";
 import { isSvgContainer } from "../utils/dom.js";
 import { LayoutEngine } from "./engine.js";
-import { Node, assertLayoutNode, replaceLayoutChildren } from "./node.js";
+import {
+  Node,
+  NodeKind,
+  assertLayoutNode,
+  replaceLayoutChildren,
+  setNodeKind,
+} from "./node.js";
 import { contentSizedPolicy } from "./size-policy.js";
 
 function normalizePadding(padding = 0) {
@@ -23,6 +29,7 @@ function normalizePadding(padding = 0) {
 export class Wrapper extends Node {
   constructor(child, options = {}) {
     super();
+    setNodeKind(this, NodeKind.WRAPPER);
     assertLayoutNode(child, "wrapper child");
     this.child = child;
     this.classTag = "wrapper";

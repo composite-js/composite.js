@@ -49,3 +49,37 @@ const margin = { top: 0, right: 0, bottom: 0, left: 0 };
   assert.equal(svg.querySelectorAll("circle").length, 2);
   assert.equal(svg.querySelectorAll("rect").length, 0);
 }
+
+{
+  const svg = createFakeSvg();
+  const container = sequenceContainer({
+    width: 100,
+    height: 50,
+    xDomain: ["A", "B"],
+    yDomain: ["row"],
+    missing: [{ week: "B", learner: "row" }],
+  });
+
+  container.render(svg, { width: 200, margin });
+
+  const missing = svg.querySelector("circle");
+  assert.equal(Number(missing.getAttribute("cx")), 150);
+  assert.equal(Number(missing.getAttribute("cy")), 25);
+}
+
+{
+  const svg = createFakeSvg();
+  const container = sequenceContainer({
+    width: 100,
+    height: 100,
+    xDomain: ["week"],
+    yDomain: ["first", "second"],
+    events: [{ week: "week", learner: "second" }],
+  });
+
+  container.render(svg, { height: 200, margin });
+
+  const event = svg.querySelector("circle");
+  assert.equal(Number(event.getAttribute("cx")), 50);
+  assert.equal(Number(event.getAttribute("cy")), 150);
+}

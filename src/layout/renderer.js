@@ -1,30 +1,19 @@
 import * as d3 from "d3";
 import { Node } from "./node.js";
+import { resolveRenderSize } from "./size-policy.js";
 
 const ZERO_MARGIN = { top: 0, right: 0, bottom: 0, left: 0 };
 
-function isEmbeddedNode(node) {
-  return node?.type === "embed";
-}
-
-function isWrapperNode(node) {
-  return node?.type === "wrapper";
-}
-
-function isRepeatXNode(node) {
-  return node?.classTag === "repeatX";
-}
-
-function isRepeatYNode(node) {
-  return node?.classTag === "repeatY";
-}
-
 function renderedSize(node, renderSize = {}) {
-  const content = node.bbox.contentRect();
+  return resolveRenderSize(node, renderSize, node.bbox.contentRect());
+}
+
+function embeddedChildPlacement(slot, child) {
+  const renderSize = resolveRenderSize(child, slot, child.bbox.contentRect());
   return {
-    width: renderSize.width !== undefined ? renderSize.width : content.width,
-    height:
-      renderSize.height !== undefined ? renderSize.height : content.height,
+    x: slot.x - renderSize.width / 2,
+    y: slot.y - renderSize.height / 2,
+    renderSize,
   };
 }
 
@@ -198,7 +187,7 @@ export class LayoutRenderer {
       .append("g")
       .attr("class", node.classTag)
       .attr("transform", `translate(${x - margin.left}, ${y - margin.top})`);
-    const horizontal = isRepeatXNode(node);
+    const horizontal = Node.isRepeatX(node);
     const scale = d3
       .scaleBand()
       .domain(node.domain)
@@ -253,15 +242,13 @@ export class LayoutRenderer {
     const children = node
       .resolveSlots({ width, height })
       .map(({ slot, child }) => {
-        const childRect = child.bbox.contentRect();
-        const childWidth = slot.width ?? childRect.width;
-        const childHeight = slot.height ?? childRect.height;
+        const placement = embeddedChildPlacement(slot, child);
         return this.renderTree(
           child,
           group,
-          margin.left + slot.x - childWidth / 2,
-          margin.top + slot.y - childHeight / 2,
-          { width: childWidth, height: childHeight },
+          margin.left + placement.x,
+          margin.top + placement.y,
+          placement.renderSize,
         );
       });
 
@@ -273,15 +260,15 @@ export class LayoutRenderer {
       return this.renderStack(node, container, x, y);
     }
 
-    if (isWrapperNode(node)) {
+    if (Node.isWrapper(node)) {
       return this.renderWrapper(node, container, x, y);
     }
 
-    if (isRepeatXNode(node) || isRepeatYNode(node)) {
+    if (Node.isRepeat(node)) {
       return this.renderRepeat(node, container, x, y, renderSize);
     }
 
-    if (isEmbeddedNode(node)) {
+    if (Node.isEmbedded(node)) {
       return this.renderEmbedded(node, container, x, y, renderSize);
     }
 
@@ -332,21 +319,26 @@ export class LayoutRenderer {
     });
   }
 
-  static renderTreeBBoxOnly(node, container, x = 0, y = 0) {
+  static renderTreeBBoxOnly(node, container, x = 0, y = 0, renderSize = {}) {
     const group = container
       .append("g")
       .attr("class", `${node.classTag} debug-bbox`)
       .attr("data-layout-debug", "bbox");
 
-    const renderBBox = (current, contentX, contentY) => {
+    const renderBBox = (
+      current,
+      contentX,
+      contentY,
+      currentRenderSize = {},
+    ) => {
       const margin = current.bbox.getMargin();
-      const content = current.bbox.contentRect();
+      const effectiveSize = renderedSize(current, currentRenderSize);
       group
         .append("rect")
         .attr("x", contentX - margin.left)
         .attr("y", contentY - margin.top)
-        .attr("width", current.bbox.totalWidth())
-        .attr("height", current.bbox.totalHeight())
+        .attr("width", effectiveSize.width + margin.left + margin.right)
+        .attr("height", effectiveSize.height + margin.top + margin.bottom)
         .attr("fill", "none")
         .attr("stroke", "red")
         .attr("stroke-dasharray", "4 2");
@@ -354,8 +346,8 @@ export class LayoutRenderer {
         .append("rect")
         .attr("x", contentX)
         .attr("y", contentY)
-        .attr("width", content.width)
-        .attr("height", content.height)
+        .attr("width", effectiveSize.width)
+        .attr("height", effectiveSize.height)
         .attr("fill", "none")
         .attr("stroke", "blue")
         .attr("stroke-dasharray", "4 2");
@@ -365,19 +357,19 @@ export class LayoutRenderer {
           const childRect = child.bbox.contentRect();
           renderBBox(child, contentX + childRect.x, contentY + childRect.y);
         });
-      } else if (isWrapperNode(current)) {
+      } else if (Node.isWrapper(current)) {
         const childMargin = current.child.bbox.getMargin();
         renderBBox(
           current.child,
           contentX + current.padding.left + childMargin.left,
           contentY + current.padding.top + childMargin.top,
         );
-      } else if (isRepeatXNode(current) || isRepeatYNode(current)) {
-        const horizontal = isRepeatXNode(current);
+      } else if (Node.isRepeat(current)) {
+        const horizontal = Node.isRepeatX(current);
         const scale = d3
           .scaleBand()
           .domain(current.domain)
-          .range([0, horizontal ? content.width : content.height])
+          .range([0, horizontal ? effectiveSize.width : effectiveSize.height])
           .paddingInner(current.paddingInner)
           .paddingOuter(current.paddingOuter);
 
@@ -392,23 +384,20 @@ export class LayoutRenderer {
             contentY + (horizontal ? 0 : scale(value)) + childMargin.top,
           );
         });
-      } else if (isEmbeddedNode(current)) {
-        current
-          .resolveSlots({ width: content.width, height: content.height })
-          .forEach(({ slot, child }) => {
-            const childRect = child.bbox.contentRect();
-            const childWidth = slot.width ?? childRect.width;
-            const childHeight = slot.height ?? childRect.height;
-            renderBBox(
-              child,
-              contentX + slot.x - childWidth / 2,
-              contentY + slot.y - childHeight / 2,
-            );
-          });
+      } else if (Node.isEmbedded(current)) {
+        current.resolveSlots(effectiveSize).forEach(({ slot, child }) => {
+          const placement = embeddedChildPlacement(slot, child);
+          renderBBox(
+            child,
+            contentX + placement.x,
+            contentY + placement.y,
+            placement.renderSize,
+          );
+        });
       }
     };
 
-    renderBBox(node, x, y);
+    renderBBox(node, x, y, renderSize);
   }
 
   static render(root, container, options = {}) {

@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { custom, wrapper, image, text } from "../../src/index.js";
+import { chart, custom, wrapper, image, text } from "../../src/index.js";
 import { withFakeSvgDocument } from "../helpers/fake-svg.mjs";
 
 const SVG_NAMESPACE = "http://www.w3.org/2000/svg";
@@ -17,6 +17,49 @@ await withFakeSvgDocument(async (document) => {
   assert.equal(svg?.getAttribute("width"), "80");
   assert.equal(svg?.getAttribute("height"), "20");
   assert.equal(svg?.querySelector("text")?.namespaceURI, SVG_NAMESPACE);
+});
+
+await withFakeSvgDocument(async (document) => {
+  const svg = document.createElementNS(SVG_NAMESPACE, "svg");
+  const bars = chart({
+    mark: "bar",
+    data: [{ category: "A", value: 10 }],
+    encoding: { x: "category", y: "value" },
+    width: 120,
+    height: 80,
+    margin: zeroMargin,
+  });
+
+  bars.render(svg);
+
+  const rect = svg.querySelector("rect");
+  assert.ok(Number(rect?.getAttribute("width")) > 0);
+  assert.ok(Number(rect?.getAttribute("height")) > 0);
+});
+
+await withFakeSvgDocument(async (document) => {
+  const svg = document.createElementNS(SVG_NAMESPACE, "svg");
+  let resolvedOptions;
+  const node = custom({
+    render(_target, options) {
+      resolvedOptions = options;
+    },
+  });
+
+  node.render(svg);
+  assert.deepEqual(resolvedOptions, {
+    width: 400,
+    height: 300,
+    margin: zeroMargin,
+  });
+
+  node.render(svg, { width: 50, height: 25, margin: zeroMargin });
+
+  assert.deepEqual(resolvedOptions, {
+    width: 50,
+    height: 25,
+    margin: zeroMargin,
+  });
 });
 
 await withFakeSvgDocument(async (document) => {

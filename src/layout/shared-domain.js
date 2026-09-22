@@ -1,4 +1,5 @@
 import * as d3 from "d3";
+import { Node } from "./node.js";
 import {
   categoricalDomain,
   continuousDomain,
@@ -346,7 +347,7 @@ function mergeDescriptors(descriptors) {
 
 function isChartNode(node) {
   return (
-    node?.classTag === "chart" &&
+    Node.isChart(node) &&
     node.element &&
     typeof node.element._applySharedDomains === "function"
   );

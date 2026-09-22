@@ -3,6 +3,23 @@ import { createSvgElement, isHtmlContainer } from "../utils/dom.js";
 
 const ZERO_MARGIN = { top: 0, right: 0, bottom: 0, left: 0 };
 const layoutParents = new WeakMap();
+const NODE_KIND = Symbol("layoutNodeKind");
+
+export const NodeKind = Object.freeze({
+  LEAF: "leaf",
+  CHART: "chart",
+  STACK: "stack",
+  REPEAT_X: "repeatX",
+  REPEAT_Y: "repeatY",
+  WRAPPER: "wrapper",
+  EMBED: "embed",
+  COMPOSITION: "composition",
+});
+
+/** @internal */
+export function setNodeKind(node, kind) {
+  node[NODE_KIND] = kind;
+}
 
 function resolvedMargin(element, renderMargin) {
   const configuredMargin = element.margin || element.options?.margin || {};
@@ -15,6 +32,21 @@ function resolvedMargin(element, renderMargin) {
 
 function intrinsicSize(element, dimension, fallback) {
   return element.options?.[dimension] ?? element[dimension] ?? fallback;
+}
+
+function resolveLeafRenderOptions(element, renderOptions) {
+  return {
+    ...renderOptions,
+    width:
+      renderOptions.width !== undefined
+        ? renderOptions.width
+        : intrinsicSize(element, "width", 400),
+    height:
+      renderOptions.height !== undefined
+        ? renderOptions.height
+        : intrinsicSize(element, "height", 300),
+    margin: resolvedMargin(element, renderOptions.margin),
+  };
 }
 
 function createRootSvg(container, width, height, margin) {
@@ -40,14 +72,42 @@ function createRootSvg(container, width, height, margin) {
 export class Node {
   constructor() {
     this.bbox = new BBox(0, 0, 0, 0);
+    setNodeKind(this, NodeKind.LEAF);
+  }
+
+  static isKind(node, kind) {
+    return isLayoutNode(node) && node[NODE_KIND] === kind;
+  }
+
+  static isChart(node) {
+    return Node.isKind(node, NodeKind.CHART);
   }
 
   static isRepeat(node) {
-    return isLayoutNode(node) && node.isRepeat === true;
+    return (
+      Node.isKind(node, NodeKind.REPEAT_X) ||
+      Node.isKind(node, NodeKind.REPEAT_Y)
+    );
+  }
+
+  static isRepeatX(node) {
+    return Node.isKind(node, NodeKind.REPEAT_X);
+  }
+
+  static isRepeatY(node) {
+    return Node.isKind(node, NodeKind.REPEAT_Y);
   }
 
   static isStack(node) {
-    return isLayoutNode(node) && node.isStack === true;
+    return Node.isKind(node, NodeKind.STACK);
+  }
+
+  static isWrapper(node) {
+    return Node.isKind(node, NodeKind.WRAPPER);
+  }
+
+  static isEmbedded(node) {
+    return Node.isKind(node, NodeKind.EMBED);
   }
 
   /**
@@ -58,40 +118,19 @@ export class Node {
   render(container, renderOptions = {}) {
     if (!this.element) return;
 
+    const resolvedOptions = resolveLeafRenderOptions(
+      this.element,
+      renderOptions,
+    );
+
     if (isHtmlContainer(container)) {
-      const width =
-        renderOptions.width !== undefined
-          ? renderOptions.width
-          : intrinsicSize(this.element, "width", 400);
-      const height =
-        renderOptions.height !== undefined
-          ? renderOptions.height
-          : intrinsicSize(this.element, "height", 300);
-      const margin = resolvedMargin(this.element, renderOptions.margin);
+      const { width, height, margin } = resolvedOptions;
       const svg = createRootSvg(container, width, height, margin);
 
-      return this.element.render(svg, {
-        ...renderOptions,
-        width,
-        height,
-        margin,
-      });
+      return this.element.render(svg, resolvedOptions);
     }
 
-    const content = this.bbox.contentRect();
-    return this.element.render(container, {
-      ...renderOptions,
-      width:
-        renderOptions.width !== undefined ? renderOptions.width : content.width,
-      height:
-        renderOptions.height !== undefined
-          ? renderOptions.height
-          : content.height,
-      margin:
-        renderOptions.margin !== undefined
-          ? renderOptions.margin
-          : this.bbox.getMargin(),
-    });
+    return this.element.render(container, resolvedOptions);
   }
 }
 

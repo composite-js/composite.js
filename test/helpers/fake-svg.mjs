@@ -102,6 +102,12 @@ function matchesSelector(node, selector) {
       .split(/\s+/)
       .includes(selector.slice(1));
   }
+  const attributeMatch = /^\[([^=\]]+)(?:=["']([^"']*)["'])?\]$/.exec(selector);
+  if (attributeMatch) {
+    const [, name, value] = attributeMatch;
+    const actual = node.getAttribute(name);
+    return value === undefined ? actual !== null : actual === value;
+  }
   return node.tagName === selector;
 }
 

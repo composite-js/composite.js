@@ -1,5 +1,6 @@
 import { DomMeasurementAdapter } from "./measurement.js";
 import { inferXYOrientation } from "../mark/orientation.js";
+import { Node } from "./node.js";
 
 function getOptions(node) {
   return node?.options || {};
@@ -42,7 +43,7 @@ export class LayoutCalculator {
     const defaultWidth = 400;
     const defaultHeight = 300;
 
-    if (node.isRepeat) {
+    if (Node.isRepeat(node)) {
       return { width: defaultWidth, height: defaultHeight };
     }
 

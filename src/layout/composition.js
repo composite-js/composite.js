@@ -4,7 +4,13 @@ import { normalizePadding } from "../mark/padding.js";
 import { BBox } from "../utils/bbox.js";
 import { isSvgContainer } from "../utils/dom.js";
 import { LayoutEngine } from "./engine.js";
-import { Node, assertLayoutNode, replaceLayoutChildren } from "./node.js";
+import {
+  Node,
+  NodeKind,
+  assertLayoutNode,
+  replaceLayoutChildren,
+  setNodeKind,
+} from "./node.js";
 import { applySharedChartDomains } from "./shared-domain.js";
 import { contentSizedPolicy, viewportSizedPolicy } from "./size-policy.js";
 
@@ -144,7 +150,7 @@ const ORIENTATION_INFERRED_BAND_MARKS = new Set([
 ]);
 
 function isChartNode(node) {
-  return node?.classTag === "chart" && node.element?.mark;
+  return Node.isChart(node) && node.element?.mark;
 }
 
 function stackSharedAxis(direction) {
@@ -295,6 +301,7 @@ function validateStackLink(nodes, direction) {
 export class Composition extends Node {
   constructor() {
     super();
+    setNodeKind(this, NodeKind.COMPOSITION);
     this.classTag = "composition";
     this.children = [];
   }
@@ -327,6 +334,7 @@ export class Composition extends Node {
 export class Stack extends Composition {
   constructor(nodes, direction, options = {}) {
     super();
+    setNodeKind(this, NodeKind.STACK);
     assertNodeArray(nodes, "nodes");
 
     this.children = nodes;
@@ -432,6 +440,7 @@ export class DirectionlessRepeat {
 export class Embedded extends Composition {
   constructor(container, repeated, mapping = {}) {
     super();
+    setNodeKind(this, NodeKind.EMBED);
     validateContainer(container);
     this.container = container;
     this.repeated = repeated;
@@ -504,6 +513,7 @@ export function embed(container, repeated, mapping = {}) {
 export class RepeatX extends Repeat {
   constructor(domain, func, options = {}) {
     super(domain, func, options);
+    setNodeKind(this, NodeKind.REPEAT_X);
     this.classTag = "repeatX";
   }
 
@@ -515,6 +525,7 @@ export class RepeatX extends Repeat {
 export class RepeatY extends Repeat {
   constructor(domain, func, options = {}) {
     super(domain, func, options);
+    setNodeKind(this, NodeKind.REPEAT_Y);
     this.classTag = "repeatY";
   }
 

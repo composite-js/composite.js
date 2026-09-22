@@ -4,18 +4,6 @@ import { LayoutCalculator } from "./calculator.js";
 import { renderComputedLayout, renderComputedLayoutInto } from "./renderer.js";
 import { Node, assertLayoutNode, assertLayoutParent } from "./node.js";
 
-function isEmbeddedNode(node) {
-  return node?.type === "embed";
-}
-
-function isWrapperNode(node) {
-  return node?.type === "wrapper";
-}
-
-function isRepeatXNode(node) {
-  return node?.classTag === "repeatX";
-}
-
 function stackGapBefore(node, childIndex) {
   if (childIndex <= 0) return 0;
   if (Array.isArray(node.margin)) return node.margin[childIndex - 1];
@@ -134,9 +122,9 @@ export class LayoutEngine {
         children = node.children;
       } else if (Node.isRepeat(node)) {
         children = node.instantiateChildren(node.classTag);
-      } else if (isEmbeddedNode(node)) {
+      } else if (Node.isEmbedded(node)) {
         children = node.instantiateChildren();
-      } else if (isWrapperNode(node)) {
+      } else if (Node.isWrapper(node)) {
         children = [node.child];
       }
 
@@ -172,12 +160,12 @@ export class LayoutEngine {
       return;
     }
 
-    if (isEmbeddedNode(node)) {
+    if (Node.isEmbedded(node)) {
       this.computeEmbedded(node, context, renderSize);
       return;
     }
 
-    if (isWrapperNode(node)) {
+    if (Node.isWrapper(node)) {
       this.computeWrapper(node, context);
       return;
     }
@@ -248,7 +236,7 @@ export class LayoutEngine {
       : 0;
     const intrinsicSize = !children.length
       ? fallback
-      : isRepeatXNode(node)
+      : Node.isRepeatX(node)
         ? {
             width: repeatIntrinsicRange(node, maxChildWidth),
             height: maxChildHeight,

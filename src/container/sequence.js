@@ -88,11 +88,15 @@ export class SequenceContainer {
     });
 
     this.missing.forEach((datum, index) => {
-      const slot = this.slots([datum], {
-        x: this.xField,
-        y: this.yField,
-        key: (_d) => `missing-${index}`,
-      })[0];
+      const slot = this.slots(
+        [datum],
+        {
+          x: this.xField,
+          y: this.yField,
+          key: (_d) => `missing-${index}`,
+        },
+        { width, height },
+      )[0];
 
       if (!slot) return;
 
@@ -105,11 +109,15 @@ export class SequenceContainer {
     });
 
     this.events.forEach((datum, index) => {
-      const slot = this.slots([datum], {
-        x: this.xField,
-        y: this.yField,
-        key: (_d) => `event-${index}`,
-      })[0];
+      const slot = this.slots(
+        [datum],
+        {
+          x: this.xField,
+          y: this.yField,
+          key: (_d) => `event-${index}`,
+        },
+        { width, height },
+      )[0];
 
       if (!slot) return;
 

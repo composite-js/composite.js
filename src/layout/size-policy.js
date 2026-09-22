@@ -20,6 +20,10 @@ export class ContentSizedPolicy {
   validateRenderOptions(node, renderOptions = {}) {
     this.validateOptions(node, renderOptions);
   }
+
+  resolveRenderSize(_node, _requestedSize = {}, intrinsicSize = {}) {
+    return { ...intrinsicSize };
+  }
 }
 
 /**
@@ -44,7 +48,36 @@ export class ViewportSizedPolicy {
 
     return { width, height };
   }
+
+  resolveRenderSize(_node, requestedSize = {}, intrinsicSize = {}) {
+    return {
+      width: requestedSize.width ?? intrinsicSize.width,
+      height: requestedSize.height ?? intrinsicSize.height,
+    };
+  }
 }
 
 export const contentSizedPolicy = new ContentSizedPolicy();
 export const viewportSizedPolicy = new ViewportSizedPolicy();
+
+/**
+ * Resolves the size a node will actually use inside an available viewport.
+ */
+export function resolveRenderSize(
+  node,
+  requestedSize = {},
+  intrinsicSize = node.bbox.contentRect(),
+) {
+  if (typeof node.sizePolicy?.resolveRenderSize === "function") {
+    return node.sizePolicy.resolveRenderSize(
+      node,
+      requestedSize,
+      intrinsicSize,
+    );
+  }
+
+  return {
+    width: requestedSize.width ?? intrinsicSize.width,
+    height: requestedSize.height ?? intrinsicSize.height,
+  };
+}

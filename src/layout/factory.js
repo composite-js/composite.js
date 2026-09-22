@@ -1,12 +1,13 @@
 import { Chart } from "../chart.js";
 import { ImageElement } from "./image.js";
 import { TextElement } from "./text.js";
-import { Node } from "./node.js";
+import { Node, NodeKind, setNodeKind } from "./node.js";
 import { RepeatX, RepeatY, Stack } from "./composition.js";
 import { wrapper as createWrapper } from "./wrapper.js";
 
 export function chart(config) {
   const node = new Node();
+  setNodeKind(node, NodeKind.CHART);
   node.element = new Chart(config);
   node.classTag = "chart";
   return node;
