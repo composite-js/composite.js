@@ -219,6 +219,25 @@ function assertInvalid(config, pattern) {
   assertInvalid(
     {
       mark: "bar",
+      data: [],
+      encoding: { x: "category", y: "value" },
+    },
+    /data for mark "bar" must contain at least one row/,
+  );
+
+  assert.throws(
+    () =>
+      new Chart({
+        mark: "bar",
+        data: [],
+        encoding: { x: "category", y: "value" },
+      }),
+    /data for mark "bar" must contain at least one row/,
+  );
+
+  assertInvalid(
+    {
+      mark: "bar",
       data: [{ category: "A", count: 4 }],
       encoding: { x: "category", y: "value" },
     },
@@ -278,6 +297,82 @@ function assertInvalid(config, pattern) {
     },
     /Field "value" for mark "pac" must contain non-negative numbers/,
   );
+
+  const negativeValueConfigs = [
+    {
+      mark: "bar",
+      data: [{ category: "A", value: -1 }],
+      encoding: { x: "category", y: "value" },
+    },
+    {
+      mark: "groupbar",
+      data: [{ category: "A", group: "G", value: -1 }],
+      encoding: { x: "category", y: "value", group: "group" },
+    },
+    {
+      mark: "stackbar",
+      data: [{ category: "A", group: "G", value: -1 }],
+      encoding: { x: "category", y: "value", group: "group" },
+    },
+    {
+      mark: "area",
+      data: [{ x: 1, y: -1 }],
+      encoding: { x: "x", y: "y" },
+    },
+    {
+      mark: "line",
+      data: [{ x: -1, y: 1 }],
+      encoding: { x: "x", y: "y" },
+    },
+    {
+      mark: "scatter",
+      data: [{ x: 1, y: -1 }],
+      encoding: { x: "x", y: "y" },
+    },
+    {
+      mark: "box",
+      data: [{ category: "A", value: -1 }],
+      encoding: { x: "category", y: "value" },
+    },
+    {
+      mark: "dumbbell",
+      data: [
+        { category: "A", value: -1 },
+        { category: "A", value: 1 },
+      ],
+      encoding: { x: "category", y: "value" },
+    },
+    {
+      mark: "bubble",
+      data: [{ x: -1, y: 1 }],
+      encoding: { x: "x", y: "y" },
+    },
+    {
+      mark: "flow",
+      data: [{ source: "A", target: "B", value: -1 }],
+      encoding: { x: "source", group: "target", y: "value" },
+    },
+    {
+      mark: "stream",
+      data: [{ x: "A", group: "G", value: -1 }],
+      encoding: { x: "x", y: "value", group: "group" },
+    },
+  ];
+
+  negativeValueConfigs.forEach((config) => {
+    assertInvalid(
+      config,
+      new RegExp(
+        `Field ".+" for mark "${config.mark}" must contain non-negative numbers`,
+      ),
+    );
+  });
+
+  assertValid({
+    mark: "bar",
+    data: [{ category: "A", value: 0 }],
+    encoding: { x: "category", y: "value" },
+  });
 }
 
 {

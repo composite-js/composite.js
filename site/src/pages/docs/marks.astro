@@ -317,6 +317,11 @@ const formatFields = (fields) => fields.join(", ");
         and <code>y</code> channels.
       </p>
       <p>
+        Every chart requires at least one data row. Quantitative fields must
+        contain finite, non-negative numbers. Zero is supported; negative values
+        are not currently supported.
+      </p>
+      <p>
         Bars, grouped bars, stacked bars, box plots, dumbbells, and proportional
         area charts infer their orientation from <code>x</code> and <code>y</code>.
         Exactly one of those channels must contain numbers. Put the numeric field
@@ -368,7 +373,10 @@ const formatFields = (fields) => fields.join(", ");
         </div>
         <div>
           <dt><code>data</code></dt>
-          <dd>An array of row objects used by the encoded data fields.</dd>
+          <dd>
+            A non-empty array of row objects used by the encoded data fields.
+            Quantitative values must be finite and non-negative.
+          </dd>
         </div>
         <div>
           <dt><code>encoding</code></dt>

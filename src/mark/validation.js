@@ -130,14 +130,22 @@ function assertFiniteNumbers(mark, data, field, options = {}) {
 
   data.forEach((row, index) => {
     const numeric = Number(row[field]);
-    if (!Number.isFinite(numeric) || (nonNegative && numeric < 0)) {
-      const description = nonNegative
-        ? "non-negative numbers"
-        : "finite numbers";
+    const isFinite = Number.isFinite(numeric);
+    if (!isFinite || (nonNegative && numeric < 0)) {
+      const description =
+        nonNegative && isFinite ? "non-negative numbers" : "finite numbers";
       throw new Error(
         `Field "${field}" for ${chartLabel(mark)} must contain ${description}; row ${index} has ${JSON.stringify(row[field])}.`,
       );
     }
+  });
+}
+
+function assertBubblePositionValues(data, encoding) {
+  ["x", "y"].forEach((channel) => {
+    const field = encoding[channel];
+    if (typeof data[0][field] !== "number") return;
+    assertFiniteNumbers("bubble", data, field, { nonNegative: true });
   });
 }
 
@@ -261,6 +269,12 @@ export function validateChartConfig(config = {}) {
   const data = config.data || [];
   const encoding = config.encoding;
 
+  if (data.length === 0) {
+    throw new RangeError(
+      `data for ${chartLabel(mark)} must contain at least one row.`,
+    );
+  }
+
   if (!encoding || typeof encoding !== "object" || Array.isArray(encoding)) {
     throw new TypeError(`encoding for ${chartLabel(mark)} must be an object.`);
   }
@@ -282,8 +296,6 @@ export function validateChartConfig(config = {}) {
     );
   }
 
-  if (data.length === 0) return;
-
   const dataBackedChannels = [
     ...definition.requiredEncoding,
     ...(encoding.size !== undefined ? ["size"] : []),
@@ -298,7 +310,7 @@ export function validateChartConfig(config = {}) {
   if (isOrientationInferredMark(mark)) {
     const orientation = inferXYOrientation(mark, data, encoding);
     assertFiniteNumbers(mark, data, orientation.valueField, {
-      nonNegative: mark === "pac",
+      nonNegative: true,
     });
 
     if (mark === "dumbbell") {
@@ -309,8 +321,12 @@ export function validateChartConfig(config = {}) {
   }
 
   (NUMERIC_FIELD_BY_MARK[mark] || []).forEach((channel) => {
-    assertFiniteNumbers(mark, data, encoding[channel]);
+    assertFiniteNumbers(mark, data, encoding[channel], { nonNegative: true });
   });
+
+  if (mark === "bubble") {
+    assertBubblePositionValues(data, encoding);
+  }
 
   if (mark === "pie" || mark === "flow") {
     assertFiniteNumbers(mark, data, encoding.y, { nonNegative: true });

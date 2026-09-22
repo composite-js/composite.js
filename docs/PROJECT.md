@@ -90,7 +90,9 @@ options)` method as a custom leaf layout node.
 - `isLayoutNode(value)` and `assertLayoutNode(value, label)` check values before
   passing them into composition helpers.
 - `validateChartConfig(config)` validates chart mark, encoding, and data shape
-  without rendering.
+  without rendering. Chart data must contain at least one row, and quantitative
+  fields currently accept only finite, non-negative values; zero is supported,
+  while negative values are not.
 - `parseCsv(text, options)` parses CSV data, while `loadCsvText(url)` loads CSV
   text in browser and Node environments.
 - `tableColumns(rows)` and `numericColumns(rows, options)` inspect tabular data,

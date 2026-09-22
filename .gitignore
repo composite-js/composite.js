@@ -5,3 +5,4 @@ site/.astro/
 .idea/
 .vscode/
 .DS_Store
+tmp/
