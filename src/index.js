@@ -25,4 +25,4 @@ export {
   parseCsv,
   tableColumns,
 } from "./data.js";
-export { validateChartConfig } from "./mark/validation.js";
+export { validateChartConfig } from "./chart/validation.js";

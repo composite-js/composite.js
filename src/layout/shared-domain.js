@@ -4,8 +4,9 @@ import {
   categoricalDomain,
   continuousDomain,
   valueDomain,
-} from "../mark/scale.js";
-import { inferXYOrientation } from "../mark/orientation.js";
+} from "../chart/scale.js";
+import { inferXYOrientation } from "../chart/orientation.js";
+import { getChartTypeDefinition } from "../chart/registry.js";
 
 const CHANNELS = ["x", "y"];
 
@@ -152,6 +153,7 @@ function bubbleDescriptor(chart, channel, explicitDomain) {
 
 function domainDescriptor(chart, channel) {
   const mark = chart.mark || "bar";
+  const strategy = getChartTypeDefinition(mark)?.sharedDomain;
   const encoding = chart.encoding || {};
   const key = domainKey(channel);
   const explicitDomain = encoding[key];
@@ -163,9 +165,8 @@ function domainDescriptor(chart, channel) {
   const field = encoding[channel];
   if (!field) return null;
 
-  switch (mark) {
-    case "bar":
-    case "groupbar": {
+  switch (strategy) {
+    case "bar": {
       const orientation = inferXYOrientation(mark, data, encoding);
       return channel === orientation.valueChannel
         ? valueDescriptor(
@@ -279,8 +280,7 @@ function domainDescriptor(chart, channel) {
       );
     }
 
-    case "matrix":
-    case "pie":
+    case "categoricalX":
       return channel === "x"
         ? categoryDescriptor(chart, channel, explicitDomain)
         : null;

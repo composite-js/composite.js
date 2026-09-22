@@ -197,7 +197,7 @@ assert.doesNotMatch(
   "LayoutRenderer",
   "LayoutCalculator",
   "BarChartRenderer",
-  "MARK_DEFINITIONS",
+  "CHART_TYPE_DEFINITIONS",
 ].forEach((name) => {
   assert.doesNotMatch(
     declarations,

@@ -2,10 +2,10 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { docsNavItems } from "../../site/src/data/docs.js";
-import { MARK_DEFINITIONS } from "../../src/mark/validation.js";
+import { CHART_TYPE_DEFINITIONS } from "../../src/chart/validation.js";
 
 const marksNavItem = docsNavItems.find((item) => item.href === "/docs/marks/");
-const markNames = Object.keys(MARK_DEFINITIONS);
+const markNames = Object.keys(CHART_TYPE_DEFINITIONS);
 
 assert.ok(marksNavItem, "Documentation navigation should include Marks");
 assert.deepEqual(

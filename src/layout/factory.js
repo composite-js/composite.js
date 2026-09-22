@@ -1,4 +1,4 @@
-import { Chart } from "../chart.js";
+import { Chart } from "../chart/chart.js";
 import { ImageElement } from "./image.js";
 import { TextElement } from "./text.js";
 import { Node, NodeKind, setNodeKind } from "./node.js";

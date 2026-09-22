@@ -1,6 +1,7 @@
 import { validateContainer, valueOf } from "../container/base.js";
-import { inferXYOrientation } from "../mark/orientation.js";
-import { normalizePadding } from "../mark/padding.js";
+import { inferXYOrientation } from "../chart/orientation.js";
+import { normalizePadding } from "../chart/padding.js";
+import { getChartTypeDefinition } from "../chart/registry.js";
 import { BBox } from "../utils/bbox.js";
 import { isSvgContainer } from "../utils/dom.js";
 import { LayoutEngine } from "./engine.js";
@@ -130,25 +131,6 @@ function normalizeStackMargin(margin, childCount) {
   );
 }
 
-const LINK_SUPPORTED_MARKS = new Set(["bar", "pac", "scatter"]);
-const BAND_PADDING_MARKS = new Set([
-  "bar",
-  "groupbar",
-  "stackbar",
-  "box",
-  "dumbbell",
-  "pac",
-  "matrix",
-]);
-const ORIENTATION_INFERRED_BAND_MARKS = new Set([
-  "bar",
-  "groupbar",
-  "stackbar",
-  "box",
-  "dumbbell",
-  "pac",
-]);
-
 function isChartNode(node) {
   return Node.isChart(node) && node.element?.mark;
 }
@@ -188,14 +170,14 @@ function hasExplicitPaddingValue(chart, key) {
 function sharedAxisField(chart, axis) {
   const mark = chart?.mark;
   const encoding = chart?.encoding || {};
+  const bandChannel = getChartTypeDefinition(mark)?.bandChannel;
 
-  if (!BAND_PADDING_MARKS.has(mark)) return null;
+  if (!bandChannel) return null;
 
-  if (mark === "matrix") {
-    return axis === "x" ? encoding.x : encoding.group;
+  if (bandChannel.type !== "orientationCategory") {
+    const channel = bandChannel[axis];
+    return channel ? encoding[channel] : null;
   }
-
-  if (!ORIENTATION_INFERRED_BAND_MARKS.has(mark)) return null;
 
   try {
     const orientation = inferXYOrientation(mark, chart.data, encoding);
@@ -277,7 +259,7 @@ function validateStackLink(nodes, direction) {
       );
     }
 
-    if (!LINK_SUPPORTED_MARKS.has(node.element.mark)) {
+    if (!getChartTypeDefinition(node.element.mark)?.supportsLink) {
       throw new Error(
         `mark "${node.element.mark}" does not support stack links.`,
       );

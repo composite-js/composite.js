@@ -42,14 +42,15 @@ pnpm run lint
 
 ## Project Architecture
 
-- `src/index.js` is the public library entrypoint. It re-exports chart, layout, container, mark renderer, axis, and utility APIs.
+- `src/index.js` is the public library entrypoint. It re-exports chart, layout, container, chart renderer, axis, and utility APIs.
 - `src/layout.js` gathers the main layout exports from the layout subsystem.
 - `src/layout/factory.js` provides user-facing factories such as `chart`, `stackX`, `stackY`, `repeatX`, and `repeatY`.
 - `src/layout/node.js` defines the base layout node contract and guards for layout-node inputs.
 - `src/layout/composition.js` implements composition nodes, including stacks, repeats, directionless repeats, and embedded layouts.
 - `src/layout/engine.js`, `src/layout/calculator.js`, `src/layout/measurement.js`, and `src/layout/renderer.js` compute bounding boxes, measure layout needs, and render the computed tree into SVG.
-- `src/chart.js` wraps chart configuration and dispatches to D3-backed mark renderers.
-- `src/mark/` contains mark-specific renderers such as bar, line, matrix, scatter, box, bubble, pie, and flow.
+- `src/chart/chart.js` wraps chart configuration and dispatches to D3-backed chart renderers.
+- `src/chart/type/` contains chart-specific renderers such as bar, line, matrix, scatter, box, bubble, pie, and flow.
+- `src/chart/registry.js` centrally declares each chart type's renderer, encoding schema, shared-domain strategy, band channel, and composition capabilities.
 - `src/container/` contains container abstractions used by embedded and sequence-style layouts.
 - `examples/` contains browser demos selected by the development script.
 - `test/` contains Node-based unit and integration tests, with fake SVG helpers where browser DOM behavior needs to be simulated.

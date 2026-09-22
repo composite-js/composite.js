@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import path from "node:path";
-import { MARK_DEFINITIONS } from "../../src/mark/validation.js";
+import { CHART_TYPE_DEFINITIONS } from "../../src/chart/validation.js";
 
 const marksPagePath = path.resolve(
   process.cwd(),
@@ -14,7 +14,7 @@ assert.ok(
   "Marks docs should introduce the chart configuration shape",
 );
 
-Object.keys(MARK_DEFINITIONS).forEach((mark) => {
+Object.keys(CHART_TYPE_DEFINITIONS).forEach((mark) => {
   assert.ok(
     marksPageSource.includes(`id: "${mark}"`),
     `Marks docs should document the ${mark} mark`,

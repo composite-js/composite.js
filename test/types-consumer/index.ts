@@ -38,7 +38,7 @@ import { Chart } from "composite-js";
 // @ts-expect-error Internals are not part of the public package entry.
 import { LayoutEngine } from "composite-js";
 // @ts-expect-error Internals are not part of the public package entry.
-import { MARK_DEFINITIONS } from "composite-js";
+import { CHART_TYPE_DEFINITIONS } from "composite-js";
 // @ts-expect-error Internals are not part of the public package entry.
 import { Node } from "composite-js";
 
@@ -231,5 +231,5 @@ void styledConfig;
 void BarChartRenderer;
 void Chart;
 void LayoutEngine;
-void MARK_DEFINITIONS;
+void CHART_TYPE_DEFINITIONS;
 void Node;

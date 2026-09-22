@@ -157,10 +157,10 @@ to override the automatic result.
 The library is organized around a layout tree.
 
 Leaf nodes are created by factories in `src/layout/factory.js`. Internally,
-`chart(config)` wraps a `Chart` instance from `src/chart.js`, while
+`chart(config)` wraps a `Chart` instance from `src/chart/chart.js`, while
 `custom(renderable)` wraps a caller-provided renderable object. The chart
-resolves its mark type and delegates rendering to a mark renderer in
-`src/mark/`.
+resolves its chart type and delegates rendering to a chart renderer in
+`src/chart/type/`.
 
 Composition nodes live in `src/layout/composition.js`. `Stack` arranges children horizontally or vertically, `RepeatX` and `RepeatY` generate repeated children along one axis, and `Embedded` renders repeated children into slots produced by a container. All of these are layout nodes, so they can be nested.
 
@@ -172,21 +172,28 @@ The internal layout pipeline has three main parts:
 - `LayoutEngine` computes bounding boxes, alignment, stack positions, repeat dimensions, and embedded child layouts.
 - `LayoutRenderer` renders the computed layout tree into SVG groups and delegates leaf rendering back to each node.
 
-Rendering is D3-backed. `src/chart.js` selects an internal mark renderer for
-the configured mark type, and mark renderers return axis configuration when
-axes should be drawn by the internal `AxisRenderer`.
+Rendering is D3-backed. `src/chart/chart.js` selects an internal chart renderer
+for the configured chart type through `src/chart/registry.js`, and chart renderers
+return axis configuration when axes should be drawn by the internal
+`AxisRenderer`. The registry is the central declaration for each chart type's
+renderer, encoding schema, shared-domain strategy, categorical band channel,
+link capability, orientation behavior, and default padding.
 
 Supported chart marks include bars, grouped bars, stacked bars, area charts, lines, matrices, scatters, boxes, bubbles, dumbbells, proportional area charts, pies, flows, and stream graphs. Marks use `encoding.x` and `encoding.y` for primary channels and `encoding.group` for secondary categorical grouping. Axis-oriented marks infer orientation from `encoding.x` and `encoding.y`: exactly one of those channels must contain numbers, and numeric categorical values should be stored as strings. Flow diagrams use `encoding: { x, group, y }`, support horizontal and vertical layout directions, can render endpoint headings with `xLabelName` and `groupLabelName`, and can map an array of colors to either `xDomain` or `groupDomain` with `colorBy`.
 
 ## Directory Guide
 
 - `src/index.js` is the stable public entrypoint.
-- `src/chart.js` contains the chart wrapper and mark renderer dispatch.
-- `src/axis.js` renders axes for mark renderers that request them.
+- `src/chart/chart.js` contains the chart wrapper and chart renderer dispatch.
+- `src/chart/axis.js` renders axes for chart renderers that request them.
 - `src/layout.js` re-exports the layout subsystem for internal tests and
   implementation modules.
 - `src/layout/` contains layout nodes, compositions, measurement, calculation, engine, and rendering logic.
-- `src/mark/` contains D3-backed renderers for supported chart marks.
+- `src/chart/` contains chart configuration, validation, rendering, and shared
+  scale and style services.
+- `src/chart/type/` contains D3-backed renderers for supported chart types.
+- `src/chart/registry.js` declares the renderer and composition capabilities
+  of every supported chart type.
 - `src/layout/text.js` contains the renderable element behind the `text()`
   layout factory.
 - `src/layout/wrapper.js` contains the wrapper element behind the `wrapper()`
@@ -202,7 +209,10 @@ Supported chart marks include bars, grouped bars, stacked bars, area charts, lin
 
 - Keep source comments and project documentation in English.
 - Preserve ESM style across source and examples.
+- Register new chart types in `src/chart/registry.js` and export their renderer
+  from `src/chart/type/index.js`; layout and validation code should consume
+  registry capabilities instead of maintaining mark-name sets.
 - For new axis-oriented marks, keep `encoding.x` tied to the rendered x channel and `encoding.y` tied to the rendered y channel. Do not add a mark-level `direction` option unless the mark needs a layout rotation like `flow` or `stream`.
 - Keep composition inputs as layout nodes. If a user-facing API accepts charts for composition, it should accept nodes created by factory helpers.
-- Prefer focused tests near the behavior being changed. Layout changes usually need coverage in `test/layout/`; mark renderer changes usually need coverage in `test/mark/`.
+- Prefer focused tests near the behavior being changed. Layout changes usually need coverage in `test/layout/`; chart renderer changes usually need coverage in `test/chart/`.
 - Do not update generated build output unless the task explicitly asks for release artifacts.

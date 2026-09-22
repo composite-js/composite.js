@@ -1,6 +1,6 @@
-import { MARK_DEFINITIONS } from "../../../src/mark/validation.js";
+import { CHART_TYPE_DEFINITIONS } from "../../../src/chart/validation.js";
 
-export const markNavItems = Object.keys(MARK_DEFINITIONS).map((mark) => ({
+export const markNavItems = Object.keys(CHART_TYPE_DEFINITIONS).map((mark) => ({
   href: `/docs/marks/#${mark}`,
   label: mark,
 }));

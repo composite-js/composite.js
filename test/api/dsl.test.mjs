@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { Chart } from "../../src/chart.js";
+import { Chart } from "../../src/chart/chart.js";
 import {
   chart,
   custom,

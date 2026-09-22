@@ -1,5 +1,5 @@
 import { DomMeasurementAdapter } from "./measurement.js";
-import { inferXYOrientation } from "../mark/orientation.js";
+import { inferXYOrientation } from "../chart/orientation.js";
 import { Node } from "./node.js";
 
 function getOptions(node) {
