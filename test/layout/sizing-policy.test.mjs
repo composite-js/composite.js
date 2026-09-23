@@ -64,6 +64,11 @@ try {
         }),
       /size is derived from its content/i,
     );
+
+    assert.throws(
+      () => computeLayout(leaf("invalid", -1, 10)),
+      /BBox width must be a finite non-negative number/,
+    );
   }
 
   {

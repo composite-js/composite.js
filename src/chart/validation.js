@@ -33,12 +33,69 @@ const NUMERIC_FIELD_BY_MARK = {
   stream: ["y"],
 };
 
+const BOX_SIDES = ["top", "right", "bottom", "left"];
+const PADDING_FIELDS = [
+  "inner",
+  "outer",
+  "xInner",
+  "xOuter",
+  "yInner",
+  "yOuter",
+  "groupInner",
+];
+
 function chartLabel(mark) {
   return `mark "${mark}"`;
 }
 
 function hasOwn(value, key) {
   return Object.prototype.hasOwnProperty.call(value, key);
+}
+
+function assertObject(value, label) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    throw new TypeError(`${label} must be an object.`);
+  }
+}
+
+function assertFiniteNumber(value, label, options = {}) {
+  if (typeof value !== "number" || !Number.isFinite(value)) {
+    throw new TypeError(`${label} must be a finite number.`);
+  }
+  if (options.nonNegative && value < 0) {
+    throw new RangeError(`${label} must be non-negative.`);
+  }
+}
+
+function assertChartGeometry(config) {
+  ["width", "height"].forEach((field) => {
+    if (config[field] === undefined) return;
+    assertFiniteNumber(config[field], field, { nonNegative: true });
+  });
+
+  if (config.margin !== undefined) {
+    assertObject(config.margin, "margin");
+    BOX_SIDES.forEach((side) => {
+      if (config.margin[side] === undefined) return;
+      assertFiniteNumber(config.margin[side], `margin.${side}`, {
+        nonNegative: true,
+      });
+    });
+  }
+
+  if (config.padding === undefined) return;
+  if (typeof config.padding === "number") {
+    assertFiniteNumber(config.padding, "padding", { nonNegative: true });
+    return;
+  }
+
+  assertObject(config.padding, "padding");
+  PADDING_FIELDS.forEach((field) => {
+    if (config.padding[field] === undefined) return;
+    assertFiniteNumber(config.padding[field], `padding.${field}`, {
+      nonNegative: true,
+    });
+  });
 }
 
 function fieldNameFor(encoding, channel) {
@@ -73,13 +130,15 @@ function assertFiniteNumbers(mark, data, field, options = {}) {
   const nonNegative = options.nonNegative === true;
 
   data.forEach((row, index) => {
-    const numeric = Number(row[field]);
-    const isFinite = Number.isFinite(numeric);
-    if (!isFinite || (nonNegative && numeric < 0)) {
+    const value = row[field];
+    const isFiniteNumber = typeof value === "number" && Number.isFinite(value);
+    if (!isFiniteNumber || (nonNegative && value < 0)) {
       const description =
-        nonNegative && isFinite ? "non-negative numbers" : "finite numbers";
+        nonNegative && isFiniteNumber
+          ? "non-negative numbers"
+          : "finite numbers";
       throw new Error(
-        `Field "${field}" for ${chartLabel(mark)} must contain ${description}; row ${index} has ${JSON.stringify(row[field])}.`,
+        `Field "${field}" for ${chartLabel(mark)} must contain ${description}; row ${index} has ${JSON.stringify(value)}.`,
       );
     }
   });
@@ -88,8 +147,20 @@ function assertFiniteNumbers(mark, data, field, options = {}) {
 function assertBubblePositionValues(data, encoding) {
   ["x", "y"].forEach((channel) => {
     const field = encoding[channel];
-    if (typeof data[0][field] !== "number") return;
-    assertFiniteNumbers("bubble", data, field, { nonNegative: true });
+    const values = data.map((row) => row[field]);
+    const allNumbers = values.every((value) => typeof value === "number");
+    const allStrings = values.every((value) => typeof value === "string");
+
+    if (allNumbers) {
+      assertFiniteNumbers("bubble", data, field, { nonNegative: true });
+      return;
+    }
+
+    if (!allStrings) {
+      throw new Error(
+        `Field "${field}" for mark "bubble" must contain either finite non-negative numbers or strings consistently.`,
+      );
+    }
   });
 }
 
@@ -125,9 +196,11 @@ function assertMatrixValues(data, encoding) {
 
     const value = row[encoding.y];
     const isBoolean = typeof value === "boolean";
-    const numeric = Number(value);
     const isUnitNumber =
-      Number.isFinite(numeric) && numeric >= 0 && numeric <= 1;
+      typeof value === "number" &&
+      Number.isFinite(value) &&
+      value >= 0 &&
+      value <= 1;
 
     if (!isBoolean && !isUnitNumber) {
       throw new Error(
@@ -205,6 +278,8 @@ export function validateChartConfig(config = {}) {
   if (!definition) {
     throw new Error(`Unsupported mark type: ${mark}`);
   }
+
+  assertChartGeometry(config);
 
   if (!Array.isArray(config.data || [])) {
     throw new TypeError(`data for ${chartLabel(mark)} must be an array.`);

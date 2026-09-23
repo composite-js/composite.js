@@ -27,6 +27,25 @@ function isFiniteNumber(value) {
   return typeof value === "number" && Number.isFinite(value);
 }
 
+function internDomainValue(value) {
+  return value !== null && typeof value === "object" ? value.valueOf() : value;
+}
+
+function assertUniqueRepeatDomain(domain) {
+  const indexesByValue = new Map();
+
+  domain.forEach((value, index) => {
+    const interned = internDomainValue(value);
+    if (indexesByValue.has(interned)) {
+      const firstIndex = indexesByValue.get(interned);
+      throw new RangeError(
+        `repeat domain values must be unique; indices ${firstIndex} and ${index} resolve to the same value ${String(value)}.`,
+      );
+    }
+    indexesByValue.set(interned, index);
+  });
+}
+
 function renderComposition(node, container, renderOptions) {
   node.sizePolicy.validateRenderOptions(node, renderOptions);
   return isSvgContainer(container)
@@ -344,9 +363,11 @@ export class Stack extends Composition {
 export class Repeat extends Composition {
   constructor(domain, func, options = {}) {
     super();
+    const normalizedDomain = [...(domain || [])];
+    assertUniqueRepeatDomain(normalizedDomain);
     this.isRepeat = true;
     this.type = "repeat";
-    this.domain = Object.freeze([...(domain || [])]);
+    this.domain = Object.freeze(normalizedDomain);
     this.func = func;
     this.paddingInner =
       options.paddingInner !== undefined ? options.paddingInner : 0.1;

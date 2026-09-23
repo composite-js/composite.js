@@ -61,3 +61,18 @@ await withFakeSvgDocument(async (document) => {
     /repeatX child 0/i,
   );
 });
+
+{
+  assert.throws(
+    () => repeatX(["A", "A"], () => leaf("duplicate")),
+    /repeat domain values must be unique.*indices 0 and 1/i,
+  );
+
+  assert.throws(
+    () =>
+      repeatY([new Date("2024-01-01"), new Date("2024-01-01")], () =>
+        leaf("duplicate-date"),
+      ),
+    /repeat domain values must be unique.*indices 0 and 1/i,
+  );
+}

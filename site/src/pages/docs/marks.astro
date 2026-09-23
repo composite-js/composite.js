@@ -318,8 +318,8 @@ const formatFields = (fields) => fields.join(", ");
       </p>
       <p>
         Every chart requires at least one data row. Quantitative fields must
-        contain finite, non-negative numbers. Zero is supported; negative values
-        are not currently supported.
+        contain finite, non-negative JavaScript numbers; numeric strings are not
+        coerced. Zero is supported; negative values are not currently supported.
       </p>
       <p>
         Bars, grouped bars, stacked bars, box plots, dumbbells, and proportional
@@ -384,7 +384,9 @@ const formatFields = (fields) => fields.join(", ");
         </div>
         <div>
           <dt><code>width</code>, <code>height</code>, <code>margin</code></dt>
-          <dd>Content size and margins for the chart leaf.</dd>
+          <dd>
+            Finite, non-negative content dimensions and margins for the chart leaf.
+          </dd>
         </div>
         <div>
           <dt><code>padding</code></dt>
@@ -392,6 +394,7 @@ const formatFields = (fields) => fields.join(", ");
             Band padding for categorical scales. Use <code>inner</code> and
             <code>outer</code>, or axis-specific <code>xInner</code>,
             <code>xOuter</code>, <code>yInner</code>, and <code>yOuter</code>.
+            Padding values must be finite and non-negative.
           </dd>
         </div>
         <div>

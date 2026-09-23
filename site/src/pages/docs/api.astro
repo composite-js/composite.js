@@ -170,7 +170,8 @@ assertLayoutNode(value, "value");`;
       <p>
         Express that one child view repeats for every domain value along an
         axis. The factory callback receives each value and returns a layout
-        node. Defaults provide repeat sizing and padding; use
+        node. Domain values must be unique so that every child has a distinct
+        band position. Defaults provide repeat sizing and padding; use
         <code>paddingInner</code>, <code>paddingOuter</code>, <code>width</code>,
         and <code>height</code> to tune repeat sizing.
       </p>

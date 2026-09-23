@@ -19,8 +19,8 @@ export class ChartRenderer {
     this.options = options;
     this.mark = options.mark || "";
     this.encoding = options.encoding || {};
-    this.width = options.width || 400;
-    this.height = options.height || 300;
+    this.width = options.width ?? 400;
+    this.height = options.height ?? 300;
     this.margin = options.margin || {
       top: 40,
       right: 40,

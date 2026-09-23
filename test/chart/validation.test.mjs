@@ -148,6 +148,39 @@ function assertInvalid(config, pattern) {
 }
 
 {
+  const base = {
+    mark: "bar",
+    data: [{ category: "A", value: 4 }],
+    encoding: { x: "category", y: "value" },
+  };
+
+  assertInvalid({ ...base, width: -1 }, /width must be non-negative/);
+  assertInvalid(
+    { ...base, height: Infinity },
+    /height must be a finite number/,
+  );
+  assertInvalid(
+    { ...base, margin: { left: NaN } },
+    /margin\.left must be a finite number/,
+  );
+  assertInvalid(
+    { ...base, margin: { left: -1 } },
+    /margin\.left must be non-negative/,
+  );
+  assertInvalid(
+    { ...base, padding: { yInner: Infinity } },
+    /padding\.yInner must be a finite number/,
+  );
+  assertInvalid({ ...base, padding: -0.1 }, /padding must be non-negative/);
+
+  const zeroSized = new Chart({ ...base, width: 0, height: 0 });
+  assert.equal(zeroSized.width, 0);
+  assert.equal(zeroSized.height, 0);
+  assert.equal(zeroSized._createRenderer().width, 0);
+  assert.equal(zeroSized._createRenderer().height, 0);
+}
+
+{
   assertInvalid(
     {
       mark: "stackbar",
@@ -255,6 +288,55 @@ function assertInvalid(config, pattern) {
       encoding: { x: "year", y: "value" },
     },
     /Field "value" for mark "line" must contain finite numbers/,
+  );
+
+  assertInvalid(
+    {
+      mark: "scatter",
+      data: [{ x: "1", y: "2" }],
+      encoding: { x: "x", y: "y" },
+    },
+    /Field "x" for mark "scatter" must contain finite numbers/,
+  );
+
+  assert.throws(
+    () =>
+      new Chart({
+        mark: "scatter",
+        data: [{ x: "1", y: "2" }],
+        encoding: { x: "x", y: "y" },
+      }),
+    /Field "x" for mark "scatter" must contain finite numbers/,
+  );
+
+  assertInvalid(
+    {
+      mark: "bubble",
+      data: [
+        { x: 1, y: "North" },
+        { x: "2", y: "South" },
+      ],
+      encoding: { x: "x", y: "y" },
+    },
+    /Field "x" for mark "bubble" must contain either finite non-negative numbers or strings consistently/,
+  );
+
+  assertValid({
+    mark: "bubble",
+    data: [
+      { x: "A", y: "North" },
+      { x: "B", y: "South" },
+    ],
+    encoding: { x: "x", y: "y" },
+  });
+
+  assertInvalid(
+    {
+      mark: "matrix",
+      data: [{ column: "C1", row: "R1", active: "0.5" }],
+      encoding: { x: "column", group: "row", y: "active" },
+    },
+    /must contain booleans or numbers between 0 and 1/,
   );
 
   assertInvalid(

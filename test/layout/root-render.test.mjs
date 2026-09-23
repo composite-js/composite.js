@@ -38,6 +38,25 @@ await withFakeSvgDocument(async (document) => {
 });
 
 await withFakeSvgDocument(async (document) => {
+  const container = document.createElement("div");
+  const pie = chart({
+    mark: "pie",
+    data: [{ category: "A", value: 1 }],
+    encoding: { x: "category", y: "value" },
+    width: 100,
+    height: 80,
+    margin: { top: 10, right: 20, bottom: 30, left: 40 },
+  });
+
+  pie.render(container);
+
+  const arcGroup = container.querySelector(".arc").parentNode;
+  assert.equal(arcGroup.getAttribute("transform"), "translate(90, 50)");
+  assert.equal(container.firstElementChild.getAttribute("width"), "160");
+  assert.equal(container.firstElementChild.getAttribute("height"), "120");
+});
+
+await withFakeSvgDocument(async (document) => {
   const svg = document.createElementNS(SVG_NAMESPACE, "svg");
   let resolvedOptions;
   const node = custom({

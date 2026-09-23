@@ -18,8 +18,8 @@ export class Chart {
     this.data = options.data || [];
     this.mark = options.mark || "bar";
     this.encoding = options.encoding || {};
-    this.width = options.width || 400;
-    this.height = options.height || 300;
+    this.width = options.width ?? 400;
+    this.height = options.height ?? 300;
     this.margin = {
       top: 40,
       right: 40,

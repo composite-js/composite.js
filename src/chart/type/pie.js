@@ -26,6 +26,7 @@ export class PieChartRenderer extends ChartRenderer {
     const container = d3.select(svg);
     const categoryField = this.encoding.x;
     const valueField = this.encoding.y;
+    const margin = this.margin;
 
     // Clear content
     container.selectAll("*").remove();
@@ -41,7 +42,10 @@ export class PieChartRenderer extends ChartRenderer {
 
     const g = container
       .append("g")
-      .attr("transform", `translate(${this.width / 2}, ${this.height / 2})`);
+      .attr(
+        "transform",
+        `translate(${margin.left + this.width / 2}, ${margin.top + this.height / 2})`,
+      );
 
     const arcs = g
       .selectAll("arc")

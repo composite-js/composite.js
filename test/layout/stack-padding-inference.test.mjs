@@ -168,37 +168,13 @@ function horizontalPac(overrides = {}) {
 }
 
 {
-  const bars = horizontalBars({
-    padding: { yInner: Infinity, yOuter: 0.08 },
-  });
-  const box = chart({
-    mark: "box",
-    data: [
-      { category: "A", value: 10 },
-      { category: "A", value: 20 },
-      { category: "B", value: 30 },
-      { category: "B", value: 40 },
-    ],
-    width: 100,
-    height: 40,
-    encoding: {
-      x: "value",
-      y: "category",
-      xDomain: [0, 100],
-      yDomain: categories,
-    },
-    padding: { yInner: 0.3, yOuter: 0.08 },
-  });
-  const pac = verticalPac();
-
-  const computed = computeLayout(stackX([bars, pac, box]), {
-    measurementAdapter,
-  });
-
-  assert.equal(resolved(computed, pac).padding.yInner, 0.1);
-  assert.equal(resolved(computed, pac).padding.yOuter, 0.08);
-  assert.equal(resolved(computed, pac)._createRenderer().padding.yInner, 0.1);
-  assert.equal(resolved(computed, pac)._createRenderer().padding.yOuter, 0.08);
+  assert.throws(
+    () =>
+      horizontalBars({
+        padding: { yInner: Infinity, yOuter: 0.08 },
+      }),
+    /padding\.yInner must be a finite number/,
+  );
 }
 
 {

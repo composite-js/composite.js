@@ -259,6 +259,16 @@ export class LayoutEngine {
       throw new Error("Invalid layout node: missing renderable element.");
     }
 
+    let width = element.options?.width ?? element.width;
+    let height = element.options?.height ?? element.height;
+
+    if (width === undefined || height === undefined) {
+      const suggested = LayoutCalculator.suggestWidthHeight(element);
+      if (width === undefined) width = suggested.width;
+      if (height === undefined) height = suggested.height;
+    }
+
+    const bbox = new BBox(0, 0, width, height);
     const margin =
       context.root === node
         ? {
@@ -270,16 +280,6 @@ export class LayoutEngine {
             ...node.options?.margin,
           }
         : LayoutCalculator.estimateMargin(element, context);
-    let width = element.options?.width ?? element.width;
-    let height = element.options?.height ?? element.height;
-
-    if (width === undefined || height === undefined) {
-      const suggested = LayoutCalculator.suggestWidthHeight(element);
-      if (width === undefined) width = suggested.width;
-      if (height === undefined) height = suggested.height;
-    }
-
-    const bbox = new BBox(0, 0, width, height);
     bbox.setMargin(margin);
     node.bbox = bbox;
   }

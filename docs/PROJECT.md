@@ -83,7 +83,7 @@ options)` method as a custom leaf layout node.
   chart nodes, `link: true` draws connector lines between matching
   `encoding.x` values when both marks support link anchors.
 - `repeatX(domain, fn, options)` creates a horizontal repeated layout from a domain and node factory.
-- `repeatY(domain, fn, options)` creates a vertical repeated layout from a domain and node factory. Repeat dimensions may be explicit or inferred from the largest child and the configured band padding.
+- `repeatY(domain, fn, options)` creates a vertical repeated layout from a domain and node factory. Repeat dimensions may be explicit or inferred from the largest child and the configured band padding. Positional repeat domains must contain unique values.
 - `repeat(domain, fn, options)` creates a directionless repeated layout that can be embedded into a compatible container.
 - `embed(container, repeated, mapping)` places repeated children into slots produced by a container.
 - `sequenceContainer(options)` creates a container abstraction for sequence-style embedded layouts.
@@ -95,8 +95,9 @@ options)` method as a custom leaf layout node.
   passing them into composition helpers.
 - `validateChartConfig(config)` validates chart mark, encoding, and data shape
   without rendering. Chart data must contain at least one row, and quantitative
-  fields currently accept only finite, non-negative values; zero is supported,
-  while negative values are not.
+  fields currently accept only finite, non-negative JavaScript numbers; numeric
+  strings are not coerced. Zero is supported, while negative values are not.
+  Chart dimensions, margins, and padding must also be finite and non-negative.
 - `parseCsv(text, options)` parses CSV data, while `loadCsvText(url)` loads CSV
   text in browser and Node environments.
 - `tableColumns(rows)` and `numericColumns(rows, options)` inspect tabular data,

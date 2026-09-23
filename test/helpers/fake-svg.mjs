@@ -39,7 +39,7 @@ function pathBounds(d) {
 }
 
 function textBounds(node) {
-  const fontSize = Number(node.getAttribute("font-size") || 12);
+  const fontSize = Number.parseFloat(node.getAttribute("font-size") || 12);
   const text = node.textContent || "";
   const x = Number(node.getAttribute("x") || 0);
   const y = Number(node.getAttribute("y") || 0);

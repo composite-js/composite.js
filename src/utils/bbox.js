@@ -3,6 +3,19 @@
  */
 export class BBox {
   constructor(x, y, width, height) {
+    if (typeof x !== "number" || !Number.isFinite(x)) {
+      throw new TypeError("BBox x must be a finite number.");
+    }
+    if (typeof y !== "number" || !Number.isFinite(y)) {
+      throw new TypeError("BBox y must be a finite number.");
+    }
+    if (typeof width !== "number" || !Number.isFinite(width) || width < 0) {
+      throw new TypeError("BBox width must be a finite non-negative number.");
+    }
+    if (typeof height !== "number" || !Number.isFinite(height) || height < 0) {
+      throw new TypeError("BBox height must be a finite non-negative number.");
+    }
+
     this.content = {
       x: x,
       y: y,
@@ -22,12 +35,20 @@ export class BBox {
    * @param {{top: number, right: number, bottom: number, left: number}} margin
    */
   setMargin(margin) {
-    this.margin = {
-      top: margin.top || 0,
-      right: margin.right || 0,
-      bottom: margin.bottom || 0,
-      left: margin.left || 0,
+    const normalized = {
+      top: margin?.top ?? 0,
+      right: margin?.right ?? 0,
+      bottom: margin?.bottom ?? 0,
+      left: margin?.left ?? 0,
     };
+    Object.entries(normalized).forEach(([side, value]) => {
+      if (typeof value !== "number" || !Number.isFinite(value) || value < 0) {
+        throw new TypeError(
+          `BBox margin.${side} must be a finite non-negative number.`,
+        );
+      }
+    });
+    this.margin = normalized;
   }
 
   /**
@@ -56,8 +77,14 @@ export class BBox {
    * @param {number} height
    */
   setSize(width, height) {
-    if (width > 0) this.content.width = width;
-    if (height > 0) this.content.height = height;
+    if (typeof width !== "number" || !Number.isFinite(width) || width < 0) {
+      throw new TypeError("BBox width must be a finite non-negative number.");
+    }
+    if (typeof height !== "number" || !Number.isFinite(height) || height < 0) {
+      throw new TypeError("BBox height must be a finite non-negative number.");
+    }
+    this.content.width = width;
+    this.content.height = height;
   }
 
   /**

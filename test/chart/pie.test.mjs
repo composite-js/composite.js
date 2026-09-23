@@ -50,6 +50,21 @@ import { createFakeSvg } from "../helpers/fake-svg.mjs";
   const svg = createFakeSvg();
   const renderer = new PieChartRenderer({
     width: 100,
+    height: 80,
+    margin: { top: 20, right: 0, bottom: 0, left: 40 },
+    encoding: { x: "category", y: "value" },
+  });
+
+  renderer.render(svg, [{ category: "A", value: 1 }]);
+
+  const arcGroup = svg.querySelectorAll(".arc")[0].parentNode;
+  assert.equal(arcGroup.getAttribute("transform"), "translate(90, 60)");
+}
+
+{
+  const svg = createFakeSvg();
+  const renderer = new PieChartRenderer({
+    width: 100,
     height: 100,
     innerRadius: 18,
     encoding: { x: "category", y: "value" },
