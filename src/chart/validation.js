@@ -154,13 +154,13 @@ function assertBubblePositionValues(data, encoding) {
     const allStrings = values.every((value) => typeof value === "string");
 
     if (allNumbers) {
-      assertFiniteNumbers("bubble", data, field, { nonNegative: true });
+      assertFiniteNumbers("bubble", data, field);
       return;
     }
 
     if (!allStrings) {
       throw new Error(
-        `Field "${field}" for mark "bubble" must contain either finite non-negative numbers or strings consistently.`,
+        `Field "${field}" for mark "bubble" must contain either finite numbers or strings consistently.`,
       );
     }
   });
@@ -172,9 +172,9 @@ function assertLinePositionValues(data, encoding) {
   const allStrings = values.every((value) => typeof value === "string");
 
   if (!allStrings) {
-    assertFiniteNumbers("line", data, xField, { nonNegative: true });
+    assertFiniteNumbers("line", data, xField);
   }
-  assertFiniteNumbers("line", data, encoding.y, { nonNegative: true });
+  assertFiniteNumbers("line", data, encoding.y);
 }
 
 function assertCandlestickValues(data, encoding) {
@@ -183,13 +183,11 @@ function assertCandlestickValues(data, encoding) {
   const allStrings = xValues.every((value) => typeof value === "string");
 
   if (!allStrings) {
-    assertFiniteNumbers("candlestick", data, xField, { nonNegative: true });
+    assertFiniteNumbers("candlestick", data, xField);
   }
 
   ["open", "high", "low", "close"].forEach((channel) => {
-    assertFiniteNumbers("candlestick", data, encoding[channel], {
-      nonNegative: true,
-    });
+    assertFiniteNumbers("candlestick", data, encoding[channel]);
   });
 
   data.forEach((row, index) => {
@@ -222,6 +220,36 @@ function assertDumbbellPairs(data, encoding, categoryChannel) {
       );
     }
   }
+}
+
+function assertStackbarGroups(data, encoding, categoryField, valueField) {
+  const groupsByCategory = new Map();
+
+  data.forEach((row, index) => {
+    const category = row[categoryField];
+    const group = row[encoding.group];
+    let state = groupsByCategory.get(category);
+    if (!state) {
+      state = { groups: new Set(), hasPositive: false, hasNegative: false };
+      groupsByCategory.set(category, state);
+    }
+
+    if (state.groups.has(group)) {
+      throw new Error(
+        `Duplicate category and group for mark "stackbar" at row ${index}: ${JSON.stringify(category)} / ${JSON.stringify(group)}.`,
+      );
+    }
+    state.groups.add(group);
+
+    const value = row[valueField];
+    state.hasPositive ||= value > 0;
+    state.hasNegative ||= value < 0;
+    if (state.hasPositive && state.hasNegative) {
+      throw new Error(
+        `Values for mark "stackbar" in category ${JSON.stringify(category)} must not mix positive and negative numbers.`,
+      );
+    }
+  });
 }
 
 function assertMatrixValues(data, encoding) {
@@ -430,9 +458,22 @@ export function validateChartConfig(config = {}) {
 
   if (isOrientationInferredChartType(mark)) {
     const orientation = inferXYOrientation(mark, data, encoding);
+    const supportsNegativeValues =
+      ["bar", "groupbar", "stackbar"].includes(mark) ||
+      (mark === "lollipop" && orientation.valueChannel === "y") ||
+      mark === "dumbbell";
     assertFiniteNumbers(mark, data, orientation.valueField, {
-      nonNegative: true,
+      nonNegative: !supportsNegativeValues,
     });
+
+    if (mark === "stackbar") {
+      assertStackbarGroups(
+        data,
+        encoding,
+        orientation.categoryField,
+        orientation.valueField,
+      );
+    }
 
     if (mark === "dumbbell") {
       assertDumbbellPairs(data, encoding, orientation.categoryChannel);
@@ -453,7 +494,7 @@ export function validateChartConfig(config = {}) {
 
   (NUMERIC_FIELD_BY_MARK[mark] || []).forEach((channel) => {
     assertFiniteNumbers(mark, data, encoding[channel], {
-      nonNegative: mark !== "histogram" && mark !== "heatmap",
+      nonNegative: mark === "stream" || mark === "waffle",
     });
   });
 

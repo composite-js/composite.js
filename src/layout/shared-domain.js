@@ -4,6 +4,7 @@ import {
   categoricalDomain,
   continuousDomain,
   valueDomain,
+  zeroBaselineDomain,
 } from "../chart/scale.js";
 import { inferXYOrientation } from "../chart/orientation.js";
 import { getChartTypeDefinition } from "../chart/registry.js";
@@ -65,7 +66,7 @@ function stackedValueDomain(chart, categoryChannel, valueChannel) {
     categoricalDomain(data, categoryField, undefined);
   const groupKeys = encoding.groupDomain || uniqueValues(data, groupField);
 
-  const maxValue = d3.max(categories, (category) =>
+  const totals = categories.map((category) =>
     d3.sum(groupKeys, (key) => {
       const item = data.find(
         (d) => d[categoryField] === category && d[groupField] === key,
@@ -74,7 +75,9 @@ function stackedValueDomain(chart, categoryChannel, valueChannel) {
     }),
   );
 
-  return valueDomain(maxValue, undefined);
+  const minimum = Math.min(0, d3.min(totals) ?? 0);
+  const maximum = Math.max(0, d3.max(totals) ?? 0);
+  return minimum === maximum ? [0, 1] : [minimum, maximum];
 }
 
 function streamValueDomain(chart) {
@@ -204,7 +207,7 @@ function domainDescriptor(chart, channel) {
             chart,
             channel,
             explicitDomain,
-            maxValueDomain(data, field),
+            zeroBaselineDomain(data, field),
           )
         : categoryDescriptor(chart, channel, explicitDomain);
     }
@@ -237,7 +240,7 @@ function domainDescriptor(chart, channel) {
             chart,
             channel,
             explicitDomain,
-            maxValueDomain(data, field),
+            zeroBaselineDomain(data, field),
           );
 
     case "line":
@@ -259,7 +262,7 @@ function domainDescriptor(chart, channel) {
         chart,
         channel,
         explicitDomain,
-        maxValueDomain(data, field),
+        zeroBaselineDomain(data, field),
       );
 
     case "scatter":

@@ -360,7 +360,7 @@ function baseOptions(overrides = {}) {
   ]);
   assert.deepEqual(axisConfig.scales.y.domain(), [0, 50]);
   assert.deepEqual(axisConfig.scales.x.range(), [120, 0]);
-  assert.deepEqual(axisConfig.scales.y.range(), [0, 80]);
+  assert.deepEqual(axisConfig.scales.y.range(), [80, 0]);
 }
 
 {

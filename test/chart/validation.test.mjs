@@ -368,7 +368,7 @@ function assertInvalid(config, pattern) {
       ],
       encoding: { x: "x", y: "y" },
     },
-    /Field "x" for mark "bubble" must contain either finite non-negative numbers or strings consistently/,
+    /Field "x" for mark "bubble" must contain either finite numbers or strings consistently/,
   );
 
   assertValid({
@@ -436,52 +436,9 @@ function assertInvalid(config, pattern) {
 
   const negativeValueConfigs = [
     {
-      mark: "bar",
-      data: [{ category: "A", value: -1 }],
-      encoding: { x: "category", y: "value" },
-    },
-    {
-      mark: "groupbar",
-      data: [{ category: "A", group: "G", value: -1 }],
-      encoding: { x: "category", y: "value", group: "group" },
-    },
-    {
-      mark: "stackbar",
-      data: [{ category: "A", group: "G", value: -1 }],
-      encoding: { x: "category", y: "value", group: "group" },
-    },
-    {
-      mark: "area",
-      data: [{ x: 1, y: -1 }],
-      encoding: { x: "x", y: "y" },
-    },
-    {
-      mark: "line",
-      data: [{ x: -1, y: 1 }],
-      encoding: { x: "x", y: "y" },
-    },
-    {
-      mark: "scatter",
-      data: [{ x: 1, y: -1 }],
-      encoding: { x: "x", y: "y" },
-    },
-    {
       mark: "box",
       data: [{ category: "A", value: -1 }],
       encoding: { x: "category", y: "value" },
-    },
-    {
-      mark: "dumbbell",
-      data: [
-        { category: "A", value: -1 },
-        { category: "A", value: 1 },
-      ],
-      encoding: { x: "category", y: "value" },
-    },
-    {
-      mark: "bubble",
-      data: [{ x: -1, y: 1 }],
-      encoding: { x: "x", y: "y" },
     },
     {
       mark: "flow",
@@ -503,6 +460,82 @@ function assertInvalid(config, pattern) {
       ),
     );
   });
+
+  [
+    {
+      mark: "scatter",
+      data: [{ x: -2, y: -3 }],
+      encoding: { x: "x", y: "y" },
+    },
+    {
+      mark: "bubble",
+      data: [{ x: -2, y: -3, size: 4 }],
+      encoding: { x: "x", y: "y", size: "size" },
+    },
+    {
+      mark: "dumbbell",
+      data: [
+        { category: "A", value: -2 },
+        { category: "A", value: 3 },
+      ],
+      encoding: { x: "category", y: "value" },
+    },
+    {
+      mark: "candlestick",
+      data: [{ period: -1, open: -3, high: 1, low: -4, close: -2 }],
+      encoding: {
+        x: "period",
+        open: "open",
+        high: "high",
+        low: "low",
+        close: "close",
+      },
+    },
+    {
+      mark: "line",
+      data: [{ x: -2, y: 3 }],
+      encoding: { x: "x", y: "y" },
+    },
+    {
+      mark: "area",
+      data: [{ x: -2, y: 3 }],
+      encoding: { x: "x", y: "y" },
+    },
+    {
+      mark: "area",
+      data: [{ x: 1, y: -3 }],
+      encoding: { x: "x", y: "y" },
+    },
+    {
+      mark: "line",
+      data: [{ x: 1, y: -3 }],
+      encoding: { x: "x", y: "y" },
+    },
+    {
+      mark: "bar",
+      data: [{ category: "A", value: -3 }],
+      encoding: { x: "category", y: "value" },
+    },
+    {
+      mark: "groupbar",
+      data: [{ category: "A", group: "G", value: -3 }],
+      encoding: { x: "category", y: "value", group: "group" },
+    },
+    {
+      mark: "lollipop",
+      data: [{ category: "A", value: -3 }],
+      encoding: { x: "category", y: "value" },
+    },
+  ].forEach(assertValid);
+
+  assertInvalid(
+    {
+      mark: "lollipop",
+      data: [{ category: "A", value: -3 }],
+      encoding: { x: "value", y: "category" },
+    },
+    /must contain non-negative numbers/,
+  );
 
   assertValid({
     mark: "bar",

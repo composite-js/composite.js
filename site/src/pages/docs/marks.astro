@@ -108,6 +108,7 @@ const markSections = [
   encoding: { x: "quarter", y: "count", group: "segment" },
   showLabels: true,
 });`,
+    note: "Within each category, values may be positive or negative, with zero allowed in either case. Mixing positive and negative values or repeating a group key is invalid. The automatic value domain includes zero.",
   },
   {
     id: "area",
@@ -408,8 +409,21 @@ const formatFields = (fields) => fields.join(", ");
       </p>
       <p>
         Every chart requires at least one data row. Quantitative fields must
-        contain finite, non-negative JavaScript numbers; numeric strings are not
-        coerced. Zero is supported; negative values are not currently supported.
+        contain finite JavaScript numbers; numeric strings are not coerced.
+        Negative values are supported for bar and grouped bar values, vertical
+        lollipop y values, scatter x/y, numeric bubble x/y, the dumbbell value
+        channel, stacked bar values, numeric candlestick x and OHLC fields,
+        numeric line x/y, area x/y, histogram observations, and heatmap color
+        values. Automatic value domains for bars, grouped bars, stacked bars,
+        lollipops, lines, and areas include zero. Their default x-axis crosses
+        vertical value scales at y=0, and horizontal value scales show a zero
+        line. Category ticks and labels for bars, grouped bars, stacked bars,
+        and lollipops sit on the unoccupied side of the zero baseline; grouped
+        categories with both signs place their labels outside the plot.
+        Explicit domain and axis-position overrides are preserved. Within a
+        stacked bar category, values may be positive or
+        negative but cannot mix signs; zero is allowed in either case. Other
+        quantitative fields remain non-negative, including bubble size.
       </p>
       <p>
         Bars, grouped bars, stacked bars, box plots, dumbbells, and proportional
@@ -465,7 +479,7 @@ const formatFields = (fields) => fields.join(", ");
           <dt><code>data</code></dt>
           <dd>
             A non-empty array of row objects used by the encoded data fields.
-            Quantitative values must be finite and non-negative.
+            Quantitative values must be finite; support for negative values depends on the mark and channel.
           </dd>
         </div>
         <div>

@@ -4,9 +4,10 @@ import { inferXYOrientation } from "../orientation.js";
 import {
   bandScale,
   bandRange,
+  categoryValueSigns,
   categoricalDomain,
   linearScale,
-  valueDomain,
+  zeroBaselineDomain,
   xRange,
   yRange,
 } from "../scale.js";
@@ -40,8 +41,9 @@ export class LollipopChartRenderer extends ChartRenderer {
       this.padding,
     );
     const valueScale = linearScale(
-      valueDomain(
-        d3.max(data, (datum) => datum[valueField]),
+      zeroBaselineDomain(
+        data,
+        valueField,
         this.encoding[`${valueChannel}Domain`],
       ),
       horizontal ? xRange(this.width) : yRange(this.height),
@@ -92,6 +94,10 @@ export class LollipopChartRenderer extends ChartRenderer {
         ? { x: valueScale, y: categoryScale }
         : { x: categoryScale, y: valueScale },
       { margin: this.margin, width: this.width, height: this.height },
+      {
+        zeroBaselineChannel: valueChannel,
+        categorySigns: categoryValueSigns(data, categoryField, valueField),
+      },
     );
   }
 }

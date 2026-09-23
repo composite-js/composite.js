@@ -4,7 +4,7 @@ import {
   bandScale,
   categoricalDomain,
   continuousDomain,
-  valueDomain,
+  zeroBaselineDomain,
   linearScale,
   xRange,
   yRange,
@@ -34,7 +34,7 @@ export class LineChartRenderer extends ChartRenderer {
     const chartWidth = this.width;
     const chartHeight = this.height;
     const reverseX = this.options.reverseX ?? this.xAxisPos === "top";
-    const reverseY = this.options.reverseY ?? this.yAxisPos === "right";
+    const reverseY = this.options.reverseY === true;
 
     container.selectAll("*").remove();
     const g = container
@@ -60,9 +60,8 @@ export class LineChartRenderer extends ChartRenderer {
       ? (datum) => xScale(datum[xField]) + xScale.bandwidth() / 2
       : (datum) => xScale(Number(datum[xField]));
 
-    const maxValue = Math.max(...data.map((datum) => datum[yField] || 0));
     const yScale = linearScale(
-      valueDomain(maxValue, this.encoding.yDomain),
+      zeroBaselineDomain(data, yField, this.encoding.yDomain),
       yRange(chartHeight, reverseY),
     );
 
@@ -137,6 +136,7 @@ export class LineChartRenderer extends ChartRenderer {
     return this.axisConfig(
       { x: xScale, y: yScale, ...(groupField ? { group: colorScale } : {}) },
       { margin, width: chartWidth, height: chartHeight },
+      { zeroBaselineChannel: "y" },
     );
   }
 }

@@ -82,7 +82,7 @@ for (const [curve, expected] of [
   assert.deepEqual(domainAxisConfig.scales.x.domain(), [1996, 2012]);
   assert.deepEqual(domainAxisConfig.scales.y.domain(), [0, 40]);
   assert.deepEqual(domainAxisConfig.scales.x.range(), [120, 0]);
-  assert.deepEqual(domainAxisConfig.scales.y.range(), [0, 80]);
+  assert.deepEqual(domainAxisConfig.scales.y.range(), [80, 0]);
 }
 
 {

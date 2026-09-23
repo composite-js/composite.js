@@ -3,14 +3,22 @@ import { ChartRenderer } from "../renderer.js";
 import {
   bandRange,
   bandScale,
+  categoryValueSigns,
   categoricalDomain,
   linearScale,
   scaleSpan,
-  valueDomain,
+  zeroBaselineDomain,
   xRange,
   yRange,
 } from "../scale.js";
 import { inferXYOrientation } from "../orientation.js";
+
+function stackedDomain(stackedData) {
+  const [minimum, maximum] = d3.extent(stackedData.flat(2));
+  const start = Math.min(0, minimum ?? 0);
+  const end = Math.max(0, maximum ?? 0);
+  return start === end ? [0, 1] : [start, end];
+}
 
 /**
  * Renderer for grouped bar charts.
@@ -53,8 +61,6 @@ export class GroupBarChartRenderer extends ChartRenderer {
     const groups = this.encoding.groupDomain || [
       ...new Set(data.map((d) => d[groupField])),
     ];
-    const maxValue = Math.max(...data.map((d) => d[xField] || 0));
-
     const yScale = d3
       .scaleBand()
       .domain(categories)
@@ -70,16 +76,17 @@ export class GroupBarChartRenderer extends ChartRenderer {
 
     const xScale = d3
       .scaleLinear()
-      .domain(this.encoding.xDomain || [0, maxValue])
+      .domain(zeroBaselineDomain(data, xField, this.encoding.xDomain))
       .range([0, chartWidth]);
 
     const colorScale = d3.scaleOrdinal().domain(groups).range(this.colorScheme);
 
     data.forEach((d, index) => {
       const value = d[xField];
-      const x = margin.left + xScale(0);
+      const xSpan = scaleSpan(xScale, 0, value);
+      const x = margin.left + xSpan.position;
       const y = margin.top + yScale(d[yField]) + groupScale(d[groupField]);
-      const barWidth = xScale(value) - xScale(0);
+      const barWidth = xSpan.size;
       const barHeight = groupScale.bandwidth();
       const fill = colorScale(d[groupField]);
       const rect = this.renderStyledRect({
@@ -100,11 +107,13 @@ export class GroupBarChartRenderer extends ChartRenderer {
       rect.append("title").text(`${d[yField]} - ${d[groupField]}: ${value}`);
 
       if (this.showLabels && barWidth > 20) {
+        const tipX = margin.left + xScale(value);
+        const tipIsLeft = tipX < margin.left + xScale(0);
         container
           .append("text")
-          .attr("x", x + barWidth + 4)
+          .attr("x", tipX + (tipIsLeft ? -4 : 4))
           .attr("y", y + barHeight / 2 + 4)
-          .attr("text-anchor", "start")
+          .attr("text-anchor", tipIsLeft ? "end" : "start")
           .attr("font-size", "10px")
           .text(value);
       }
@@ -113,6 +122,10 @@ export class GroupBarChartRenderer extends ChartRenderer {
     return this.axisConfig(
       { x: xScale, y: yScale, group: groupScale },
       { margin, width: chartWidth, height: chartHeight },
+      {
+        zeroBaselineChannel: "x",
+        categorySigns: categoryValueSigns(data, yField, xField),
+      },
     );
   }
 
@@ -131,10 +144,8 @@ export class GroupBarChartRenderer extends ChartRenderer {
     const groups = this.encoding.groupDomain || [
       ...new Set(data.map((d) => d[groupField])),
     ];
-    const maxValue = Math.max(...data.map((d) => d[yField] || 0));
-
     const reverseX = this.xAxisPos === "top";
-    const reverseY = this.yAxisPos === "right";
+    const reverseY = this.options.reverseY === true;
     const xScale = bandScale(categories, xRange(chartWidth, reverseX), {
       inner: this.padding.xInner,
       outer: this.padding.xOuter,
@@ -147,7 +158,7 @@ export class GroupBarChartRenderer extends ChartRenderer {
       .paddingInner(this.padding.groupInner);
 
     const yScale = linearScale(
-      valueDomain(maxValue, this.encoding.yDomain),
+      zeroBaselineDomain(data, yField, this.encoding.yDomain),
       yRange(chartHeight, reverseY),
     );
 
@@ -180,7 +191,7 @@ export class GroupBarChartRenderer extends ChartRenderer {
         container
           .append("text")
           .attr("x", x + groupScale.bandwidth() / 2)
-          .attr("y", y - 4)
+          .attr("y", y + ySpan.size / 2 + 4)
           .attr("text-anchor", "middle")
           .attr("font-size", "10px")
           .text(value);
@@ -190,6 +201,10 @@ export class GroupBarChartRenderer extends ChartRenderer {
     return this.axisConfig(
       { x: xScale, y: yScale, group: groupScale },
       { margin, width: chartWidth, height: chartHeight },
+      {
+        zeroBaselineChannel: "y",
+        categorySigns: categoryValueSigns(data, xField, yField),
+      },
     );
   }
 }
@@ -272,7 +287,6 @@ export class StackBarChartRenderer extends ChartRenderer {
 
     const stack = d3.stack().keys(groupKeys);
     const stackedData = stack(pivotedData);
-    const maxValue = d3.max(stackedData, (layer) => d3.max(layer, (d) => d[1]));
 
     const colorScale = d3
       .scaleOrdinal()
@@ -285,9 +299,9 @@ export class StackBarChartRenderer extends ChartRenderer {
       outer: this.padding.yOuter,
     });
 
-    const reverseX = this.yAxisPos === "right";
+    const reverseX = this.options.reverseX === true;
     const xScale = linearScale(
-      valueDomain(maxValue, this.encoding.xDomain),
+      this.encoding.xDomain || stackedDomain(stackedData),
       xRange(chartWidth, reverseX),
     );
 
@@ -339,6 +353,10 @@ export class StackBarChartRenderer extends ChartRenderer {
     return this.axisConfig(
       { x: xScale, y: yScale },
       { margin, width: chartWidth, height: chartHeight },
+      {
+        zeroBaselineChannel: "x",
+        categorySigns: categoryValueSigns(data, categoryField, valueField),
+      },
     );
   }
 
@@ -380,7 +398,6 @@ export class StackBarChartRenderer extends ChartRenderer {
 
     const stack = d3.stack().keys(groupKeys);
     const stackedData = stack(pivotedData);
-    const maxValue = d3.max(stackedData, (layer) => d3.max(layer, (d) => d[1]));
 
     const colorScale = d3
       .scaleOrdinal()
@@ -393,9 +410,9 @@ export class StackBarChartRenderer extends ChartRenderer {
       outer: this.padding.xOuter,
     });
 
-    const reverseY = this.yAxisPos === "right";
+    const reverseY = this.options.reverseY === true;
     const yScale = linearScale(
-      valueDomain(maxValue, this.encoding.yDomain),
+      this.encoding.yDomain || stackedDomain(stackedData),
       yRange(chartHeight, reverseY),
     );
 
@@ -447,6 +464,10 @@ export class StackBarChartRenderer extends ChartRenderer {
     return this.axisConfig(
       { x: xScale, y: yScale },
       { margin, width: chartWidth, height: chartHeight },
+      {
+        zeroBaselineChannel: "y",
+        categorySigns: categoryValueSigns(data, categoryField, valueField),
+      },
     );
   }
 }
@@ -508,8 +529,6 @@ export class BarChartRenderer extends ChartRenderer {
       .append("g")
       .attr("transform", `translate(${margin.left},${margin.top})`);
 
-    const maxValue = Math.max(...data.map((d) => d[xField] || 0));
-
     const reverseY = this.xAxisPos === "top";
     const yScale = bandScale(
       categoricalDomain(data, yField, this.encoding.yDomain),
@@ -520,9 +539,9 @@ export class BarChartRenderer extends ChartRenderer {
       },
     );
 
-    const reverseX = this.yAxisPos === "right";
+    const reverseX = this.options.reverseX === true;
     const xScale = linearScale(
-      valueDomain(maxValue, this.encoding.xDomain),
+      zeroBaselineDomain(data, xField, this.encoding.xDomain),
       xRange(chartWidth, reverseX),
     );
     const anchors = [];
@@ -558,24 +577,28 @@ export class BarChartRenderer extends ChartRenderer {
       rect.append("title").text(`${d[yField]}: ${value}`);
 
       if (this.showLabels) {
+        const tipX = margin.left + xScale(value);
+        const tipIsLeft = tipX < margin.left + xScale(0);
         const label = container
           .append("text")
           .attr("y", y + barHeight / 2 + 4)
           .attr("font-size", "12px")
           .text(value);
 
-        if (reverseX) {
-          label.attr("x", x - 5).attr("text-anchor", "end");
-        } else {
-          label.attr("x", x + barWidth + 5).attr("text-anchor", "start");
-        }
+        label
+          .attr("x", tipX + (tipIsLeft ? -5 : 5))
+          .attr("text-anchor", tipIsLeft ? "end" : "start");
       }
     });
 
     return this.axisConfig(
       { x: xScale, y: yScale },
       { margin, width: chartWidth, height: chartHeight },
-      { linkAnchors: { channels: ["y"], anchors } },
+      {
+        linkAnchors: { channels: ["y"], anchors },
+        zeroBaselineChannel: "x",
+        categorySigns: categoryValueSigns(data, yField, xField),
+      },
     );
   }
 
@@ -596,8 +619,6 @@ export class BarChartRenderer extends ChartRenderer {
       .append("g")
       .attr("transform", `translate(${margin.left},${margin.top})`);
 
-    const maxValue = Math.max(...data.map((d) => d[yField] || 0));
-
     const reverseX = this.xAxisPos === "top";
     const xScale = bandScale(
       categoricalDomain(data, xField, this.encoding.xDomain),
@@ -608,9 +629,9 @@ export class BarChartRenderer extends ChartRenderer {
       },
     );
 
-    const reverseY = this.yAxisPos === "right";
+    const reverseY = this.options.reverseY === true;
     const yScale = linearScale(
-      valueDomain(maxValue, this.encoding.yDomain),
+      zeroBaselineDomain(data, yField, this.encoding.yDomain),
       yRange(chartHeight, reverseY),
     );
     const anchors = [];
@@ -646,10 +667,12 @@ export class BarChartRenderer extends ChartRenderer {
       rect.append("title").text(`${d[xField]}: ${value}`);
 
       if (this.showLabels) {
+        const tipY = margin.top + yScale(value);
+        const tipIsAbove = tipY < margin.top + yScale(0);
         container
           .append("text")
           .attr("x", x + barWidth / 2)
-          .attr("y", y - 5)
+          .attr("y", tipY + (tipIsAbove ? -5 : 14))
           .attr("text-anchor", "middle")
           .attr("font-size", "12px")
           .text(value);
@@ -659,7 +682,11 @@ export class BarChartRenderer extends ChartRenderer {
     return this.axisConfig(
       { x: xScale, y: yScale },
       { margin, width: chartWidth, height: chartHeight },
-      { linkAnchors: { channels: ["x"], anchors } },
+      {
+        linkAnchors: { channels: ["x"], anchors },
+        zeroBaselineChannel: "y",
+        categorySigns: categoryValueSigns(data, xField, yField),
+      },
     );
   }
 }

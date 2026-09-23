@@ -3,7 +3,7 @@ import { ChartRenderer } from "../renderer.js";
 import {
   continuousDomain,
   linearScale,
-  valueDomain,
+  zeroBaselineDomain,
   xRange,
   yRange,
 } from "../scale.js";
@@ -44,14 +44,12 @@ export class AreaChartRenderer extends ChartRenderer {
       (a, b) => Number(a[xField]) - Number(b[xField]),
     );
     const reverseX = this.xAxisPos === "top";
-    const reverseY = this.yAxisPos === "right";
+    const reverseY = this.options.reverseY === true;
 
     container.selectAll("*").remove();
     const g = container
       .append("g")
       .attr("transform", `translate(${margin.left},${margin.top})`);
-
-    const yMax = d3.max(values, (d) => Number(d[yField])) || 0;
 
     const xScale = linearScale(
       continuousDomain(values, xField, this.encoding.xDomain, {
@@ -61,7 +59,7 @@ export class AreaChartRenderer extends ChartRenderer {
     );
 
     const yScale = linearScale(
-      valueDomain(yMax, this.encoding.yDomain),
+      zeroBaselineDomain(values, yField, this.encoding.yDomain),
       yRange(chartHeight, reverseY),
     );
 
@@ -115,6 +113,7 @@ export class AreaChartRenderer extends ChartRenderer {
     return this.axisConfig(
       { x: xScale, y: yScale },
       { margin, width: chartWidth, height: chartHeight },
+      { zeroBaselineChannel: "y" },
     );
   }
 }

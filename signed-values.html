@@ -1,0 +1,614 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>负值图表验收 · composite.js</title>
+    <style>
+      :root {
+        font-family:
+          Inter,
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          sans-serif;
+        color: #17253d;
+        background: #f3f6fb;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+      }
+
+      .page {
+        width: min(1420px, calc(100% - 48px));
+        margin: 0 auto;
+        padding: 40px 0 72px;
+      }
+
+      h1,
+      h2,
+      p {
+        margin-top: 0;
+      }
+
+      .hero {
+        padding: 32px 36px;
+        border-radius: 22px;
+        color: white;
+        background: linear-gradient(115deg, #192b50, #365caa);
+        box-shadow: 0 18px 35px #233f7840;
+      }
+
+      .eyebrow {
+        margin-bottom: 8px;
+        color: #b8d7ff;
+        font-size: 12px;
+        font-weight: 800;
+        letter-spacing: 0.16em;
+      }
+
+      h1 {
+        margin-bottom: 12px;
+        font-size: clamp(28px, 4vw, 42px);
+      }
+
+      .hero p {
+        max-width: 920px;
+        margin-bottom: 0;
+        line-height: 1.7;
+      }
+
+      .summary {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 12px;
+        margin: 28px 0 18px;
+      }
+
+      .summary h2 {
+        margin: 0 auto 0 0;
+        font-size: 23px;
+      }
+
+      .pill,
+      .status {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 700;
+      }
+
+      .pill {
+        padding: 8px 12px;
+        color: #31547f;
+        background: #e4edfa;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 18px;
+      }
+
+      .card {
+        min-width: 0;
+        padding: 23px 24px 19px;
+        border: 1px solid #dce5f1;
+        border-radius: 18px;
+        background: white;
+        box-shadow: 0 8px 22px #273b5a0b;
+      }
+
+      .card-head {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+      }
+
+      .card h2 {
+        margin-bottom: 6px;
+        font-size: 19px;
+      }
+
+      .card p {
+        margin-bottom: 12px;
+        color: #5b6d85;
+        line-height: 1.55;
+      }
+
+      .status {
+        margin-left: auto;
+        padding: 6px 10px;
+        white-space: nowrap;
+      }
+
+      .status.ok {
+        color: #176142;
+        background: #e0f6e9;
+      }
+
+      .status.error {
+        color: #a92e35;
+        background: #ffe8e9;
+      }
+
+      .plot {
+        display: flex;
+        justify-content: center;
+        min-height: 270px;
+        overflow-x: auto;
+        border-radius: 12px;
+        background: #fbfcff;
+      }
+
+      .plot svg {
+        flex: none;
+        max-width: none;
+      }
+
+      .values {
+        margin-top: 12px;
+        color: #60728d;
+        font-size: 12px;
+        line-height: 1.5;
+      }
+
+      .validation {
+        margin-top: 34px;
+      }
+
+      .checks {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 18px;
+      }
+
+      .check-message {
+        padding: 13px 14px;
+        border-radius: 10px;
+        color: #7e3f34;
+        background: #fff3ed;
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 12px;
+        overflow-wrap: anywhere;
+      }
+
+      @media (max-width: 850px) {
+        .page {
+          width: min(100% - 24px, 620px);
+          padding-top: 16px;
+        }
+        .hero {
+          padding: 25px;
+        }
+        .grid,
+        .checks {
+          grid-template-columns: 1fr;
+        }
+        .card {
+          padding: 20px 16px 16px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="page">
+      <header class="hero">
+        <div class="eyebrow">COMPOSITE.JS · REVIEW PAGE</div>
+        <h1>负值图表验收</h1>
+        <p>
+          下方均由当前 composite.js 源码实时渲染为
+          SVG。查看正值向上、负值向下的方向、位于 0
+          的基线、按正负分侧的分类标签， 以及 stackbar
+          对全负、跨类别正负和非法数据的处理。
+        </p>
+      </header>
+
+      <div class="summary">
+        <h2>实际渲染</h2>
+        <span class="pill" id="render-count">加载中…</span>
+        <span class="pill">纵向图的横轴默认位于 y=0</span>
+      </div>
+      <div class="grid" id="charts"></div>
+
+      <section class="validation">
+        <div class="summary">
+          <h2>非法输入校验</h2>
+          <span class="pill" id="check-count">加载中…</span>
+        </div>
+        <div class="checks" id="checks"></div>
+      </section>
+    </main>
+
+    <script type="module">
+      import { chart, validateChartConfig } from "./src/index.js";
+
+      const signedPairs = [
+        { category: "甲", value: -6 },
+        { category: "甲", value: 4 },
+        { category: "乙", value: -3 },
+        { category: "乙", value: 7 },
+      ];
+
+      const signedStacks = [
+        { category: "负值组", group: "A", value: -3 },
+        { category: "负值组", group: "B", value: -2 },
+        { category: "正值组", group: "A", value: 2 },
+        { category: "正值组", group: "B", value: 4 },
+        { category: "含零组", group: "A", value: 0 },
+        { category: "含零组", group: "B", value: -2 },
+      ];
+
+      const cases = [
+        {
+          title: "Bar · 纵向正负值",
+          note: "横轴位于 y=0；正值向上，负值向下。",
+          values: "亏损：-5；盈利：6",
+          config: {
+            mark: "bar",
+            data: [
+              { category: "亏损", value: -5 },
+              { category: "盈利", value: 6 },
+            ],
+            encoding: { x: "category", y: "value" },
+            color: "#5279d7",
+          },
+        },
+        {
+          title: "Bar · 横向正负值",
+          note: "数值轴的 0 线位于中间；负值向左。",
+          values: "亏损：-5；盈利：6",
+          config: {
+            mark: "bar",
+            data: [
+              { category: "亏损", value: -5 },
+              { category: "盈利", value: 6 },
+            ],
+            encoding: { x: "value", y: "category" },
+            color: "#5279d7",
+          },
+        },
+        {
+          title: "Groupbar · 纵向正负值",
+          note: "同一类别内不同系列可位于 0 的两侧。",
+          values: "甲：A=-4、B=3；乙：A=5、B=-2",
+          config: {
+            mark: "groupbar",
+            data: [
+              { category: "甲", group: "A", value: -4 },
+              { category: "甲", group: "B", value: 3 },
+              { category: "乙", group: "A", value: 5 },
+              { category: "乙", group: "B", value: -2 },
+            ],
+            encoding: { x: "category", y: "value", group: "group" },
+            colorScheme: ["#5279d7", "#e78d71"],
+          },
+        },
+        {
+          title: "Groupbar · 横向正负值",
+          note: "负值柱段有正的宽度，并从 0 向左延伸。",
+          values: "甲：A=-4、B=3；乙：A=5、B=-2",
+          config: {
+            mark: "groupbar",
+            data: [
+              { category: "甲", group: "A", value: -4 },
+              { category: "甲", group: "B", value: 3 },
+              { category: "乙", group: "A", value: 5 },
+              { category: "乙", group: "B", value: -2 },
+            ],
+            encoding: { x: "value", y: "category", group: "group" },
+            colorScheme: ["#5279d7", "#e78d71"],
+          },
+        },
+        {
+          title: "Lollipop · 负的 y",
+          note: "圆点在值的位置，茎线从 y=0 向上或向下延伸。",
+          values: "亏损：-4；盈利：6",
+          config: {
+            mark: "lollipop",
+            data: [
+              { category: "亏损", value: -4 },
+              { category: "盈利", value: 6 },
+            ],
+            encoding: { x: "category", y: "value" },
+            color: "#8d6bd1",
+          },
+        },
+        {
+          title: "Scatter · x/y 可为负",
+          note: "四个象限都有点；数值轴自动覆盖负值。",
+          values: "点：(-6, -3)、(-2, 5)、(3, -4)、(7, 6)",
+          config: {
+            mark: "scatter",
+            data: [
+              { x: -6, y: -3 },
+              { x: -2, y: 5 },
+              { x: 3, y: -4 },
+              { x: 7, y: 6 },
+            ],
+            encoding: { x: "x", y: "y" },
+            color: "#4068d7",
+            radius: 6,
+          },
+        },
+        {
+          title: "Bubble · x/y 可为负",
+          note: "位置允许负值，气泡大小仍为非负值。",
+          values: "位置：(-6, 4)、(-2, -3)、(3, 5)、(7, -4)；size：4～25",
+          config: {
+            mark: "bubble",
+            data: [
+              { x: -6, y: 4, size: 4 },
+              { x: -2, y: -3, size: 12 },
+              { x: 3, y: 5, size: 25 },
+              { x: 7, y: -4, size: 8 },
+            ],
+            encoding: { x: "x", y: "y", size: "size" },
+            color: "#6e78d8",
+            maxRadius: 17,
+          },
+        },
+        {
+          title: "Dumbbell · 横向负值",
+          note: "同一类别的两个点可以跨越 0。",
+          values: "甲：-6 → 4；乙：-3 → 7",
+          config: {
+            mark: "dumbbell",
+            data: signedPairs,
+            encoding: { x: "value", y: "category" },
+            colors: ["#dd765e", "#456ed4"],
+          },
+        },
+        {
+          title: "Dumbbell · 纵向负值",
+          note: "交换 x/y 后，数值轴同样支持负值。",
+          values: "甲：-6 → 4；乙：-3 → 7",
+          config: {
+            mark: "dumbbell",
+            data: signedPairs,
+            encoding: { x: "category", y: "value" },
+            colors: ["#dd765e", "#456ed4"],
+          },
+        },
+        {
+          title: "Candlestick · 负的 x 与 OHLC",
+          note: "开高低收和数值 x 都允许跨越 0。",
+          values: "x：-3、-1、1、3；low 最低 -6",
+          config: {
+            mark: "candlestick",
+            data: [
+              { tick: -3, open: -4, high: -1, low: -6, close: -2 },
+              { tick: -1, open: -2, high: 1, low: -3, close: 0 },
+              { tick: 1, open: 0, high: 2, low: -1, close: -1 },
+              { tick: 3, open: -1, high: 3, low: -2, close: 2 },
+            ],
+            encoding: {
+              x: "tick",
+              open: "open",
+              high: "high",
+              low: "low",
+              close: "close",
+            },
+          },
+        },
+        {
+          title: "Line · 负的 x/y",
+          note: "纵向数值域包含 0；折线可穿过基线。",
+          values: "x：-6、-3、0、3、6；y：-4～7",
+          config: {
+            mark: "line",
+            data: [
+              { x: -6, y: 3 },
+              { x: -3, y: -4 },
+              { x: 0, y: 0 },
+              { x: 3, y: 7 },
+              { x: 6, y: 4 },
+            ],
+            encoding: { x: "x", y: "y" },
+            color: "#267f89",
+          },
+        },
+        {
+          title: "Area · 负的 x/y",
+          note: "面积从 y=0 填到正值或负值。",
+          values: "x：-6、-3、0、3、6；y：-5～6",
+          config: {
+            mark: "area",
+            data: [
+              { x: -6, y: 2 },
+              { x: -3, y: -5 },
+              { x: 0, y: -2 },
+              { x: 3, y: 6 },
+              { x: 6, y: 1 },
+            ],
+            encoding: { x: "x", y: "y" },
+            color: "#39a89e",
+          },
+        },
+        {
+          title: "Histogram · 负的观测值",
+          note: "已有的负值支持：负数进入对应的 x 区间。",
+          values: "样本：-8、-7、-3、-1、0、2、4、7",
+          config: {
+            mark: "histogram",
+            data: [-8, -7, -3, -1, 0, 2, 4, 7].map((x) => ({ x })),
+            encoding: { x: "x" },
+            binCount: 6,
+            color: "#6586cf",
+          },
+        },
+        {
+          title: "Heatmap · 负的颜色值",
+          note: "已有的负值支持：颜色范围从 -4 到 4。",
+          values: "两行三列：-4、-2、0、1、3、4",
+          config: {
+            mark: "heatmap",
+            data: [
+              { column: "A", row: "上", value: -4 },
+              { column: "B", row: "上", value: -2 },
+              { column: "C", row: "上", value: 0 },
+              { column: "A", row: "下", value: 1 },
+              { column: "B", row: "下", value: 3 },
+              { column: "C", row: "下", value: 4 },
+            ],
+            encoding: {
+              x: "column",
+              group: "row",
+              y: "value",
+              yDomain: [-4, 4],
+            },
+            color: "#345fc0",
+          },
+        },
+        {
+          title: "Stackbar · 纵向正负类别",
+          note: "横轴位于 y=0；正值组标签在下方，负值组标签在上方。",
+          values: "负值组：-3 + -2；正值组：2 + 4；含零组：0 + -2",
+          config: {
+            mark: "stackbar",
+            data: signedStacks,
+            encoding: { x: "category", y: "value", group: "group" },
+            colorScheme: ["#6586cf", "#f19a75"],
+          },
+        },
+        {
+          title: "Stackbar · 横向正负类别",
+          note: "分类标签靠近 0 线；正值组在左，负值组在右。",
+          values: "负值组：-5；正值组：6；含零组：-2",
+          config: {
+            mark: "stackbar",
+            data: signedStacks,
+            encoding: { x: "value", y: "category", group: "group" },
+            colorScheme: ["#6586cf", "#f19a75"],
+          },
+        },
+        {
+          title: "Stackbar · 全负数据",
+          note: "自动数值域应从负的总量延伸到 0。",
+          values: "甲：-2 + -3；乙：-1 + -2",
+          config: {
+            mark: "stackbar",
+            data: [
+              { category: "甲", group: "A", value: -2 },
+              { category: "甲", group: "B", value: -3 },
+              { category: "乙", group: "A", value: -1 },
+              { category: "乙", group: "B", value: -2 },
+            ],
+            encoding: { x: "category", y: "value", group: "group" },
+            colorScheme: ["#6586cf", "#f19a75"],
+          },
+        },
+      ];
+
+      const invalidCases = [
+        {
+          title: "同一类别混合正负",
+          data: [
+            { category: "甲", group: "A", value: -2 },
+            { category: "甲", group: "B", value: 3 },
+          ],
+          expected: /must not mix positive and negative numbers/,
+        },
+        {
+          title: "类别与 group 组合重复",
+          data: [
+            { category: "甲", group: "A", value: -2 },
+            { category: "甲", group: "A", value: -3 },
+          ],
+          expected: /Duplicate category and group/,
+        },
+      ];
+
+      function addText(parent, tag, text, className) {
+        const node = document.createElement(tag);
+        node.textContent = text;
+        if (className) node.className = className;
+        parent.append(node);
+        return node;
+      }
+
+      function makeCard(parent, title, note) {
+        const card = document.createElement("article");
+        card.className = "card";
+        const head = document.createElement("div");
+        head.className = "card-head";
+        const labels = document.createElement("div");
+        addText(labels, "h2", title);
+        addText(labels, "p", note);
+        const status = addText(head, "span", "加载中", "status");
+        head.prepend(labels);
+        card.append(head);
+        parent.append(card);
+        return { card, status };
+      }
+
+      let rendered = 0;
+      for (const item of cases) {
+        const { card, status } = makeCard(
+          document.getElementById("charts"),
+          item.title,
+          item.note,
+        );
+        const plot = document.createElement("div");
+        plot.className = "plot";
+        card.append(plot);
+        addText(card, "div", item.values, "values");
+        try {
+          const width = Math.max(260, Math.min(500, plot.clientWidth - 82));
+          chart({
+            ...item.config,
+            width,
+            height: 205,
+            margin: { top: 36, right: 20, bottom: 44, left: 62 },
+          }).render(plot);
+          status.textContent = "✓ 已渲染";
+          status.className = "status ok";
+          rendered += 1;
+        } catch (error) {
+          status.textContent = "渲染失败";
+          status.className = "status error";
+          addText(plot, "p", error.message);
+        }
+      }
+      document.getElementById("render-count").textContent =
+        `${rendered} / ${cases.length} 张图已渲染`;
+
+      let rejected = 0;
+      for (const item of invalidCases) {
+        const { card, status } = makeCard(
+          document.getElementById("checks"),
+          item.title,
+          "该数据应在渲染前被校验拒绝。",
+        );
+        let message;
+        try {
+          validateChartConfig({
+            mark: "stackbar",
+            data: item.data,
+            encoding: { x: "category", y: "value", group: "group" },
+          });
+          message = "错误：非法数据没有被拒绝。";
+          status.textContent = "校验失败";
+          status.className = "status error";
+        } catch (error) {
+          message = error.message;
+          const expected = item.expected.test(error.message);
+          status.textContent = expected ? "✓ 按预期拒绝" : "意外错误";
+          status.className = expected ? "status ok" : "status error";
+          if (expected) rejected += 1;
+        }
+        addText(card, "div", message, "check-message");
+      }
+      document.getElementById("check-count").textContent =
+        `${rejected} / ${invalidCases.length} 项非法输入已拒绝`;
+    </script>
+  </body>
+</html>

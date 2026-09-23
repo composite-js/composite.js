@@ -66,15 +66,22 @@ export class ChartRenderer {
       yTickCount: this.yTickCount,
       showXGrid: this.showXGrid,
       showYGrid: this.showYGrid,
+      xAxisPosExplicit: this.options.xAxisPos !== undefined,
+      yAxisPosExplicit: this.options.yAxisPos !== undefined,
     };
   }
 
   axisConfig(scales, dimensions, extras = {}) {
+    const { zeroBaselineChannel, categorySigns, ...otherExtras } = extras;
     return {
       scales,
       dimensions,
-      axisOptions: this.getAxisOptions(),
-      ...extras,
+      axisOptions: {
+        ...this.getAxisOptions(),
+        zeroBaselineChannel,
+        categorySigns,
+      },
+      ...otherExtras,
     };
   }
 

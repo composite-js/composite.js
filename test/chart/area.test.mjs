@@ -70,5 +70,5 @@ assert.equal(circles[0].getAttribute("r"), "4");
   ]);
 
   assert.deepEqual(reversedAxisConfig.scales.x.range(), [120, 0]);
-  assert.deepEqual(reversedAxisConfig.scales.y.range(), [0, 80]);
+  assert.deepEqual(reversedAxisConfig.scales.y.range(), [80, 0]);
 }

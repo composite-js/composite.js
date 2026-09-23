@@ -98,8 +98,22 @@ options)` method as a custom leaf layout node.
   passing them into composition helpers.
 - `validateChartConfig(config)` validates chart mark, encoding, and data shape
   without rendering. Chart data must contain at least one row, and quantitative
-  fields currently accept only finite, non-negative JavaScript numbers; numeric
-  strings are not coerced. Zero is supported, while negative values are not.
+  fields require finite JavaScript numbers; numeric strings are not coerced.
+  Negative values are supported for bar and grouped bar values, vertical
+  lollipop y values, scatter x/y, numeric bubble x/y, the dumbbell value
+  channel, stacked bar values, numeric candlestick x and OHLC fields, numeric
+  line x/y, area x/y, histogram observations, and heatmap color values.
+  Automatic value domains for bars, grouped bars, stacked bars, lollipops,
+  lines, and areas include zero. Their default x-axis crosses vertical value
+  scales at y=0, and horizontal value scales show a zero line. Explicit domain
+  and axis-position overrides are preserved. For bar, grouped bar, stacked bar,
+  and lollipop charts, category ticks and labels sit on the unoccupied side of
+  the zero baseline. Grouped categories containing both signs place their labels
+  outside the plotting area.
+  Each stacked bar category may contain positive or negative values, with zero
+  allowed in either case; a category must not mix positive and negative values
+  or repeat a group key. Other quantitative fields remain non-negative,
+  including bubble size.
   Chart dimensions, margins, and padding must also be finite and non-negative.
 - `parseCsv(text, options)` parses CSV data, while `loadCsvText(url)` loads CSV
   text in browser and Node environments.

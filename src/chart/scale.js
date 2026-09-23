@@ -46,6 +46,39 @@ export function valueDomain(maxValue, configuredDomain) {
   return configuredDomain !== undefined ? configuredDomain : [0, maxValue || 0];
 }
 
+export function zeroBaselineDomain(data, field, configuredDomain) {
+  if (configuredDomain !== undefined) return configuredDomain;
+  const values = data
+    .map((datum) => Number(datum[field]))
+    .filter(Number.isFinite);
+  const minimum = Math.min(0, d3.min(values) ?? 0);
+  const maximum = Math.max(0, d3.max(values) ?? 0);
+  return minimum === maximum ? [0, 1] : [minimum, maximum];
+}
+
+export function categoryValueSigns(data, categoryField, valueField) {
+  const states = new Map();
+  data.forEach((datum) => {
+    const category = datum[categoryField];
+    const state = states.get(category) || { positive: false, negative: false };
+    state.positive ||= datum[valueField] > 0;
+    state.negative ||= datum[valueField] < 0;
+    states.set(category, state);
+  });
+  return new Map(
+    [...states].map(([category, state]) => [
+      category,
+      state.positive && state.negative
+        ? "mixed"
+        : state.negative
+          ? -1
+          : state.positive
+            ? 1
+            : 0,
+    ]),
+  );
+}
+
 export function bandScale(domain, range, padding = {}) {
   return d3
     .scaleBand()

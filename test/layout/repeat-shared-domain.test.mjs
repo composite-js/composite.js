@@ -49,6 +49,54 @@ await withFakeSvgDocument(async (document) => {
 
 await withFakeSvgDocument(async (document) => {
   const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+
+  repeatX(
+    [-5, 4],
+    (value) =>
+      chart({
+        mark: "bar",
+        data: [{ category: "A", value }],
+        encoding: { x: "category", y: "value" },
+        margin: { top: 0, right: 0, bottom: 0, left: 0 },
+      }),
+    { width: 200, height: 100, paddingInner: 0, paddingOuter: 0 },
+  ).render(svg, { width: 200, height: 100 });
+
+  const heights = svg
+    .querySelectorAll("rect")
+    .map((rect) => numericAttribute(rect, "height"));
+
+  assert.equal(heights.length, 2);
+  assert.ok(Math.abs(heights[0] - (100 * 5) / 9) < 1e-9);
+  assert.ok(Math.abs(heights[1] - (100 * 4) / 9) < 1e-9);
+});
+
+await withFakeSvgDocument(async (document) => {
+  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+
+  repeatX(
+    [-5, 4],
+    (value) =>
+      chart({
+        mark: "stackbar",
+        data: [{ category: "A", group: "g", value }],
+        encoding: { x: "category", y: "value", group: "group" },
+        margin: { top: 0, right: 0, bottom: 0, left: 0 },
+      }),
+    { width: 200, height: 100, paddingInner: 0, paddingOuter: 0 },
+  ).render(svg, { width: 200, height: 100 });
+
+  const heights = svg
+    .querySelectorAll("rect")
+    .map((rect) => numericAttribute(rect, "height"));
+
+  assert.equal(heights.length, 2);
+  assert.ok(Math.abs(heights[0] - (100 * 5) / 9) < 1e-9);
+  assert.ok(Math.abs(heights[1] - (100 * 4) / 9) < 1e-9);
+});
+
+await withFakeSvgDocument(async (document) => {
+  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
   const ranges = [
     { open: 9, high: 12, low: 8, close: 11 },
     { open: 90, high: 120, low: 80, close: 110 },
