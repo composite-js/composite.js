@@ -21,6 +21,7 @@ export class LineChartRenderer extends ChartRenderer {
     this.showPoints = options.showPoints !== false;
     this.pointRadius = options.pointRadius ?? 4;
     this.strokeWidth = options.strokeWidth ?? 2;
+    this.curve = options.curve || "linear";
     this.padding = options.padding || { xInner: 0.1, xOuter: 0.1 };
   }
 
@@ -83,7 +84,14 @@ export class LineChartRenderer extends ChartRenderer {
     const line = d3
       .line()
       .x(xPosition)
-      .y((datum) => yScale(datum[yField]));
+      .y((datum) => yScale(datum[yField]))
+      .curve(
+        {
+          linear: d3.curveLinear,
+          step: d3.curveStepAfter,
+          spline: d3.curveCatmullRom,
+        }[this.curve],
+      );
     const pointRadius = this.pointRadius;
 
     series.forEach(({ key, data: seriesData }) => {

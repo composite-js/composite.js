@@ -30,6 +30,9 @@ const NUMERIC_FIELD_BY_MARK = {
   area: ["x", "y"],
   scatter: ["x", "y"],
   stream: ["y"],
+  histogram: ["x"],
+  heatmap: ["y"],
+  waffle: ["y"],
 };
 
 const BOX_SIDES = ["top", "right", "bottom", "left"];
@@ -273,6 +276,63 @@ function assertValidFlowOptions(config) {
   }
 }
 
+function assertNewChartOptions(config, mark, data, encoding) {
+  if (
+    mark === "line" &&
+    config.curve !== undefined &&
+    !["linear", "step", "spline"].includes(config.curve)
+  ) {
+    throw new Error(
+      'curve for mark "line" must be "linear", "step", or "spline".',
+    );
+  }
+
+  if (mark === "histogram") {
+    if (
+      config.binCount !== undefined &&
+      (!Number.isInteger(config.binCount) || config.binCount < 1)
+    ) {
+      throw new RangeError(
+        'binCount for mark "histogram" must be a positive integer.',
+      );
+    }
+    if (
+      encoding.xDomain !== undefined &&
+      (encoding.xDomain.length !== 2 ||
+        !encoding.xDomain.every(Number.isFinite) ||
+        encoding.xDomain[0] >= encoding.xDomain[1])
+    ) {
+      throw new RangeError(
+        'encoding.xDomain for mark "histogram" must contain two increasing numbers.',
+      );
+    }
+  }
+
+  if (
+    mark === "heatmap" &&
+    encoding.yDomain !== undefined &&
+    (encoding.yDomain.length !== 2 ||
+      !encoding.yDomain.every(Number.isFinite) ||
+      encoding.yDomain[0] >= encoding.yDomain[1])
+  ) {
+    throw new RangeError(
+      'encoding.yDomain for mark "heatmap" must contain two increasing numbers.',
+    );
+  }
+
+  if (mark === "waffle") {
+    const visibleRows =
+      encoding.xDomain === undefined
+        ? data
+        : data.filter((row) => encoding.xDomain.includes(row[encoding.x]));
+    if (visibleRows.every((row) => row[encoding.y] === 0)) {
+      throw new RangeError(
+        'Values for mark "waffle" must sum to more than zero.',
+      );
+    }
+  }
+}
+
 function assertNoLegacyEncoding(encoding) {
   Object.entries(LEGACY_ENCODING_FIELDS).forEach(([legacy, replacement]) => {
     if (hasOwn(encoding, legacy)) {
@@ -361,6 +421,7 @@ export function validateChartConfig(config = {}) {
     ...(encoding.size !== undefined ? ["size"] : []),
   ];
   assertRowsHaveFields(mark, data, encoding, dataBackedChannels);
+  assertNewChartOptions(config, mark, data, encoding);
 
   if (mark === "matrix") {
     assertMatrixValues(data, encoding);
@@ -391,7 +452,9 @@ export function validateChartConfig(config = {}) {
   }
 
   (NUMERIC_FIELD_BY_MARK[mark] || []).forEach((channel) => {
-    assertFiniteNumbers(mark, data, encoding[channel], { nonNegative: true });
+    assertFiniteNumbers(mark, data, encoding[channel], {
+      nonNegative: mark !== "histogram" && mark !== "heatmap",
+    });
   });
 
   if (mark === "bubble") {

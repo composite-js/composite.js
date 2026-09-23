@@ -12,13 +12,17 @@ const rendererByMark = {
   dumbbell: "DumbbellChartRenderer",
   flow: "FlowDiagramRenderer",
   groupbar: "GroupBarChartRenderer",
+  heatmap: "HeatmapChartRenderer",
+  histogram: "HistogramChartRenderer",
   line: "LineChartRenderer",
+  lollipop: "LollipopChartRenderer",
   matrix: "MatrixChartRenderer",
   pac: "ProportionalAreaChartRenderer",
   pie: "PieChartRenderer",
   scatter: "ScatterChartRenderer",
   stackbar: "StackBarChartRenderer",
   stream: "StreamGraphRenderer",
+  waffle: "WaffleChartRenderer",
 };
 
 const configByMark = {
@@ -80,6 +84,16 @@ const configByMark = {
     ],
     encoding: { x: "category", y: "value", group: "group" },
   },
+  heatmap: {
+    mark: "heatmap",
+    data: [{ column: "C1", row: "R1", value: 4 }],
+    encoding: { x: "column", group: "row", y: "value" },
+  },
+  histogram: {
+    mark: "histogram",
+    data: [{ value: 4 }],
+    encoding: { x: "value" },
+  },
   line: {
     mark: "line",
     data: [
@@ -87,6 +101,11 @@ const configByMark = {
       { x: 2, y: 4 },
     ],
     encoding: { x: "x", y: "y" },
+  },
+  lollipop: {
+    mark: "lollipop",
+    data: [{ category: "A", value: 4 }],
+    encoding: { x: "category", y: "value" },
   },
   matrix: {
     mark: "matrix",
@@ -123,6 +142,11 @@ const configByMark = {
       { period: "Q1", series: "B", value: 2 },
     ],
     encoding: { x: "period", y: "value", group: "series" },
+  },
+  waffle: {
+    mark: "waffle",
+    data: [{ category: "A", value: 4 }],
+    encoding: { x: "category", y: "value" },
   },
 };
 

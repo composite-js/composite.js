@@ -270,6 +270,16 @@ function domainDescriptor(chart, channel) {
         extentDomain(data, field),
       );
 
+    case "histogram":
+      return channel === "x"
+        ? valueDescriptor(
+            chart,
+            channel,
+            explicitDomain,
+            extentDomain(data, field),
+          )
+        : null;
+
     case "bubble":
       return bubbleDescriptor(chart, channel, explicitDomain);
 

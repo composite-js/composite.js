@@ -5,6 +5,10 @@ export {
 } from "./bar.js";
 export { AreaChartRenderer } from "./area.js";
 export { LineChartRenderer } from "./line.js";
+export { LollipopChartRenderer } from "./lollipop.js";
+export { WaffleChartRenderer } from "./waffle.js";
+export { HeatmapChartRenderer } from "./heatmap.js";
+export { HistogramChartRenderer } from "./histogram.js";
 export { CandlestickChartRenderer } from "./candlestick.js";
 export { MatrixChartRenderer } from "./matrix.js";
 export { ScatterChartRenderer } from "./scatter.js";

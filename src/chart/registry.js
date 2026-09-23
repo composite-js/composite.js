@@ -26,6 +26,13 @@ export const CHART_TYPE_REGISTRY = {
     inferredOrientation: true,
     supportsLink: true,
   },
+  lollipop: {
+    renderer: "LollipopChartRenderer",
+    encoding: xyEncoding,
+    sharedDomain: "bar",
+    bandChannel: inferredBandChannel,
+    inferredOrientation: true,
+  },
   groupbar: {
     renderer: "GroupBarChartRenderer",
     encoding: groupedEncoding,
@@ -70,6 +77,32 @@ export const CHART_TYPE_REGISTRY = {
     sharedDomain: "categoricalX",
     bandChannel: { x: "x", y: "group" },
     defaultPadding: 0,
+  },
+  heatmap: {
+    renderer: "HeatmapChartRenderer",
+    encoding: {
+      requiredEncoding: ["x", "group", "y"],
+      optionalEncoding: ["xDomain", "groupDomain", "yDomain"],
+    },
+    sharedDomain: "categoricalX",
+    bandChannel: { x: "x", y: "group" },
+    defaultPadding: 0,
+  },
+  waffle: {
+    renderer: "WaffleChartRenderer",
+    encoding: {
+      requiredEncoding: ["x", "y"],
+      optionalEncoding: ["xDomain"],
+    },
+    sharedDomain: "categoricalX",
+  },
+  histogram: {
+    renderer: "HistogramChartRenderer",
+    encoding: {
+      requiredEncoding: ["x"],
+      optionalEncoding: ["xDomain", "yDomain"],
+    },
+    sharedDomain: "histogram",
   },
   scatter: {
     renderer: "ScatterChartRenderer",

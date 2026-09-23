@@ -35,6 +35,28 @@ circles[0].listeners.get("mouseleave").call(circles[0], {});
 assert.equal(circles[0].getAttribute("fill"), "white");
 assert.equal(circles[0].getAttribute("r"), "4");
 
+for (const [curve, expected] of [
+  ["step", /L60,40L60,0/],
+  ["spline", /C/],
+]) {
+  const curveSvg = createFakeSvg();
+  new LineChartRenderer({
+    width: 120,
+    height: 80,
+    margin: { top: 0, right: 0, bottom: 0, left: 0 },
+    encoding: { x: "year", y: "value" },
+    curve,
+  }).render(curveSvg, [
+    { year: 2000, value: 10 },
+    { year: 2004, value: 20 },
+    { year: 2008, value: 15 },
+  ]);
+  assert.match(
+    curveSvg.querySelector(".line-series").getAttribute("d"),
+    expected,
+  );
+}
+
 {
   const domainSvg = createFakeSvg();
   const domainRenderer = new LineChartRenderer({

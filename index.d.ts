@@ -134,6 +134,10 @@ export interface ChartConfig<T extends Datum = Datum> {
   color?: string;
   colors?: string[];
   colorScheme?: string[];
+  /** Line interpolation: step holds each value until the next x position. */
+  curve?: "linear" | "step" | "spline";
+  /** Number of equal-width histogram bins. */
+  binCount?: number;
   colorBy?: "x" | "group" | string;
   markStyle?: MarkStyle<T>;
   showXAxis?: boolean;
