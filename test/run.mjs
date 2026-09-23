@@ -7,6 +7,7 @@ const tests = [
   "./layout/stack-align.test.mjs",
   "./layout/stack-padding-inference.test.mjs",
   "./layout/stack-link.test.mjs",
+  "./layout/overlay.test.mjs",
   "./layout/measurement-adapter.test.mjs",
   "./layout/render-output.test.mjs",
   "./layout/root-render.test.mjs",

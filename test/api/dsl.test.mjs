@@ -3,6 +3,7 @@ import { Chart } from "../../src/chart/chart.js";
 import {
   chart,
   custom,
+  overlay,
   wrapper,
   isLayoutNode,
   repeatX,
@@ -34,6 +35,7 @@ import {
 
   assert.equal(stackX([makeChild()]).classTag, "stackX");
   assert.equal(stackY([makeChild()]).classTag, "stackY");
+  assert.equal(overlay([makeChild(), makeChild()]).classTag, "overlay");
 }
 
 {
@@ -45,6 +47,7 @@ import {
 
   assert.throws(() => stackX([bareChart]), /layout node/i);
   assert.throws(() => stackY([bareChart]), /layout node/i);
+  assert.throws(() => overlay([bareChart]), /layout node/i);
 }
 
 {

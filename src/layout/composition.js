@@ -358,6 +358,27 @@ export class Stack extends Composition {
 }
 
 /**
+ * Composition whose children share one content rectangle.
+ */
+export class Overlay extends Composition {
+  constructor(nodes) {
+    super();
+    setNodeKind(this, NodeKind.OVERLAY);
+    assertNodeArray(nodes, "nodes");
+
+    this.children = Object.freeze([...nodes]);
+    this.type = "overlay";
+    this.classTag = "overlay";
+    this.sizePolicy = contentSizedPolicy;
+    Object.freeze(this);
+  }
+
+  render(container, renderOptions = {}) {
+    return renderComposition(this, container, renderOptions);
+  }
+}
+
+/**
  * Base class for repeat compositions.
  */
 export class Repeat extends Composition {

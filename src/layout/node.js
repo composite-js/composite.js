@@ -11,6 +11,7 @@ export const NodeKind = Object.freeze({
   LEAF: "leaf",
   CHART: "chart",
   STACK: "stack",
+  OVERLAY: "overlay",
   REPEAT_X: "repeatX",
   REPEAT_Y: "repeatY",
   WRAPPER: "wrapper",
@@ -47,6 +48,9 @@ export class Node {
   static isStack(node) {
     return Node.isKind(node, NodeKind.STACK);
   }
+  static isOverlay(node) {
+    return Node.isKind(node, NodeKind.OVERLAY);
+  }
   static isWrapper(node) {
     return Node.isKind(node, NodeKind.WRAPPER);
   }
@@ -76,7 +80,7 @@ export function assertLayoutNode(value, label = "node") {
   if (isLayoutNode(value)) return;
   const actual = value?.constructor?.name || typeof value;
   throw new TypeError(
-    `${label} must be a layout node created by chart(), custom(), text(), image(), wrapper(), stackX(), stackY(), repeatX(), repeatY(), anchor(), or embed(); received ${actual}.`,
+    `${label} must be a layout node created by chart(), custom(), text(), image(), wrapper(), stackX(), stackY(), overlay(), repeatX(), repeatY(), anchor(), or embed(); received ${actual}.`,
   );
 }
 

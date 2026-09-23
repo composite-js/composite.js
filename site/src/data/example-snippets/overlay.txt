@@ -1,0 +1,126 @@
+// Source: https://www.zingchart.com/gallery/mixed-bar-line-staggered
+const plotWidth = 1200;
+const plotHeight = 360;
+const padding = { xInner: 0.58, xOuter: 0.28 };
+const datasetUrl = exampleAssetUrl("dataset/overlay.csv");
+const colors = {
+  "Base %": "#193a59",
+  "Custom %": "#65a0d8",
+  "Base XA": "#c7cdd8",
+  "Custom XA": "#b06e50",
+  "Total XA": "#a5b65e",
+};
+
+class ColorLegend {
+  constructor(items) {
+    this.items = items;
+    this.width = plotWidth;
+    this.height = 28;
+    this.options = { width: this.width, height: this.height };
+  }
+
+  render(svg, renderOptions = {}) {
+    const width = renderOptions.width ?? this.width;
+    const container = d3.select(svg);
+    container.selectAll("*").remove();
+
+    const itemWidth = 118;
+    const startX = (width - itemWidth * this.items.length) / 2;
+    const groups = container
+      .selectAll("g")
+      .data(this.items)
+      .join("g")
+      .attr(
+        "transform",
+        (_item, index) => `translate(${startX + index * itemWidth}, 8)`,
+      );
+
+    groups
+      .append("rect")
+      .attr("width", 12)
+      .attr("height", 12)
+      .attr("rx", 1.5)
+      .attr("fill", (item) => item.color);
+    groups
+      .append("text")
+      .attr("x", 19)
+      .attr("y", 10)
+      .attr("fill", "#333")
+      .attr("font-family", "sans-serif")
+      .attr("font-size", 11)
+      .text((item) => item.label);
+  }
+}
+
+function buildView(rows) {
+  const barData = rows.flatMap((row) => [
+    { quarter: row.quarter, series: "Base %", value: row.basePercent },
+    {
+      quarter: row.quarter,
+      series: "Custom %",
+      value: 100 - row.basePercent,
+    },
+  ]);
+  const lineSeries = [
+    { label: "Base XA", field: "baseXa" },
+    { label: "Custom XA", field: "customXa" },
+    { label: "Total XA", field: "totalXa" },
+  ];
+  const lineData = lineSeries.flatMap(({ label, field }) =>
+    rows.map((row) => ({
+      quarter: row.quarter,
+      series: label,
+      value: row[field],
+    })),
+  );
+
+  const bars = chart({
+    data: barData,
+    mark: "stackbar",
+    encoding: {
+      x: "quarter",
+      y: "value",
+      group: "series",
+      yDomain: [0, 100],
+      groupDomain: ["Base %", "Custom %"],
+    },
+    width: plotWidth,
+    height: plotHeight,
+    padding,
+    colorScheme: [colors["Base %"], colors["Custom %"]],
+    yTickCount: 5,
+    yTickFormat: (value) => `${value}%`,
+    showYGrid: true,
+  });
+
+  const lines = chart({
+    data: lineData,
+    mark: "line",
+    encoding: {
+      x: "quarter",
+      y: "value",
+      group: "series",
+      yDomain: [0, 8000],
+      groupDomain: ["Base XA", "Custom XA", "Total XA"],
+    },
+    width: plotWidth,
+    height: plotHeight,
+    padding,
+    colorScheme: [colors["Base XA"], colors["Custom XA"], colors["Total XA"]],
+    showXAxis: false,
+    yAxisPos: "right",
+    yTickCount: 8,
+    yTickFormat: (value) => `$${d3.format(",")(value)}`,
+  });
+
+  const legend = custom(
+    new ColorLegend(
+      Object.entries(colors).map(([label, color]) => ({ label, color })),
+    ),
+    { classTag: "legend" },
+  );
+
+  return stackY([overlay([bars, lines]), legend], { margin: 8 });
+}
+
+return buildView(parseCsv(await loadCsvText(datasetUrl)));

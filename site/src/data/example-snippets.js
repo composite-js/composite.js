@@ -5,6 +5,7 @@ import mirror from "./example-snippets/mirror.txt?raw";
 import mediafears from "./example-snippets/mediafears.txt?raw";
 import nobel from "./example-snippets/nobel.txt?raw";
 import olympic from "./example-snippets/olympic.txt?raw";
+import overlay from "./example-snippets/overlay.txt?raw";
 import rainfall from "./example-snippets/rainfall.txt?raw";
 import scatterplotmatrix from "./example-snippets/scatterplotmatrix.txt?raw";
 import upset from "./example-snippets/upset.txt?raw";
@@ -17,6 +18,7 @@ const snippets = {
   mediafears,
   nobel,
   olympic,
+  overlay,
   rainfall,
   scatterplotmatrix,
   upset,

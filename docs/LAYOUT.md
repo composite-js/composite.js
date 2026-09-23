@@ -34,7 +34,8 @@ the target's contents.
 `computeLayout(spec, { width, height, margin, document, measurementAdapter })`
 returns a read-only ComputedLayout. Existing sizing rules remain: stack and
 wrapper sizes derive from content and reject root width/height overrides.
-Leaf, repeat, and embed roots accept dimensions. Root leaves use configured
+Leaf, repeat, and embed roots accept dimensions. Overlay, stack, and wrapper
+sizes derive from their content. Root leaves use configured
 margins; composition children use the measurement adapter. Repeat leaf cells
 retain the existing zero-margin policy.
 
@@ -48,6 +49,16 @@ without a browser.
 without repeating measurement, repeat callbacks, slot lookup, or layout.
 Dimensions cannot be overridden here; compute another result to resize.
 Results for different viewports may coexist and be rendered in any order.
+
+## Overlay geometry
+
+`overlay([background, foreground])` gives every direct child the same content
+rectangle. Its intrinsic width and height are the largest child content width
+and height, while each outer margin is the largest margin requested on that
+side by any child. This keeps plot regions aligned while allowing, for example,
+a left axis on one chart and a right axis on another. Children render in array
+order, so later children appear above earlier children. Overlay coordinates
+only geometry; chart domains remain explicit chart configuration.
 
 ## Occurrences and coordinates
 

@@ -138,6 +138,14 @@ export interface ChartConfig<T extends Datum = Datum> {
   yAxisName?: string;
   xAxisPos?: "top" | "bottom" | string;
   yAxisPos?: "left" | "right" | string;
+  xTickFormat?: (value: Primitive, index: number) => string;
+  yTickFormat?: (value: Primitive, index: number) => string;
+  xTickCount?: number;
+  yTickCount?: number;
+  showXGrid?: boolean;
+  showYGrid?: boolean;
+  reverseX?: boolean;
+  reverseY?: boolean;
   [option: string]: unknown;
 }
 
@@ -452,6 +460,7 @@ export function custom(
 export function text(config?: TextOptions): LeafLayoutNode;
 export function image(config: ImageOptions): LeafLayoutNode;
 export function wrapper(node: LayoutNode, options?: WrapperOptions): LayoutNode;
+export function overlay(nodes: LayoutNode[]): LayoutNode;
 export function stackX(nodes: LayoutNode[], options?: StackOptions): LayoutNode;
 export function stackY(nodes: LayoutNode[], options?: StackOptions): LayoutNode;
 export function repeatX<T = unknown>(

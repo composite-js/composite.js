@@ -210,19 +210,26 @@ function domainDescriptor(chart, channel) {
           );
 
     case "line":
-      return channel === "x"
-        ? valueDescriptor(
-            chart,
-            channel,
-            explicitDomain,
-            extentDomain(data, field),
-          )
-        : valueDescriptor(
-            chart,
-            channel,
-            explicitDomain,
-            maxValueDomain(data, field),
-          );
+      if (channel === "x") {
+        const sample = data.find((datum) => datum[field] !== undefined);
+        const categorical =
+          typeof sample?.[field] === "string" ||
+          explicitDomain?.some((value) => typeof value === "string");
+        return categorical
+          ? categoryDescriptor(chart, channel, explicitDomain)
+          : valueDescriptor(
+              chart,
+              channel,
+              explicitDomain,
+              extentDomain(data, field),
+            );
+      }
+      return valueDescriptor(
+        chart,
+        channel,
+        explicitDomain,
+        maxValueDomain(data, field),
+      );
 
     case "scatter":
       return valueDescriptor(

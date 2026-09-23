@@ -28,6 +28,7 @@ const helpers = {
   image: composite.image,
   loadCsvText: composite.loadCsvText,
   numericColumns: composite.numericColumns,
+  overlay: composite.overlay,
   parseCsv: composite.parseCsv,
   repeat: composite.repeat,
   repeatX: composite.repeatX,

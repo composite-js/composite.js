@@ -2,7 +2,7 @@ import { Chart } from "../chart/chart.js";
 import { ImageElement } from "./image.js";
 import { TextElement } from "./text.js";
 import { Node, NodeKind, setNodeKind, copyOptions } from "./node.js";
-import { RepeatX, RepeatY, Stack } from "./composition.js";
+import { Overlay, RepeatX, RepeatY, Stack } from "./composition.js";
 import { wrapper as createWrapper } from "./wrapper.js";
 
 function freezeLeaf(node) {
@@ -61,6 +61,10 @@ export function stackX(nodes, options) {
 
 export function stackY(nodes, options) {
   return new Stack(nodes, "vertical", options);
+}
+
+export function overlay(nodes) {
+  return new Overlay(nodes);
 }
 
 export function repeatX(domain, func, options) {

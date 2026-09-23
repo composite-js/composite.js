@@ -31,7 +31,7 @@ export function expandLayout(spec, occurrenceId = "0", active = new Set()) {
       viewport: null,
     };
     let children = [];
-    if (Node.isStack(spec)) {
+    if (Node.isStack(spec) || Node.isOverlay(spec)) {
       if (!spec.children.length)
         throw new Error("Invalid: composition node has no children.");
       children = spec.children;

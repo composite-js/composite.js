@@ -111,14 +111,20 @@ const markSections = [
   },
   {
     id: "line",
-    summary: "Line chart for continuous x/y data.",
+    summary: "Single- or multi-series line chart with continuous or categorical x values.",
     required: ["x", "y"],
-    optional: ["xDomain", "yDomain"],
-    options: ["axis visibility, names, and positions"],
+    optional: ["xDomain", "yDomain", "group", "groupDomain"],
+    options: [
+      "color or colorScheme",
+      "showPoints, pointRadius, and strokeWidth",
+      "padding for categorical x values",
+      "axis visibility, names, positions, tick formatting, and grid lines",
+    ],
     example: `chart({
   mark: "line",
   data: timeline,
-  encoding: { x: "year", y: "value" },
+  encoding: { x: "quarter", y: "value", group: "series" },
+  colorScheme: ["#b06e50", "#a5b65e"],
 });`,
   },
   {
@@ -295,7 +301,7 @@ const formatFields = (fields) => fields.join(", ");
       <p>
         A mark is the rendering layer inside a chart leaf. Create one with
         <code>{chartShapeLabel}</code>, then pass the chart node into layout
-        operators such as <code>stackX</code>, <code>stackY</code>,
+        operators such as <code>stackX</code>, <code>stackY</code>, <code>overlay</code>,
         <code>repeatX</code>, or <code>embed</code>.
       </p>
       <pre class="docs-code"><code>{chartShapeCode}</code></pre>

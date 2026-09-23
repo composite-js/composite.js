@@ -69,6 +69,21 @@ function assertInvalid(config, pattern) {
   });
 
   assertValid({
+    mark: "line",
+    data: [
+      { quarter: "Q1", series: "Base", value: 4 },
+      { quarter: "Q2", series: "Base", value: 5 },
+    ],
+    encoding: {
+      x: "quarter",
+      y: "value",
+      group: "series",
+      xDomain: ["Q1", "Q2"],
+      groupDomain: ["Base"],
+    },
+  });
+
+  assertValid({
     mark: "pac",
     data: [{ category: "A", value: 4 }],
     encoding: { x: "value", y: "category", yDomain: ["A", "B"] },

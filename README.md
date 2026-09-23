@@ -2,7 +2,7 @@
 
 `composite.js` is a JavaScript grammar for building composite visualizations.
 Describe the charts you need and their abstract
-relationships—such as stacking, repetition, alignment, and embedding—and let
+relationships—such as stacking, overlaying, repetition, alignment, and embedding—and let
 the library render the charts and compute their concrete layout.
 
 ## Install
@@ -55,7 +55,7 @@ view.render(document.querySelector("#app"));
 ## What You Describe
 
 You provide the chart data, mark types, visual encodings, and high-level
-relationships between charts. Operations such as `stackX()`, `stackY()`,
+relationships between charts. Operations such as `stackX()`, `stackY()`, `overlay()`,
 `repeatX()`, `repeatY()`, and `embed()` describe composition intent without
 requiring pixel coordinates or SVG transforms.
 

@@ -84,6 +84,14 @@ export const examples = [
     dataFiles: ["mediafears.csv"],
     featured: false,
   },
+  {
+    slug: "overlay",
+    title: "Overlay",
+    summary: "A dual-axis stacked-bar and multi-series line composition.",
+    tags: ["overlay", "stackbar", "line"],
+    dataFiles: ["overlay.csv"],
+    featured: false,
+  },
 ];
 
 export const featuredExamples = examples.filter(

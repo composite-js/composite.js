@@ -62,3 +62,41 @@ assert.equal(circles[0].getAttribute("r"), "4");
   assert.deepEqual(domainAxisConfig.scales.x.range(), [120, 0]);
   assert.deepEqual(domainAxisConfig.scales.y.range(), [0, 80]);
 }
+
+{
+  const groupedSvg = createFakeSvg();
+  const groupedRenderer = new LineChartRenderer({
+    width: 120,
+    height: 80,
+    margin: { top: 0, right: 0, bottom: 0, left: 0 },
+    colorScheme: ["#b36f4f", "#9cad5b"],
+    padding: { xInner: 0.2, xOuter: 0.1 },
+    encoding: {
+      x: "quarter",
+      y: "value",
+      group: "series",
+      xDomain: ["Q1", "Q2"],
+      yDomain: [0, 40],
+      groupDomain: ["Base", "Total"],
+    },
+  });
+
+  const groupedAxisConfig = groupedRenderer.render(groupedSvg, [
+    { quarter: "Q1", series: "Base", value: 10 },
+    { quarter: "Q2", series: "Base", value: 20 },
+    { quarter: "Q1", series: "Total", value: 30 },
+    { quarter: "Q2", series: "Total", value: 25 },
+  ]);
+
+  const series = groupedSvg.querySelectorAll(".line-series");
+  assert.equal(series.length, 2);
+  assert.equal(series[0].getAttribute("stroke"), "#b36f4f");
+  assert.equal(series[1].getAttribute("stroke"), "#9cad5b");
+  assert.equal(groupedSvg.querySelectorAll(".line-point").length, 4);
+  assert.deepEqual(groupedAxisConfig.scales.x.domain(), ["Q1", "Q2"]);
+  assert.deepEqual(groupedAxisConfig.scales.y.domain(), [0, 40]);
+  assert.equal(
+    groupedSvg.querySelectorAll("title")[0].textContent,
+    "Q1 - Base: 10",
+  );
+}

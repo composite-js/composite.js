@@ -18,6 +18,7 @@ import {
   repeat,
   repeatX,
   repeatY,
+  overlay,
   sequenceContainer,
   stackX,
   stackY,
@@ -145,6 +146,7 @@ const customNode = custom(renderable, { classTag: "sparkline" });
 const row = stackX([label, bars, flag, customNode], { margin: [4, 12, 0] });
 const linkedRow = stackX([bars, bars], { link: true });
 const linkedColumn = stackY([bars, bars], { link: true });
+const overlaid = overlay([bars, bars]);
 const wrapped = wrapper(row, { padding: 8, stroke: "#94a3b8" });
 const repeatedX = repeatX(["A", "B"], (category) =>
   chart<Row>({

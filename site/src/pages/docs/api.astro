@@ -19,6 +19,8 @@ const linkedRow = stackX([horizontalBars, pac], {
   link: true,
 });`;
 
+const overlayCode = `const view = overlay([stackedBars, groupedLines]);`;
+
 const repeatCode = `const pies = repeatX(ids, (id) =>
   chart({
     mark: "pie",
@@ -163,6 +165,18 @@ assertLayoutNode(value, "value");`;
         <code>pac</code>, and <code>scatter</code>.
       </p>
       <pre class="docs-code"><code>{stackCode}</code></pre>
+    </section>
+
+    <section class="docs-section">
+      <h2><code>overlay(nodes)</code></h2>
+      <p>
+        Places every child in one shared content rectangle. The largest child
+        content size is used, outer margins are merged per side, and later
+        children paint above earlier children. Chart domains remain explicit,
+        which allows overlays such as a percentage axis on the left and a
+        currency axis on the right.
+      </p>
+      <pre class="docs-code"><code>{overlayCode}</code></pre>
     </section>
 
     <section class="docs-section">

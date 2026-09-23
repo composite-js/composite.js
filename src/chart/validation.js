@@ -28,7 +28,6 @@ const LEGACY_TOP_LEVEL_OPTIONS = {
 
 const NUMERIC_FIELD_BY_MARK = {
   area: ["x", "y"],
-  line: ["x", "y"],
   scatter: ["x", "y"],
   stream: ["y"],
 };
@@ -162,6 +161,17 @@ function assertBubblePositionValues(data, encoding) {
       );
     }
   });
+}
+
+function assertLinePositionValues(data, encoding) {
+  const xField = encoding.x;
+  const values = data.map((row) => row[xField]);
+  const allStrings = values.every((value) => typeof value === "string");
+
+  if (!allStrings) {
+    assertFiniteNumbers("line", data, xField, { nonNegative: true });
+  }
+  assertFiniteNumbers("line", data, encoding.y, { nonNegative: true });
 }
 
 function assertDumbbellPairs(data, encoding, categoryChannel) {
@@ -306,6 +316,7 @@ export function validateChartConfig(config = {}) {
   assertRequiredEncoding(mark, definition, encoding);
   assertEncodingFieldNames(mark, encoding, [
     ...definition.requiredEncoding,
+    ...(encoding.group !== undefined ? ["group"] : []),
     ...(encoding.size !== undefined ? ["size"] : []),
   ]);
 
@@ -317,6 +328,7 @@ export function validateChartConfig(config = {}) {
 
   const dataBackedChannels = [
     ...definition.requiredEncoding,
+    ...(encoding.group !== undefined ? ["group"] : []),
     ...(encoding.size !== undefined ? ["size"] : []),
   ];
   assertRowsHaveFields(mark, data, encoding, dataBackedChannels);
@@ -336,6 +348,11 @@ export function validateChartConfig(config = {}) {
       assertDumbbellPairs(data, encoding, orientation.categoryChannel);
     }
 
+    return;
+  }
+
+  if (mark === "line") {
+    assertLinePositionValues(data, encoding);
     return;
   }
 

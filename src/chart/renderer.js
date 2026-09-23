@@ -33,6 +33,12 @@ export class ChartRenderer {
     this.yAxisName = options.yAxisName || "";
     this.xAxisPos = options.xAxisPos || "bottom";
     this.yAxisPos = options.yAxisPos || "left";
+    this.xTickFormat = options.xTickFormat;
+    this.yTickFormat = options.yTickFormat;
+    this.xTickCount = options.xTickCount;
+    this.yTickCount = options.yTickCount;
+    this.showXGrid = options.showXGrid === true;
+    this.showYGrid = options.showYGrid === true;
     this.markStyle = normalizeMarkStyle(options.markStyle);
   }
 
@@ -54,6 +60,12 @@ export class ChartRenderer {
       yAxisName: this.yAxisName,
       xAxisPos: this.xAxisPos,
       yAxisPos: this.yAxisPos,
+      xTickFormat: this.xTickFormat,
+      yTickFormat: this.yTickFormat,
+      xTickCount: this.xTickCount,
+      yTickCount: this.yTickCount,
+      showXGrid: this.showXGrid,
+      showYGrid: this.showYGrid,
     };
   }
 

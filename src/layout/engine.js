@@ -106,6 +106,14 @@ export class LayoutEngine {
   }
 
   static computeLayoutNode(node, context, renderSize = {}) {
+    if (Node.isOverlay(node)) {
+      node.children.forEach((child) => {
+        this.computeLayoutNode(child, context);
+      });
+      this.computeOverlay(node);
+      return;
+    }
+
     if (Node.isStack(node)) {
       node.children.forEach((child) => {
         this.computeLayoutNode(child, context);
@@ -189,6 +197,32 @@ export class LayoutEngine {
     }
 
     this.updateBBox(node);
+  }
+
+  static computeOverlay(node) {
+    const width = Math.max(
+      ...node.children.map((child) => child.bbox.contentRect().width),
+    );
+    const height = Math.max(
+      ...node.children.map((child) => child.bbox.contentRect().height),
+    );
+    const margin = {
+      top: Math.max(
+        ...node.children.map((child) => child.bbox.getMargin().top),
+      ),
+      right: Math.max(
+        ...node.children.map((child) => child.bbox.getMargin().right),
+      ),
+      bottom: Math.max(
+        ...node.children.map((child) => child.bbox.getMargin().bottom),
+      ),
+      left: Math.max(
+        ...node.children.map((child) => child.bbox.getMargin().left),
+      ),
+    };
+
+    node.bbox = new BBox(0, 0, width, height);
+    node.bbox.setMargin(margin);
   }
 
   static computeRepeat(node, context = {}, renderSize = {}) {
@@ -322,7 +356,13 @@ export class LayoutEngine {
     if (node.arrangedSignature === signature) return;
     node.arrangedSignature = signature;
     const { width, height } = node.bbox.contentRect();
-    if (Node.isStack(node)) {
+    if (Node.isOverlay(node)) {
+      node.children.forEach((child) => {
+        this.arrange(child, { width, height });
+        child.bbox.setSize(width, height);
+        child.bbox.translateTo(0, 0);
+      });
+    } else if (Node.isStack(node)) {
       node.children.forEach((child) => this.arrange(child));
     } else if (Node.isWrapper(node)) {
       const child = node.child;

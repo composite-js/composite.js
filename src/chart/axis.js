@@ -15,6 +15,12 @@ export class AxisRenderer {
     this.yAxisName = options.yAxisName || "";
     this.xAxisPos = options.xAxisPos || "bottom";
     this.yAxisPos = options.yAxisPos || "left";
+    this.xTickFormat = options.xTickFormat;
+    this.yTickFormat = options.yTickFormat;
+    this.xTickCount = options.xTickCount;
+    this.yTickCount = options.yTickCount;
+    this.showXGrid = options.showXGrid === true;
+    this.showYGrid = options.showYGrid === true;
   }
 
   /**
@@ -55,11 +61,16 @@ export class AxisRenderer {
         ? `translate(${margin.left}, ${margin.top})`
         : `translate(${margin.left}, ${margin.top + height})`;
 
+    const axis = xAxisGenerator(xScale);
+    if (this.xTickCount !== undefined) axis.ticks(this.xTickCount);
+    if (this.xTickFormat !== undefined) axis.tickFormat(this.xTickFormat);
+    if (this.showXGrid) axis.tickSize(-height);
+
     container
       .append("g")
-      .attr("class", "x-axis")
+      .attr("class", this.showXGrid ? "x-axis x-grid" : "x-axis")
       .attr("transform", xTransform)
-      .call(xAxisGenerator(xScale));
+      .call(axis);
 
     if (this.xAxisName) {
       const labelY =
@@ -93,11 +104,16 @@ export class AxisRenderer {
         ? `translate(${margin.left + width}, ${margin.top})`
         : `translate(${margin.left}, ${margin.top})`;
 
+    const axis = yAxisGenerator(yScale);
+    if (this.yTickCount !== undefined) axis.ticks(this.yTickCount);
+    if (this.yTickFormat !== undefined) axis.tickFormat(this.yTickFormat);
+    if (this.showYGrid) axis.tickSize(-width);
+
     const yAxisGroup = container
       .append("g")
-      .attr("class", "y-axis")
+      .attr("class", this.showYGrid ? "y-axis y-grid" : "y-axis")
       .attr("transform", yTransform)
-      .call(yAxisGenerator(yScale));
+      .call(axis);
 
     if (this.yAxisName) {
       // Calculate offset based on the maximum width of tick labels

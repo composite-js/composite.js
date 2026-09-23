@@ -47,7 +47,10 @@ export const CHART_TYPE_REGISTRY = {
   },
   line: {
     renderer: "LineChartRenderer",
-    encoding: xyEncoding,
+    encoding: {
+      requiredEncoding: ["x", "y"],
+      optionalEncoding: ["xDomain", "yDomain", "group", "groupDomain"],
+    },
     sharedDomain: "line",
   },
   matrix: {

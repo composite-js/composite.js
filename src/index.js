@@ -12,6 +12,7 @@ export {
   gridContainer,
   image,
   isLayoutNode,
+  overlay,
   repeat,
   repeatX,
   repeatY,

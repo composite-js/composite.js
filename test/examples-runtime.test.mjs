@@ -123,5 +123,26 @@ for (const file of exampleFiles) {
         "media-fears should label its shared axes",
       );
     }
+
+    if (file === "overlay.js") {
+      const labels = svg
+        .querySelectorAll("text")
+        .map((text) => text.textContent);
+
+      assert.equal(
+        svg.querySelectorAll(".overlay").length,
+        1,
+        "overlay example should share one plot rectangle",
+      );
+      assert.equal(
+        svg.querySelectorAll(".line-series").length,
+        3,
+        "overlay example should render three line series",
+      );
+      assert.ok(
+        labels.includes("Base %") && labels.includes("Total XA"),
+        "overlay example should render its color legend",
+      );
+    }
   });
 }

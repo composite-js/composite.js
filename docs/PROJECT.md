@@ -82,6 +82,9 @@ options)` method as a custom leaf layout node.
 - `stackY(nodes, options)` arranges layout nodes vertically. For two direct
   chart nodes, `link: true` draws connector lines between matching
   `encoding.x` values when both marks support link anchors.
+- `overlay(nodes)` places layout nodes in one shared content rectangle. The
+  largest intrinsic content width and height are used, margins are merged by
+  taking the maximum on each side, and later children paint above earlier ones.
 - `repeatX(domain, fn, options)` creates a horizontal repeated layout from a domain and node factory.
 - `repeatY(domain, fn, options)` creates a vertical repeated layout from a domain and node factory. Repeat dimensions may be explicit or inferred from the largest child and the configured band padding. Positional repeat domains must contain unique values.
 - `repeat(domain, fn, options)` creates a directionless repeated layout that can be embedded into a compatible container.
@@ -146,13 +149,17 @@ axis padding for marks that use band padding objects, such as `bar`, `pac`,
 axis-specific padding is copied only when matching direct chart children use
 the same categorical field.
 
+Line charts accept numeric or string `encoding.x` values. Supplying
+`encoding.group` and an optional `groupDomain` renders multiple colored series;
+categorical lines use the same band-padding model as categorical bar charts.
+
 ### Default-first layout
 
 The shortest valid composition should be the normal starting point. Chart
 dimensions and margins have built-in defaults, layout measurement accounts for
 rendered content, stack positions are derived from child bounds, and repeats
 infer their viewport from all repeated children. Leaf nodes, repeats, and
-embedded layouts accept explicit dimensions. Stacks and wrappers are
+embedded layouts accept explicit dimensions. Overlays, stacks, and wrappers are
 content-sized and reject render-time `width` or `height`. User-facing examples
 should introduce explicit sizing only when the example has a concrete reason
 to override the automatic result.
@@ -170,7 +177,7 @@ Leaf nodes are created by factories in `src/layout/factory.js`. Internally,
 resolves its chart type and delegates rendering to a chart renderer in
 `src/chart/type/`.
 
-Composition nodes live in `src/layout/composition.js`. `Stack` arranges children horizontally or vertically, `RepeatX` and `RepeatY` describe repeated children along one axis, and `Embedded` renders repeated children into slots produced by a container. All of these are layout nodes, so they can be nested.
+Composition nodes live in `src/layout/composition.js`. `Stack` arranges children horizontally or vertically, `Overlay` gives children a shared content rectangle, `RepeatX` and `RepeatY` describe repeated children along one axis, and `Embedded` renders repeated children into slots produced by a container. All of these are layout nodes, so they can be nested.
 
 Containers are data-driven spatial organizers for embedded layout nodes. A container provides `width`, `height`, `margin`, and `slots(data, mapping, size)`, and may render a structural background layer with `render(svg, options)`. Each slot must have a unique key matching the repeated datum key plus finite `x` and `y` coordinates relative to the container content box; optional slot dimensions must be finite and non-negative. Containers may omit data that have no valid slot, and may return slots in any order. Containers should organize repeated children rather than encode quantitative values as primary marks; use embedded `chart(...)` or `custom(...)` nodes for the visual encoding itself. Built-in containers include `sequenceContainer()` and `gridContainer()`, while `customContainer()` is the recommended extension point for user-defined slot logic.
 
