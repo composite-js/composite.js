@@ -45,6 +45,7 @@ assert.deepEqual(
   "BarChartRenderer",
   "BoxPlotRenderer",
   "BubbleChartRenderer",
+  "CandlestickChartRenderer",
   "Chart",
   "Composition",
   "DirectionlessRepeat",

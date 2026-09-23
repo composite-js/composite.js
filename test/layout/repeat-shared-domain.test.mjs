@@ -49,6 +49,39 @@ await withFakeSvgDocument(async (document) => {
 
 await withFakeSvgDocument(async (document) => {
   const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  const ranges = [
+    { open: 9, high: 12, low: 8, close: 11 },
+    { open: 90, high: 120, low: 80, close: 110 },
+  ];
+
+  repeatX(
+    ranges,
+    (prices) =>
+      chart({
+        mark: "candlestick",
+        data: [{ period: "A", ...prices }],
+        encoding: {
+          x: "period",
+          open: "open",
+          high: "high",
+          low: "low",
+          close: "close",
+        },
+        margin: { top: 0, right: 0, bottom: 0, left: 0 },
+      }),
+    { width: 200, height: 100, paddingInner: 0, paddingOuter: 0 },
+  ).render(svg, { width: 200, height: 100 });
+
+  const wickHeights = svg
+    .querySelectorAll(".candlestick-wick")
+    .map((wick) => numericAttribute(wick, "y2") - numericAttribute(wick, "y1"));
+
+  assert.equal(wickHeights.length, 2);
+  assert.ok(wickHeights[0] < wickHeights[1]);
+});
+
+await withFakeSvgDocument(async (document) => {
+  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
   const slices = [
     [
       { category: "A", value: 1 },

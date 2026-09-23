@@ -53,6 +53,14 @@ export const CHART_TYPE_REGISTRY = {
     },
     sharedDomain: "line",
   },
+  candlestick: {
+    renderer: "CandlestickChartRenderer",
+    encoding: {
+      requiredEncoding: ["x", "open", "high", "low", "close"],
+      optionalEncoding: ["xDomain", "yDomain"],
+    },
+    sharedDomain: "candlestick",
+  },
   matrix: {
     renderer: "MatrixChartRenderer",
     encoding: {

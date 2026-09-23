@@ -1,5 +1,28 @@
 import * as d3 from "d3";
 
+function moveToBack(selection) {
+  const node = selection.node();
+  const parent = node?.parentNode;
+  const firstChild = parent?.children?.[0] || parent?.firstChild;
+
+  if (parent && firstChild && firstChild !== node) {
+    parent.insertBefore(node, firstChild);
+  }
+}
+
+function drawGrid(container, axis, className, transform) {
+  const grid = container
+    .append("g")
+    .attr("class", className)
+    .attr("transform", transform)
+    .attr("pointer-events", "none")
+    .call(axis.tickFormat(() => "").tickSizeOuter(0));
+
+  grid.select(".domain").remove();
+  grid.selectAll("text").remove();
+  moveToBack(grid);
+}
+
 /**
  * Axis renderer class for drawing chart axes.
  */
@@ -64,11 +87,16 @@ export class AxisRenderer {
     const axis = xAxisGenerator(xScale);
     if (this.xTickCount !== undefined) axis.ticks(this.xTickCount);
     if (this.xTickFormat !== undefined) axis.tickFormat(this.xTickFormat);
-    if (this.showXGrid) axis.tickSize(-height);
+
+    if (this.showXGrid) {
+      const gridAxis = xAxisGenerator(xScale).tickSize(-height);
+      if (this.xTickCount !== undefined) gridAxis.ticks(this.xTickCount);
+      drawGrid(container, gridAxis, "x-grid", xTransform);
+    }
 
     container
       .append("g")
-      .attr("class", this.showXGrid ? "x-axis x-grid" : "x-axis")
+      .attr("class", "x-axis")
       .attr("transform", xTransform)
       .call(axis);
 
@@ -107,11 +135,16 @@ export class AxisRenderer {
     const axis = yAxisGenerator(yScale);
     if (this.yTickCount !== undefined) axis.ticks(this.yTickCount);
     if (this.yTickFormat !== undefined) axis.tickFormat(this.yTickFormat);
-    if (this.showYGrid) axis.tickSize(-width);
+
+    if (this.showYGrid) {
+      const gridAxis = yAxisGenerator(yScale).tickSize(-width);
+      if (this.yTickCount !== undefined) gridAxis.ticks(this.yTickCount);
+      drawGrid(container, gridAxis, "y-grid", yTransform);
+    }
 
     const yAxisGroup = container
       .append("g")
-      .attr("class", this.showYGrid ? "y-axis y-grid" : "y-axis")
+      .attr("class", "y-axis")
       .attr("transform", yTransform)
       .call(axis);
 

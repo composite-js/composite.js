@@ -144,5 +144,55 @@ for (const file of exampleFiles) {
         "overlay example should render its color legend",
       );
     }
+
+    if (file === "candlestick.js") {
+      const grid = svg.querySelector(".y-grid");
+      const firstBody = svg.querySelector(".candlestick-body");
+
+      assert.equal(
+        svg.querySelectorAll(".overlay").length,
+        1,
+        "candlestick example should overlay its chart layers",
+      );
+      assert.equal(
+        svg.querySelectorAll(".candlestick-body").length,
+        28,
+        "candlestick example should render one body per OHLC row",
+      );
+      assert.equal(
+        svg.querySelectorAll(".candlestick-wick").length,
+        28,
+        "candlestick example should render one wick per OHLC row",
+      );
+      assert.equal(
+        svg.querySelectorAll(".line-series").length,
+        4,
+        "candlestick example should overlay four moving-average lines",
+      );
+      assert.equal(
+        svg.querySelectorAll(".line-point").length,
+        112,
+        "candlestick example should show a point for every moving-average value",
+      );
+      assert.equal(
+        new Set(
+          svg
+            .querySelectorAll(".line-series")
+            .map((line) => line.getAttribute("stroke")),
+        ).size,
+        4,
+        "candlestick example should use a different color for each line",
+      );
+      assert.equal(
+        grid.parentNode,
+        firstBody.parentNode,
+        "candlestick grid and bodies should share a chart layer",
+      );
+      assert.ok(
+        grid.parentNode.children.indexOf(grid) <
+          firstBody.parentNode.children.indexOf(firstBody),
+        "candlestick grid should render behind its bodies",
+      );
+    }
   });
 }

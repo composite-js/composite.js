@@ -92,6 +92,14 @@ export const examples = [
     dataFiles: ["overlay.csv"],
     featured: false,
   },
+  {
+    slug: "candlestick",
+    title: "Candlestick Overlay",
+    summary: "A candlestick chart overlaid with moving-average lines.",
+    tags: ["overlay", "candlestick", "line"],
+    dataFiles: ["candlestick.csv"],
+    featured: false,
+  },
 ];
 
 export const featuredExamples = examples.filter(

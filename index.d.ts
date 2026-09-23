@@ -29,6 +29,10 @@ export interface Encoding {
   y?: string;
   group?: string;
   size?: string;
+  open?: string;
+  high?: string;
+  low?: string;
+  close?: string;
   xDomain?: Primitive[];
   yDomain?: Primitive[];
   groupDomain?: Primitive[];

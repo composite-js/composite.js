@@ -128,6 +128,31 @@ const markSections = [
 });`,
   },
   {
+    id: "candlestick",
+    summary: "Open-high-low-close candles across an ordered x domain.",
+    required: ["x", "open", "high", "low", "close"],
+    optional: ["xDomain", "yDomain"],
+    options: [
+      "upColor and downColor",
+      "candleWidth or candleWidthRatio",
+      "wickWidth",
+      "padding for categorical x values",
+      "axis visibility, names, positions, tick formatting, and grid lines",
+    ],
+    example: `chart({
+  mark: "candlestick",
+  data: prices,
+  encoding: {
+    x: "date",
+    open: "open",
+    high: "high",
+    low: "low",
+    close: "close",
+  },
+});`,
+    note: "High must be at least the open and close; low must be at most the open and close.",
+  },
+  {
     id: "scatter",
     summary: "Scatter plot for numeric x/y points.",
     required: ["x", "y"],
@@ -321,6 +346,10 @@ const formatFields = (fields) => fields.join(", ");
         <code>{'encoding: { x: "category", y: "value" }'}</code> maps the data fields
         named <code>category</code> and <code>value</code> onto the <code>x</code>
         and <code>y</code> channels.
+      </p>
+      <p>
+        Candlestick charts use <code>open</code>, <code>high</code>, <code>low</code>,
+        and <code>close</code> for their four quantitative price fields.
       </p>
       <p>
         Every chart requires at least one data row. Quantitative fields must

@@ -28,6 +28,7 @@ const tests = [
   "./chart/bubble.test.mjs",
   "./chart/area.test.mjs",
   "./chart/line.test.mjs",
+  "./chart/candlestick.test.mjs",
   "./chart/matrix.test.mjs",
   "./chart/box.test.mjs",
   "./chart/stream.test.mjs",

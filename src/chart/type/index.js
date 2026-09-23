@@ -5,6 +5,7 @@ export {
 } from "./bar.js";
 export { AreaChartRenderer } from "./area.js";
 export { LineChartRenderer } from "./line.js";
+export { CandlestickChartRenderer } from "./candlestick.js";
 export { MatrixChartRenderer } from "./matrix.js";
 export { ScatterChartRenderer } from "./scatter.js";
 export { BoxPlotRenderer } from "./box.js";

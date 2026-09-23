@@ -1,0 +1,95 @@
+// Source: https://echarts.apache.org/examples/en/editor.html?c=candlestick-sh
+
+import { chart, loadCsvText, overlay, parseCsv } from "../src/index.js";
+
+const datasetUrl = new URL("./dataset/candlestick.csv", import.meta.url);
+const width = 1080;
+const height = 420;
+const margin = { top: 20, right: 24, bottom: 42, left: 58 };
+const movingAverageSeries = [
+  { name: "MA5", windowSize: 5, color: "#5273c7" },
+  { name: "MA10", windowSize: 10, color: "#82bd63" },
+  { name: "MA20", windowSize: 20, color: "#f2b53f" },
+  { name: "MA30", windowSize: 30, color: "#ef6a67" },
+];
+
+function movingAverage(rows, series) {
+  return rows.map((row, index) => {
+    const window = rows.slice(
+      Math.max(0, index - series.windowSize + 1),
+      index + 1,
+    );
+    return {
+      date: row.date,
+      series: series.name,
+      value: window.reduce((sum, item) => sum + item.close, 0) / window.length,
+    };
+  });
+}
+
+function buildView(rows) {
+  const yDomain = [
+    Math.min(...rows.map((row) => row.low)) - 2,
+    Math.max(...rows.map((row) => row.high)) + 2,
+  ];
+  const padding = { xInner: 0.18, xOuter: 0.1 };
+  const averageData = movingAverageSeries.flatMap((series) =>
+    movingAverage(rows, series),
+  );
+
+  const candles = chart({
+    data: rows,
+    mark: "candlestick",
+    encoding: {
+      x: "date",
+      open: "open",
+      high: "high",
+      low: "low",
+      close: "close",
+      yDomain,
+    },
+    width,
+    height,
+    margin,
+    padding,
+    upColor: "#e00000",
+    downColor: "#00b83f",
+    showYGrid: true,
+    yTickCount: 6,
+    xTickFormat: (value, index) => (index % 4 === 0 ? value : ""),
+  });
+
+  const average = chart({
+    data: averageData,
+    mark: "line",
+    encoding: {
+      x: "date",
+      y: "value",
+      group: "series",
+      yDomain,
+      groupDomain: movingAverageSeries.map((series) => series.name),
+    },
+    width,
+    height,
+    margin,
+    padding,
+    colorScheme: movingAverageSeries.map((series) => series.color),
+    strokeWidth: 2,
+    showPoints: true,
+    pointRadius: 2.5,
+    showXAxis: false,
+    showYAxis: false,
+  });
+
+  return overlay([candles, average]);
+}
+
+export async function createExample() {
+  return buildView(parseCsv(await loadCsvText(datasetUrl)));
+}
+
+if (typeof document !== "undefined") {
+  createExample().then((view) => {
+    view.render(document.getElementById("app"));
+  });
+}

@@ -8,6 +8,7 @@ const rendererByMark = {
   bar: "BarChartRenderer",
   box: "BoxPlotRenderer",
   bubble: "BubbleChartRenderer",
+  candlestick: "CandlestickChartRenderer",
   dumbbell: "DumbbellChartRenderer",
   flow: "FlowDiagramRenderer",
   groupbar: "GroupBarChartRenderer",
@@ -46,6 +47,17 @@ const configByMark = {
     mark: "bubble",
     data: [{ x: 1, y: 2, size: 3 }],
     encoding: { x: "x", y: "y", size: "size" },
+  },
+  candlestick: {
+    mark: "candlestick",
+    data: [{ period: "Q1", open: 10, high: 14, low: 8, close: 12 }],
+    encoding: {
+      x: "period",
+      open: "open",
+      high: "high",
+      low: "low",
+      close: "close",
+    },
   },
   dumbbell: {
     mark: "dumbbell",

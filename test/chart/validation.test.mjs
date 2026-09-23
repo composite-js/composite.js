@@ -84,6 +84,18 @@ function assertInvalid(config, pattern) {
   });
 
   assertValid({
+    mark: "candlestick",
+    data: [{ period: "Q1", open: 10, high: 14, low: 8, close: 12 }],
+    encoding: {
+      x: "period",
+      open: "open",
+      high: "high",
+      low: "low",
+      close: "close",
+    },
+  });
+
+  assertValid({
     mark: "pac",
     data: [{ category: "A", value: 4 }],
     encoding: { x: "value", y: "category", yDomain: ["A", "B"] },
@@ -110,6 +122,29 @@ function assertInvalid(config, pattern) {
     data: [{ category: "A", value: 4 }],
     encoding: { x: "category", y: "value" },
   });
+}
+
+{
+  const candlestick = {
+    mark: "candlestick",
+    data: [{ period: "Q1", open: 10, high: 11, low: 8, close: 12 }],
+    encoding: {
+      x: "period",
+      open: "open",
+      high: "high",
+      low: "low",
+      close: "close",
+    },
+  };
+
+  assertInvalid(candlestick, /Invalid OHLC values/);
+  assertInvalid(
+    {
+      ...candlestick,
+      data: [{ period: "Q1", open: 10, high: 14, low: 8, close: "12" }],
+    },
+    /Field "close".*finite numbers/,
+  );
 }
 
 {

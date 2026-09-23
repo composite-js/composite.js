@@ -174,6 +174,35 @@ function assertLinePositionValues(data, encoding) {
   assertFiniteNumbers("line", data, encoding.y, { nonNegative: true });
 }
 
+function assertCandlestickValues(data, encoding) {
+  const xField = encoding.x;
+  const xValues = data.map((row) => row[xField]);
+  const allStrings = xValues.every((value) => typeof value === "string");
+
+  if (!allStrings) {
+    assertFiniteNumbers("candlestick", data, xField, { nonNegative: true });
+  }
+
+  ["open", "high", "low", "close"].forEach((channel) => {
+    assertFiniteNumbers("candlestick", data, encoding[channel], {
+      nonNegative: true,
+    });
+  });
+
+  data.forEach((row, index) => {
+    const open = row[encoding.open];
+    const high = row[encoding.high];
+    const low = row[encoding.low];
+    const close = row[encoding.close];
+
+    if (high < Math.max(open, close) || low > Math.min(open, close)) {
+      throw new Error(
+        `Invalid OHLC values for mark "candlestick" at row ${index}: high must be at least open and close, and low must be at most open and close.`,
+      );
+    }
+  });
+}
+
 function assertDumbbellPairs(data, encoding, categoryChannel) {
   const categoryField = encoding[categoryChannel];
   const counts = new Map();
@@ -353,6 +382,11 @@ export function validateChartConfig(config = {}) {
 
   if (mark === "line") {
     assertLinePositionValues(data, encoding);
+    return;
+  }
+
+  if (mark === "candlestick") {
+    assertCandlestickValues(data, encoding);
     return;
   }
 

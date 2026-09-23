@@ -163,6 +163,37 @@ function domainDescriptor(chart, channel) {
 
   const data = chart.data || [];
   const field = encoding[channel];
+
+  if (strategy === "candlestick") {
+    if (channel === "x") {
+      if (!field) return null;
+      const sample = data.find((datum) => datum[field] !== undefined);
+      const categorical =
+        typeof sample?.[field] === "string" ||
+        explicitDomain?.some((value) => typeof value === "string");
+      return categorical
+        ? categoryDescriptor(chart, channel, explicitDomain)
+        : valueDescriptor(
+            chart,
+            channel,
+            explicitDomain,
+            extentDomain(data, field),
+          );
+    }
+
+    const values = data.flatMap((datum) => [
+      Number(datum[encoding.low]),
+      Number(datum[encoding.high]),
+    ]);
+    const extent = values.length ? d3.extent(values) : [0, 1];
+    const span = extent[1] - extent[0];
+    const padding = span ? span * 0.05 : Math.abs(extent[0]) * 0.05 || 1;
+    return valueDescriptor(chart, channel, explicitDomain, [
+      extent[0] - padding,
+      extent[1] + padding,
+    ]);
+  }
+
   if (!field) return null;
 
   switch (strategy) {

@@ -1,3 +1,4 @@
+import candlestick from "./example-snippets/candlestick.txt?raw";
 import country from "./example-snippets/country.txt?raw";
 import dropoutseer from "./example-snippets/dropoutseer.txt?raw";
 import iforum from "./example-snippets/iforum.txt?raw";
@@ -11,6 +12,7 @@ import scatterplotmatrix from "./example-snippets/scatterplotmatrix.txt?raw";
 import upset from "./example-snippets/upset.txt?raw";
 
 const snippets = {
+  candlestick,
   country,
   dropoutseer,
   iforum,
