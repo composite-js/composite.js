@@ -16,7 +16,7 @@ const commonRules = {
 
 export default [
   {
-    ignores: ["dist/**", "node_modules/**", "site/dist/**"],
+    ignores: ["dist/**", "node_modules/**", "site/dist/**", "tmp/**"],
   },
   {
     files: ["**/*.{js,mjs}"],

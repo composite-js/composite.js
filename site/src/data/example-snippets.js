@@ -2,6 +2,7 @@ import country from "./example-snippets/country.txt?raw";
 import dropoutseer from "./example-snippets/dropoutseer.txt?raw";
 import iforum from "./example-snippets/iforum.txt?raw";
 import mirror from "./example-snippets/mirror.txt?raw";
+import mediafears from "./example-snippets/mediafears.txt?raw";
 import nobel from "./example-snippets/nobel.txt?raw";
 import olympic from "./example-snippets/olympic.txt?raw";
 import rainfall from "./example-snippets/rainfall.txt?raw";
@@ -13,6 +14,7 @@ const snippets = {
   dropoutseer,
   iforum,
   mirror,
+  mediafears,
   nobel,
   olympic,
   rainfall,

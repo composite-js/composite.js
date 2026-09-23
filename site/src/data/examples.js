@@ -76,6 +76,14 @@ export const examples = [
     dataFiles: ["iris.csv"],
     featured: false,
   },
+  {
+    slug: "mediafears",
+    title: "Media-Inflamed Fears",
+    summary: "Aligned area-chart lanes showing synthetic attention over time.",
+    tags: ["area", "repeatY", "small multiples"],
+    dataFiles: ["mediafears.csv"],
+    featured: false,
+  },
 ];
 
 export const featuredExamples = examples.filter(

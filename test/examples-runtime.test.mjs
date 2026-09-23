@@ -98,5 +98,30 @@ for (const file of exampleFiles) {
         "scatterplot-matrix should only render each variable label once",
       );
     }
+
+    if (file === "mediafears.js") {
+      const labels = svg
+        .querySelectorAll("text")
+        .map((text) => text.textContent);
+
+      assert.equal(
+        svg.querySelectorAll(".wrapper").length,
+        13,
+        "media-fears should render one framed area lane per topic",
+      );
+      assert.equal(
+        svg.querySelectorAll(".media-fears-timeline-axis").length,
+        1,
+        "media-fears should render one shared timeline axis",
+      );
+      assert.ok(
+        labels.includes("ZIKA") && labels.includes("MILLENNIUM BUG"),
+        "media-fears should label the repeated topic lanes",
+      );
+      assert.ok(
+        labels.includes("Intensity") && labels.includes("Nov 2021"),
+        "media-fears should label its shared axes",
+      );
+    }
   });
 }
