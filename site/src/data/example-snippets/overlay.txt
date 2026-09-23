@@ -109,6 +109,7 @@ function buildView(rows) {
     colorScheme: [colors["Base XA"], colors["Custom XA"], colors["Total XA"]],
     showXAxis: false,
     yAxisPos: "right",
+    reverseY: false,
     yTickCount: 8,
     yTickFormat: (value) => `$${d3.format(",")(value)}`,
   });

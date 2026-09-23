@@ -1,3 +1,4 @@
+// Source: https://echarts.apache.org/examples/en/editor.html?c=candlestick-sh
 const datasetUrl = exampleAssetUrl("dataset/candlestick.csv");
 const width = 1080;
 const height = 420;
@@ -24,7 +25,6 @@ function movingAverage(rows, series) {
 }
 
 function buildView(rows) {
-  const xDomain = rows.map((row) => row.date);
   const yDomain = [
     Math.min(...rows.map((row) => row.low)) - 2,
     Math.max(...rows.map((row) => row.high)) + 2,
@@ -43,7 +43,6 @@ function buildView(rows) {
       high: "high",
       low: "low",
       close: "close",
-      xDomain,
       yDomain,
     },
     width,
@@ -64,7 +63,6 @@ function buildView(rows) {
       x: "date",
       y: "value",
       group: "series",
-      xDomain,
       yDomain,
       groupDomain: movingAverageSeries.map((series) => series.name),
     },
